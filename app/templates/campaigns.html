@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% set layout = 'minimal' %}
+{% block content %}
+{% if campaigns %}
+<script id="mc-campaign-index" type="application/json">
+[{% for campaign in campaigns %}{"id": {{ campaign.id }}, "name": {{ campaign.name | tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]
+</script>
+{% endif %}
+
+<div id="mc-continue-card" class="card mc-continue-card mb-4" hidden>
+  <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <h5 class="card-title mb-1">Continue where you left off</h5>
+      <p class="text-muted mb-0" id="mc-continue-label"></p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a id="mc-continue-workspace" class="btn btn-primary btn-sm">Open Workspace</a>
+      <a id="mc-continue-lore-board" class="btn btn-outline-secondary btn-sm">Lore Board</a>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-8">
+    <h1>Campaigns</h1>
+    {% if campaigns %}
+    <div class="list-group">
+      {% for campaign in campaigns %}
+      <a href="/campaigns/{{ campaign.id }}" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">{{ campaign.name }}</h5>
+          <small>{{ campaign.system or 'No system' }}</small>
+        </div>
+        <p class="mb-1 text-muted">{{ campaign.description or 'No description yet' }}</p>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No campaigns yet. Create one to start your campaign console.</p>
+    {% endif %}
+  </div>
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">New Campaign</h5>
+        <form action="/campaigns" method="post">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input name="name" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">System</label>
+            <input name="system" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Create Campaign</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

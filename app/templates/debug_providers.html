@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">Provider Diagnostics</div>
+  <div class="card-body">
+    <p class="text-muted mb-3">No API calls are made on this page. Active provider: <strong>{{ active_provider or 'not set' }}</strong></p>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Model</th>
+            <th>Endpoint URL</th>
+            <th>API Key Present</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in providers %}
+          <tr{% if row.provider == active_provider %} class="table-light"{% endif %}>
+            <td><strong>{{ row.provider }}</strong></td>
+            <td><code>{{ row.model }}</code></td>
+            <td><code>{{ row.endpoint_url or '(not configured)' }}</code></td>
+            <td>{{ 'True' if row.api_key_present else 'False' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="d-flex gap-2">
+  <a href="/debug/provider-test" class="btn btn-primary">Run provider smoke test</a>
+  <a href="/settings/llm" class="btn btn-outline-secondary">LLM Settings</a>
+</div>
+{% endblock %}

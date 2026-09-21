@@ -1,0 +1,23 @@
+<details class="mt-2">
+  <summary class="small text-muted user-select-none">Create new faction</summary>
+  <div class="border rounded p-2 mt-2">
+    <div class="mb-2">
+      <label class="form-label small mb-1">Faction name</label>
+      <input name="new_faction_name" class="form-control form-control-sm" placeholder="e.g. Iron Crown" />
+    </div>
+    <div class="mb-2">
+      <label class="form-label small mb-1">Faction type</label>
+      <select name="new_faction_type" class="form-select form-select-sm" data-mc-reveals="new_faction_type_custom" data-mc-reveals-value="other">
+        <option value="">— Unspecified —</option>
+        {% for value, label in faction_type_choices %}
+        <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div data-mc-reveal-target="new_faction_type_custom" hidden>
+      <label class="form-label small mb-1">Custom faction type</label>
+      <input name="new_faction_type_custom" class="form-control form-control-sm" placeholder="e.g. Noble House" />
+    </div>
+    <p class="form-text small mb-0">Saving will create the faction and link it automatically.</p>
+  </div>
+</details>

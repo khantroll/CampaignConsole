@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1>{{ session.title }}</h1>
+    <p class="text-muted mb-1">{{ session.date or 'No date set' }}</p>
+    <p class="mb-0">Campaign: <a href="{{ lore_board_href }}">{{ campaign.name }}</a></p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ workspace_href }}" class="btn btn-primary">Workspace</a>
+    <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player" class="btn btn-outline-info">Player View</a>
+    <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/export/markdown" class="btn btn-outline-success">Export Markdown</a>
+    <form action="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/clear-ai-fields" method="post" class="d-inline"
+          onsubmit="return confirm('Clear all AI-generated fields for this session?');">
+      <button type="submit" class="btn btn-outline-danger">Clear AI Fields</button>
+    </form>
+  </div>
+</div>
+
+{% if hub_message %}
+<div class="alert alert-info">
+  {{ hub_message }}
+  <a href="{{ workspace_href }}" class="alert-link ms-2">Open Workspace</a>
+</div>
+{% endif %}
+
+{% if workflow_message %}
+<div class="alert {% if analysis_warning and not (analysis_result and analysis_result.fields_extracted) %}alert-info{% else %}alert-success{% endif %}">{{ workflow_message }}</div>
+{% endif %}
+
+{% if analysis_warning %}
+<div class="alert {% if 'partially parsed' in analysis_warning %}alert-info{% else %}alert-warning{% endif %}">{{ analysis_warning }}</div>
+{% elif analysis_result and analysis_result.updated_fields %}
+<div class="alert alert-success">
+  AI fields updated ({{ analysis_result.parser_used or 'unknown' }} parser): {{ analysis_result.updated_fields | join(', ') }}
+</div>
+{% endif %}
+
+{% if prep_warning %}
+<div class="alert alert-info">{{ prep_warning }}</div>
+{% endif %}
+
+{% if prep_message %}
+<div class="alert {% if 'draft generated' in prep_message|lower or 'saved' in prep_message|lower %}alert-success{% elif 'partially parsed' in prep_message or 'No next-session prep section found.' in prep_message %}alert-info{% else %}alert-warning{% endif %}">{{ prep_message }}</div>
+{% endif %}
+
+{% if prep_overwrite_confirmation %}
+<div class="alert alert-warning">
+  <strong>Manual prep will be overwritten.</strong>
+  Generating new AI prep will replace your edited draft when you save.
+</div>
+<div class="card mb-4">
+  <div class="card-header">Existing Prep Preview</div>
+  <div class="card-body">
+    <p class="text-preserve mb-3">{{ prep_overwrite_confirmation.existing_prep_preview }}{% if prep_overwrite_confirmation.existing_prep_preview|length >= 500 %}...{% endif %}</p>
+    <form action="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/generate-prep" method="post" id="prep-overwrite-form">
+      <textarea hidden name="notes">{{ session.notes or '' }}</textarea>
+      <input type="hidden" name="confirm_overwrite" value="1" />
+      <button type="submit" class="btn btn-danger me-2">Generate New Prep Draft</button>
+      <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="card mb-4 border-primary">
+  <div class="card-header bg-primary text-white">GM Session Workflow</div>
+  <div class="card-body">
+    <ol class="mb-0">
+      <li class="mb-1"><strong>Save Notes</strong> — paste or update session notes.</li>
+      <li class="mb-1"><strong>Save &amp; Analyze Session</strong> — saves notes and generates recaps and analysis.</li>
+      <li class="mb-1"><strong>Review AI Drafts</strong> — edit generated text below.</li>
+      <li class="mb-1"><strong>Generate Prep from This Session</strong> — draft next-session prep from this session and campaign context.</li>
+      <li><strong>Save AI Drafts</strong> — accept your edits.</li>
+    </ol>
+  </div>
+</div>
+
+<form method="post" action="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/notes" id="gm-workflow-form">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card mb-3">
+        <div class="card-header">1. Session Notes <span class="badge bg-secondary">GM only</span></div>
+        <div class="card-body">
+          <div class="mb-3">
+            <textarea name="notes" id="session-notes" class="form-control text-preserve" rows="10"
+              data-saved-notes="{{ (session.notes or '') | e }}">{{ session.notes or '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-outline-primary">Save Notes</button>
+          <button type="submit" class="btn btn-primary ms-2"
+            formaction="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/save-and-analyze"
+            formmethod="post">Save &amp; Analyze Session</button>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header">2–4. AI Draft Review <span class="badge bg-secondary">GM only</span></div>
+        <div class="card-body">
+          <p class="text-muted small">Edit AI output here before saving. Player recap is shareable with players.</p>
+
+          <div class="mb-3">
+            <label class="form-label">Player Recap <span class="badge bg-info text-dark">shareable</span></label>
+            <textarea name="player_recap" class="form-control text-preserve" rows="5">{{ session.player_recap or '' }}</textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">GM Recap <span class="badge bg-secondary">private</span></label>
+            <textarea name="recap" class="form-control text-preserve" rows="5">{{ session.recap or '' }}</textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Analysis <span class="badge bg-secondary">private</span></label>
+            <textarea name="analysis" class="form-control text-preserve" rows="8">{{ session.analysis or '' }}</textarea>
+            {% if session.analysis_raw and not session.analysis %}
+            <div class="alert alert-warning mt-2 mb-0 py-2">Raw AI output saved for debugging — see panel on the right.</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Next Session Prep <span class="badge bg-secondary">private</span></label>
+            {% if session.next_session_prep and session.next_session_prep | looks_like_ai_blob %}
+            <div class="alert alert-warning py-2">This prep looks like unparsed AI output. Regenerate or clear AI fields.</div>
+            {% endif %}
+            <textarea name="next_session_prep" class="form-control text-preserve" rows="14">{% if prep_draft %}{{ prep_draft }}{% else %}{{ session.next_session_prep or '' }}{% endif %}</textarea>
+            {% if session.next_session_prep_manually_edited and not prep_draft %}
+            <p class="small text-muted mt-2 mb-0">You previously edited this prep manually.</p>
+            {% elif prep_draft %}
+            <p class="small text-muted mt-2 mb-0">New prep draft — review and click Save AI Drafts to keep it.</p>
+            {% endif %}
+          </div>
+
+          {% if narrative_suggestions %}
+          <div class="card mb-3 border-info">
+            <div class="card-header">Suggested Narrative Blocks (from AI Prep)</div>
+            <div class="card-body">
+              <p class="small text-muted">Check items to create scenes, encounters, or objectives in the Workspace. Nothing is created until you submit.</p>
+              <form action="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/narrative-suggestions" method="post">
+                {% if narrative_suggestions.scenes %}
+                <h6 class="text-muted">Suggested Scenes</h6>
+                {% for row in narrative_suggestions.scenes %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="approved_scenes" value="{{ row.title }}" id="sug-scene-{{ loop.index }}" />
+                  <label class="form-check-label" for="sug-scene-{{ loop.index }}">{{ row.title }}{% if row.narrative_goal %} — {{ row.narrative_goal }}{% endif %}</label>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% if narrative_suggestions.encounters %}
+                <h6 class="text-muted mt-2">Suggested Encounters</h6>
+                {% for row in narrative_suggestions.encounters %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="approved_encounters" value="{{ row.title }}|other" id="sug-enc-{{ loop.index }}" />
+                  <label class="form-check-label" for="sug-enc-{{ loop.index }}">{{ row.title }}</label>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% if narrative_suggestions.objectives %}
+                <h6 class="text-muted mt-2">Suggested Objectives</h6>
+                {% for row in narrative_suggestions.objectives %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="approved_objectives" value="{{ row.title }}|normal" id="sug-obj-{{ loop.index }}" />
+                  <label class="form-check-label" for="sug-obj-{{ loop.index }}">{{ row.title }}</label>
+                </div>
+                {% endfor %}
+                {% endif %}
+                <button type="submit" class="btn btn-outline-primary btn-sm mt-3">Create Approved Blocks in Workspace</button>
+              </form>
+            </div>
+          </div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-success"
+            formaction="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/ai-drafts"
+            formmethod="post">Save AI Drafts</button>
+          <button type="submit" class="btn btn-outline-primary ms-2"
+            formaction="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/generate-prep"
+            formmethod="post"
+            onclick="return confirmNotesSavedForPrep();">Generate Prep from This Session</button>
+          <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player" class="btn btn-sm btn-outline-info ms-2">Open Player View</a>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header">Session Entities</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <strong>NPCs Mentioned:</strong>
+            {% if session.npcs %}
+            <ul class="mb-0">
+              {% for npc in session.npcs %}
+              <li><a href="/campaigns/{{ campaign.id }}/npcs/{{ npc.id }}/edit">{{ npc.name }}</a>{% if npc.role %} — {{ npc.role }}{% endif %}</li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">None linked.</p>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <strong>PCs Present:</strong>
+            {% if session.party_members %}
+            <ul class="mb-0">
+              {% for pc in session.party_members %}
+              <li><a href="/campaigns/{{ campaign.id }}/pcs/{{ pc.id }}/edit">{{ pc.character_name }}</a></li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">None linked.</p>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <strong>Locations:</strong>
+            {% if session.locations %}
+            <ul class="mb-0">
+              {% for location in session.locations %}
+              <li><a href="/campaigns/{{ campaign.id }}/locations/{{ location.id }}/edit">{{ location.name }}</a></li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">None linked.</p>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <strong>Factions:</strong>
+            {% if session.factions %}
+            <ul class="mb-0">
+              {% for faction in session.factions %}
+              <li><a href="/campaigns/{{ campaign.id }}/factions/{{ faction.id }}/edit">{{ faction.name }}</a></li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">None linked.</p>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <strong>Items:</strong>
+            {% if session.items %}
+            <ul class="mb-0">
+              {% for item in session.items %}
+              <li><a href="/campaigns/{{ campaign.id }}/items/{{ item.id }}/edit">{{ item.name }}</a></li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">None linked.</p>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <strong>Creatures:</strong>
+            {% if session.creatures %}
+            <ul class="mb-0">
+              {% for creature in session.creatures %}
+              <li><a href="/campaigns/{{ campaign.id }}/creatures/{{ creature.id }}/edit">{{ creature.name }}</a></li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">None linked.</p>
+            {% endif %}
+          </div>
+          <div class="mb-0">
+            <strong>Plot Threads:</strong>
+            {% if session.plot_threads %}
+            <ul class="mb-0">
+              {% for thread in session.plot_threads %}
+              <li><a href="/campaigns/{{ campaign.id }}/threads/{{ thread.id }}/edit">{{ thread.title }}</a>{% if thread.status %} ({{ thread.status }}){% endif %}</li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">None linked.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      {% if ai_run_metadata %}
+      <div class="card mb-3">
+        <div class="card-header">AI Run Diagnostics <span class="badge bg-secondary">GM only</span></div>
+        <div class="card-body small">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">Task</dt>
+            <dd class="col-sm-7">{{ ai_run_metadata.task or '—' }}</dd>
+            <dt class="col-sm-5">Saved to session</dt>
+            <dd class="col-sm-7">{{ ai_run_metadata.saved_to_session_id or '—' }}</dd>
+            <dt class="col-sm-5">Provider</dt>
+            <dd class="col-sm-7">{{ ai_run_metadata.provider or '—' }}</dd>
+            <dt class="col-sm-5">Model</dt>
+            <dd class="col-sm-7">{{ ai_run_metadata.model or '—' }}</dd>
+            <dt class="col-sm-5">Generated</dt>
+            <dd class="col-sm-7">{{ ai_run_metadata.generated_at or '—' }}</dd>
+            <dt class="col-sm-5">Parser</dt>
+            <dd class="col-sm-7">{{ ai_run_metadata.parser_used or '—' }}</dd>
+            <dt class="col-sm-5">Top-level keys detected</dt>
+            <dd class="col-sm-7">{% if ai_run_metadata.raw_keys %}{{ ai_run_metadata.raw_keys | join(', ') }}{% else %}—{% endif %}</dd>
+            <dt class="col-sm-5">Normalized keys detected</dt>
+            <dd class="col-sm-7">{% if ai_run_metadata.normalized_keys %}{{ ai_run_metadata.normalized_keys | join(', ') }}{% else %}—{% endif %}</dd>
+            <dt class="col-sm-5">Finalized keys detected</dt>
+            <dd class="col-sm-7">{% if ai_run_metadata.finalized_keys %}{{ ai_run_metadata.finalized_keys | join(', ') }}{% else %}—{% endif %}</dd>
+            <dt class="col-sm-5">Fields updated</dt>
+            <dd class="col-sm-7">{% if ai_run_metadata.fields_updated %}{{ ai_run_metadata.fields_updated | join(', ') }}{% else %}—{% endif %}</dd>
+            <dt class="col-sm-5">Fields missing</dt>
+            <dd class="col-sm-7">{% if ai_run_metadata.fields_missing %}{{ ai_run_metadata.fields_missing | join(', ') }}{% else %}—{% endif %}</dd>
+            <dt class="col-sm-5">Raw output saved</dt>
+            <dd class="col-sm-7">{{ 'Yes' if ai_run_metadata.raw_output_saved else 'No' }}</dd>
+          </dl>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if prep_result and not prep_result.fields_extracted and prep_result.raw_output %}
+      <div class="card mb-3">
+        <div class="card-header">Debug: Raw AI Output (Prep)</div>
+        <div class="card-body">
+          <p class="text-preserve mb-0 small">{{ prep_result.raw_output }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if analysis_result and not analysis_result.fields_extracted and (analysis_result.raw_output or session.analysis_raw) %}
+      <div class="card mb-3">
+        <div class="card-header">Debug: Raw AI Output (Analyze)</div>
+        <div class="card-body">
+          <p class="text-preserve mb-0 small">{{ analysis_result.raw_output or session.analysis_raw }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card mb-3">
+        <div class="card-header">Campaign Tools</div>
+        <div class="card-body">
+          <a href="/campaigns/{{ campaign.id }}/search" class="btn btn-outline-secondary w-100 mb-2">Search Campaign Lore</a>
+          <a href="/campaigns/{{ campaign.id }}/ai/review" class="btn btn-outline-primary w-100">Campaign AI Review</a>
+          <p class="small text-muted mt-2 mb-0">Use Campaign AI Review to generate prep for a different session from the campaign page.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script>
+function confirmNotesSavedForPrep() {
+  const notesField = document.getElementById('session-notes');
+  if (!notesField) return true;
+  const saved = notesField.dataset.savedNotes || '';
+  if (notesField.value !== saved) {
+    return window.confirm('Notes have unsaved changes. They will be saved automatically before generating prep. Continue?');
+  }
+  return true;
+}
+</script>
+{% endblock %}

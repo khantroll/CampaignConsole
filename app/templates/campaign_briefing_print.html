@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brief Me — {{ campaign.name }}</title>
+    <link rel="stylesheet" href="/static/css/print.css" />
+  </head>
+  <body class="mc-print-page mc-print-briefing">
+    <div class="mc-print-toolbar">
+      <button type="button" class="mc-print-btn" onclick="window.print()">Print</button>
+      <a class="mc-print-btn mc-print-btn-ghost" href="/campaigns/{{ campaign.id }}/briefing/export/markdown">Download Markdown</a>
+      <a class="mc-print-btn mc-print-btn-ghost" href="/campaigns/{{ campaign.id }}/briefing">Back to Briefing</a>
+    </div>
+
+    <header class="mc-print-header">
+      <p class="mc-print-label">Brief Me</p>
+      <h1>{{ campaign.name }}</h1>
+      {% if campaign.system %}<p class="mc-print-subtitle">{{ campaign.system }}</p>{% endif %}
+      {% if generated_at %}<p class="mc-print-meta">Generated {{ generated_at }}</p>{% endif %}
+    </header>
+
+    <main class="mc-print-body">
+      {% set print_view = true %}
+      {% include "partials/campaign_briefing_summary.html" %}
+      {% include "partials/campaign_briefing_content.html" %}
+    </main>
+
+    <footer class="mc-print-footer">
+      GM Mission Control · {{ campaign.name }}
+    </footer>
+  </body>
+</html>

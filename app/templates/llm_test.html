@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>LLM Provider Test</span>
+    {% if provider %}
+    <span class="badge bg-primary text-uppercase">{{ provider_label }}</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    {% if not llm_available %}
+    <div class="alert alert-warning mb-0">
+      The active LLM provider is not configured. Set provider and API keys in LLM Settings.
+    </div>
+    {% else %}
+    <p class="text-muted mb-3">
+      Sends one smoke-test prompt to the configured provider using model <code>{{ model }}</code>.
+      No retries, no fallbacks, no provider switching.
+    </p>
+    <form action="/llm/test" method="post">
+      <button type="submit" class="btn btn-primary">Run provider test</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if result %}
+<div class="card mb-3">
+  <div class="card-header">Test Result</div>
+  <div class="card-body">
+    {% if result.success %}
+    <div class="alert alert-success mb-3">Provider test passed.</div>
+    {% else %}
+    <div class="alert alert-danger mb-3">{{ result.error or 'Provider test failed.' }}</div>
+    {% endif %}
+    {% if result.message %}
+    <pre class="mb-0">{{ result.message }}</pre>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="mt-3">
+  <a href="/debug/providers" class="btn btn-outline-primary me-2">Provider diagnostics</a>
+  <a href="/settings/llm" class="btn btn-outline-primary me-2">LLM Settings</a>
+  <a href="/" class="btn btn-secondary">Home</a>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    Session Ingestion
+  </div>
+  <div class="card-body">
+    {% if message %}
+    <div class="alert alert-warning">{{ message }}</div>
+    {% endif %}
+    <form action="/campaigns/{{ campaign.id }}/ingest" method="post">
+      <div class="mb-3">
+        <label class="form-label">Session Title</label>
+        <input name="session_title" class="form-control" placeholder="Session title" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Date</label>
+        <input name="session_date" class="form-control" placeholder="YYYY-MM-DD" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Raw Session Notes</label>
+        <textarea name="raw_notes" class="form-control" rows="12"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Extract Candidates</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

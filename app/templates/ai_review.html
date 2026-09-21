@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <h1>Campaign AI Review — {{ campaign.name }}</h1>
+      <p class="text-muted">Generate next-session prep from campaign context for any session. For notes, analyze, and prep drafts, use Session Workflow on a specific session.</p>
+    </div>
+  </div>
+</div>
+
+{% if overwrite_confirmation %}
+<div class="alert alert-warning">
+  <strong>Manual prep will be overwritten.</strong>
+  This session already has prep you edited manually. Generating new AI prep will replace it.
+</div>
+<div class="card mb-4">
+  <div class="card-header">Existing Prep Preview</div>
+  <div class="card-body">
+    <p class="text-preserve mb-3">{{ overwrite_confirmation.existing_prep_preview }}{% if overwrite_confirmation.existing_prep_preview|length >= 500 %}...{% endif %}</p>
+    <form action="/campaigns/{{ campaign.id }}/ai/review" method="post">
+      <input type="hidden" name="session_id" value="{{ overwrite_confirmation.session_id }}" />
+      <textarea hidden name="notes">{{ overwrite_confirmation.notes }}</textarea>
+      <input type="hidden" name="confirm_overwrite" value="1" />
+      <button type="submit" class="btn btn-danger me-2">Overwrite With AI Prep</button>
+      <a href="/campaigns/{{ campaign.id }}/ai/review" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card mb-3">
+      <div class="card-header">Campaign Prep Options</div>
+      <div class="card-body">
+        {% if message %}
+        <div class="alert {% if 'partially parsed' in message or 'No next-session prep section found.' in message %}alert-info{% elif 'could not be parsed' in message %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</div>
+        {% if session and message and ('saved' in message|lower or 'prep' in message|lower) %}
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <a href="{{ session_workflow_url(campaign.id, session.id) }}" class="btn btn-sm btn-outline-primary">Session Workflow</a>
+          <a href="{{ workspace_url(campaign.id, session_id=session.id, mode='review') }}" class="btn btn-sm btn-outline-info">Workspace (Review)</a>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {% if not overwrite_confirmation %}
+        <form action="/campaigns/{{ campaign.id }}/ai/review" method="post">
+          <div class="mb-3">
+            <label class="form-label">Save prep to session</label>
+            <select name="session_id" class="form-select" required>
+              {% for item in sessions %}
+              <option value="{{ item.id }}" {% if session and session.id == item.id %}selected{% endif %}>{{ item.title }} - {{ item.date or 'No date' }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Choose which session receives the generated prep.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes context</label>
+            <textarea name="notes" class="form-control text-preserve" rows="10">{{ notes or '' }}</textarea>
+            <div class="form-text">Defaults to the selected session's notes when left empty.</div>
+          </div>
+          <button type="submit" class="btn btn-primary">Generate Prep from Selected Session</button>
+        </form>
+        {% endif %}
+
+        <div class="mt-3">
+          <a href="/llm/test" class="btn btn-outline-secondary mb-2">Test LLM Provider</a>
+          <p class="small text-muted mb-1">
+            LLM provider available: {{ llm_available | string }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    {% if session %}
+    <div class="card mb-3">
+      <div class="card-header">Next Session Prep</div>
+      <div class="card-body">
+        {% if session.next_session_prep %}
+        {% if session.next_session_prep | looks_like_invalid_prep %}
+        <div class="alert alert-warning mb-2">Saved prep looks invalid (likely truncated AI output). Generate again or edit on the session page.</div>
+        {% endif %}
+        <p class="text-preserve mb-2">{{ session.next_session_prep }}</p>
+        {% else %}
+        <p class="text-muted mb-2">No prep saved for this session yet.</p>
+        {% endif %}
+        <a href="{{ session_workflow_url(campaign.id, session.id) }}" class="btn btn-sm btn-outline-primary">Session Workflow</a>
+        <a href="{{ workspace_url(campaign.id, session_id=session.id, mode='review') }}" class="btn btn-sm btn-outline-info ms-1">Workspace (Review)</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if result and not result.fields_extracted and result.raw_output %}
+    <div class="card mb-3">
+      <div class="card-header">Debug: Raw AI Output</div>
+      <div class="card-body">
+        <p class="text-preserve mb-0">{{ result.raw_output }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

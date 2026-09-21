@@ -1,0 +1,28 @@
+{% if entity_history and entity_history.sessions %}
+<div class="mc-ref-history">
+  <div class="mc-ref-history-head">
+    <span class="mc-ref-history-label">Session history</span>
+    <span class="mc-ref-history-count">{{ entity_history.session_count }}</span>
+  </div>
+  <ul class="mc-ref-history-list">
+    {% for hist_session in entity_history.sessions[:5] %}
+    <li class="mc-ref-history-item">
+      <a href="{{ session_workflow_url(campaign.id, hist_session.id) }}" class="mc-ref-history-link">{{ hist_session.title }}</a>
+      {% if hist_session.date %}<span class="mc-ref-history-date">{{ hist_session.date }}</span>{% endif %}
+      {% if current_session_id is defined and hist_session.id == current_session_id %}
+      <span class="mc-intel-badge mc-intel-new">current</span>
+      {% elif loop.first and entity_history.session_count == 1 %}
+      <span class="mc-intel-badge mc-intel-returning">only</span>
+      {% elif loop.first %}
+      <span class="mc-intel-badge mc-intel-returning">first</span>
+      {% elif loop.last and entity_history.session_count > 1 %}
+      <span class="mc-intel-badge mc-intel-returning">latest</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+    {% if entity_history.session_count > 5 %}
+    <li class="mc-ref-history-more">+{{ entity_history.session_count - 5 }} more session{{ 's' if entity_history.session_count - 5 != 1 else '' }}</li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}

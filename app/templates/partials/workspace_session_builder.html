@@ -1,0 +1,208 @@
+{% macro status_badge(status, badge_map) %}
+<span class="badge bg-{{ badge_map.get(status, 'secondary') }}">{{ status | replace('_', ' ') | title }}</span>
+{% endmacro %}
+
+<div class="mc-session-builder mc-panel-{{ mode }}" id="mc-session-builder" data-rules-lookup-watch>
+  <div class="mc-session-builder-head d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+    <h2 class="h6 mb-0">Session Builder</h2>
+    {% if session %}
+    <div class="d-flex flex-wrap gap-1">
+      <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#mc-quick-scene-form">+ Scene</button>
+      <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#mc-quick-encounter-form">+ Encounter</button>
+      <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#mc-quick-objective-form">+ Objective</button>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if session %}
+  <div class="collapse mb-2" id="mc-quick-scene-form">
+    <form action="/campaigns/{{ campaign.id }}/workspace/scenes" method="post" class="card card-body p-2 small">
+      <input type="hidden" name="session_id" value="{{ session.id }}" />
+      <input type="hidden" name="mode" value="{{ mode }}" />
+      <div class="row g-2">
+        <div class="col-md-4"><input name="title" class="form-control form-control-sm" placeholder="Scene title" required data-rules-lookup-source /></div>
+        <div class="col-md-5"><input name="narrative_goal" class="form-control form-control-sm" placeholder="Narrative goal" data-rules-lookup-source /></div>
+        <div class="col-md-3">
+          <select name="location_id" class="form-select form-select-sm">
+            <option value="">Location…</option>
+            {% for loc in campaign_locations or [] %}
+            <option value="{{ loc.id }}">{{ loc.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm mt-2">Add Scene</button>
+    </form>
+  </div>
+
+  <div class="collapse mb-2" id="mc-quick-encounter-form">
+    <form action="/campaigns/{{ campaign.id }}/workspace/encounters" method="post" class="card card-body p-2 small">
+      <input type="hidden" name="session_id" value="{{ session.id }}" />
+      <input type="hidden" name="mode" value="{{ mode }}" />
+      <input type="hidden" name="scene_id" value="{{ session_builder.active_scene.id if session_builder.active_scene else '' }}" />
+      <div class="row g-2">
+        <div class="col-md-4"><input name="title" class="form-control form-control-sm" placeholder="Encounter title" required data-rules-lookup-source /></div>
+        <div class="col-md-3">
+          <select name="encounter_type" class="form-select form-select-sm">
+            <option value="social">Social</option>
+            <option value="exploration">Exploration</option>
+            <option value="combat">Combat</option>
+            <option value="puzzle">Puzzle</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="col-md-5"><input name="stakes" class="form-control form-control-sm" placeholder="Stakes" data-rules-lookup-source /></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm mt-2">Add Encounter</button>
+    </form>
+  </div>
+
+  <div class="collapse mb-2" id="mc-quick-objective-form">
+    <form action="/campaigns/{{ campaign.id }}/workspace/objectives" method="post" class="card card-body p-2 small">
+      <input type="hidden" name="session_id" value="{{ session.id }}" />
+      <input type="hidden" name="mode" value="{{ mode }}" />
+      <input type="hidden" name="scene_id" value="{{ session_builder.active_scene.id if session_builder.active_scene else '' }}" />
+      <div class="row g-2">
+        <div class="col-md-4"><input name="title" class="form-control form-control-sm" placeholder="Objective title" required data-rules-lookup-source /></div>
+        <div class="col-md-3">
+          <select name="objective_type" class="form-select form-select-sm">
+            <option value="party_goal">Party Goal</option>
+            <option value="clue">Clue</option>
+            <option value="gm_goal">GM Goal</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select name="priority" class="form-select form-select-sm">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="col-md-3"><input name="description" class="form-control form-control-sm" placeholder="Description" data-rules-lookup-source /></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm mt-2">Add Objective</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if mode == 'prep' or mode == 'run' %}
+  <section class="mb-3">
+    <h3 class="mc-ref-section-title">Scenes</h3>
+    {% if session_builder and session_builder.scenes %}
+      {% for card in session_builder.scenes %}
+      {% set scene = card.block %}
+      <div
+        class="mc-narrative-card {% if card.is_active %}mc-narrative-card-active{% endif %} mb-2"
+        data-rules-lookup-text="{{ scene.title }} {{ scene.narrative_goal or '' }} {{ scene.summary or '' }} {{ scene.notes or '' }}"
+      >
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div>
+            <strong>{{ scene.title }}</strong>
+            {{ status_badge(scene.status, scene_status_badges) }}
+            {% if card.is_active %}<span class="badge bg-info">Active</span>{% endif %}
+          </div>
+          <div class="btn-group btn-group-sm">
+            {% if not card.is_active and scene.status != 'completed' %}
+            <form action="/campaigns/{{ campaign.id }}/workspace/scenes/{{ scene.id }}/activate" method="post" class="d-inline">
+              <input type="hidden" name="session_id" value="{{ session.id }}" />
+              <input type="hidden" name="mode" value="{{ mode }}" />
+              <button type="submit" class="btn btn-outline-info btn-sm">Set Active</button>
+            </form>
+            {% endif %}
+            <form action="/campaigns/{{ campaign.id }}/workspace/scenes/{{ scene.id }}/reorder" method="post" class="d-inline">
+              <input type="hidden" name="session_id" value="{{ session.id }}" />
+              <input type="hidden" name="mode" value="{{ mode }}" />
+              <input type="hidden" name="direction" value="up" />
+              <button type="submit" class="btn btn-outline-secondary btn-sm">↑</button>
+            </form>
+            <form action="/campaigns/{{ campaign.id }}/workspace/scenes/{{ scene.id }}/reorder" method="post" class="d-inline">
+              <input type="hidden" name="session_id" value="{{ session.id }}" />
+              <input type="hidden" name="mode" value="{{ mode }}" />
+              <input type="hidden" name="direction" value="down" />
+              <button type="submit" class="btn btn-outline-secondary btn-sm">↓</button>
+            </form>
+          </div>
+        </div>
+        {% if scene.narrative_goal %}<p class="small mb-1 text-muted">{{ scene.narrative_goal }}</p>{% endif %}
+        {% if card.primary_location %}<p class="small mb-1">📍 {{ card.primary_location.name }}</p>{% endif %}
+        {% if card.links.npcs %}<p class="small mb-0">NPCs: {% for npc in card.links.npcs %}{{ npc.name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+        {% if card.links.threads %}<p class="small mb-0">Threads: {% for t in card.links.threads %}{{ t.title }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      </div>
+      {% endfor %}
+      {% if session_builder.active_scene %}
+      <form action="/campaigns/{{ campaign.id }}/workspace/scenes/clear-active" method="post" class="mt-1">
+        <input type="hidden" name="session_id" value="{{ session.id }}" />
+        <input type="hidden" name="mode" value="{{ mode }}" />
+        <button type="submit" class="btn btn-link btn-sm p-0">Clear Active Scene</button>
+      </form>
+      {% endif %}
+    {% else %}
+    <p class="text-muted small mb-0">No scenes yet. Use + Scene to add one.</p>
+    {% endif %}
+  </section>
+
+  <section class="mb-3">
+    <h3 class="mc-ref-section-title">Encounters</h3>
+    {% if session_builder and session_builder.encounters %}
+      {% for card in session_builder.encounters %}
+      {% set enc = card.block %}
+      <div
+        class="mc-narrative-card mb-2"
+        data-rules-lookup-text="{{ enc.title }} {{ enc.objective or '' }} {{ enc.stakes or '' }} {{ enc.outcome or '' }}"
+      >
+        <strong>{{ enc.title }}</strong>
+        {{ status_badge(enc.encounter_type, encounter_type_badges) }}
+        {{ status_badge(enc.status, scene_status_badges) }}
+        {% if enc.objective %}<p class="small mb-1">{{ enc.objective }}</p>{% endif %}
+        {% if enc.stakes %}<p class="small mb-0 text-muted">Stakes: {{ enc.stakes }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p class="text-muted small mb-0">No encounters yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="mb-3">
+    <h3 class="mc-ref-section-title">Objectives</h3>
+    {% if session_builder and session_builder.objectives %}
+      {% for card in session_builder.objectives %}
+      {% set obj = card.block %}
+      <div
+        class="mc-narrative-card mb-2"
+        data-rules-lookup-text="{{ obj.title }} {{ obj.description or '' }}"
+      >
+        <strong>{{ obj.title }}</strong>
+        {{ status_badge(obj.objective_type, objective_type_badges) }}
+        {{ status_badge(obj.priority, objective_priority_badges) }}
+        {{ status_badge(obj.status, objective_status_badges) }}
+        {% if obj.description %}<p class="small mb-0 text-muted">{{ obj.description }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p class="text-muted small mb-0">No objectives yet.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if mode == 'review' %}
+  <section class="mb-3">
+    <h3 class="mc-ref-section-title">Session Review</h3>
+    {% if session_builder %}
+    <p class="small text-muted">Completed/skipped scenes, outcomes, and open objectives.</p>
+    {% for card in session_builder.scenes if card.block.status in ['completed', 'skipped'] %}
+    <div class="mc-narrative-card mb-2"><strong>{{ card.block.title }}</strong> {{ status_badge(card.block.status, scene_status_badges) }}</div>
+    {% else %}
+    <p class="text-muted small">No completed scenes recorded.</p>
+    {% endfor %}
+    {% for card in session_builder.encounters if card.block.outcome %}
+    <div class="mc-narrative-card mb-2"><strong>{{ card.block.title }}</strong><p class="small mb-0">{{ card.block.outcome }}</p></div>
+    {% endfor %}
+    {% for card in session_builder.objectives if card.block.status in ['open', 'in_progress', 'failed'] %}
+    <div class="mc-narrative-card mb-2"><strong>{{ card.block.title }}</strong> {{ status_badge(card.block.status, objective_status_badges) }}</div>
+    {% endfor %}
+    {% endif %}
+  </section>
+  {% endif %}
+</div>

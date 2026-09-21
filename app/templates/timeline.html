@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <h1>{{ campaign.name }} Timeline</h1>
+      <p class="text-muted">Sessions are shown in chronological order, with linked campaign entities.</p>
+    </div>
+  </div>
+</div>
+
+{% if sessions %}
+<div class="list-group">
+  {% for session in sessions %}
+  <div class="list-group-item mb-3">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h5><a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}">{{ session.title }}</a></h5>
+        <div class="small text-muted">{{ session.date or 'No date set' }}</div>
+      </div>
+      <div>
+        <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/edit" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+        <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/delete" class="btn btn-sm btn-outline-danger">Delete</a>
+      </div>
+    </div>
+    <p class="text-preserve mt-3 mb-2 long-text-card">{{ session.recap or session.notes or 'No summary available.' }}</p>
+    {% if session.notes and session.notes|length > 500 %}
+    <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}" class="small">View full session</a>
+    {% endif %}
+    <div class="d-flex flex-wrap gap-2">
+      {% if session.npcs %}
+      <span class="badge bg-primary">NPCs: {% for npc in session.npcs %}{{ npc.name }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+      {% endif %}
+      {% if session.locations %}
+      <span class="badge bg-success">Locations: {% for location in session.locations %}{{ location.name }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+      {% endif %}
+      {% if session.factions %}
+      <span class="badge bg-warning text-dark">Factions: {% for faction in session.factions %}{{ faction.name }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+      {% endif %}
+      {% if session.items %}
+      <span class="badge bg-info text-dark">Items: {% for item in session.items %}{{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+      {% endif %}
+      {% if session.creatures %}
+      <span class="badge bg-danger">Creatures: {% for creature in session.creatures %}{{ creature.name }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+      {% endif %}
+      {% if session.plot_threads %}
+      <span class="badge bg-secondary">Plot Threads: {% for thread in session.plot_threads %}{{ thread.title }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">No timeline sessions available yet.</p>
+{% endif %}
+{% endblock %}

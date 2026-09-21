@@ -1,0 +1,58 @@
+{% if campaign and layout | default('dashboard') in ['dashboard', 'workspace'] %}
+<aside class="mc-sidebar">
+  <div class="mc-sidebar-head">
+    <h2 class="mc-sidebar-title">{{ campaign.name }}</h2>
+    <p class="mc-sidebar-sub">{{ campaign.system or 'Campaign' }}</p>
+  </div>
+  <div class="mc-nav-section">
+    <div class="mc-nav-label">Navigation</div>
+    <a class="mc-nav-link {% if active_nav == 'workspace' %}is-active{% endif %}" href="{{ workspace_href }}">Workspace</a>
+    <a class="mc-nav-link {% if active_nav == 'sessions' %}is-active{% endif %}" href="{{ session_workflow_href }}">Session Workflow</a>
+    <a class="mc-nav-link {% if active_nav == 'dashboard' %}is-active{% endif %}" href="{{ lore_board_href }}">Lore Board</a>
+    <a class="mc-nav-link {% if active_nav == 'ingest' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/ingest">Ingest Notes</a>
+    <a class="mc-nav-link {% if active_nav == 'ai_review' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/ai/review">AI Review</a>
+    <a class="mc-nav-link {% if active_nav == 'search' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/search">Search</a>
+    <a class="mc-nav-link {% if active_nav == 'timeline' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/timeline">Timeline</a>
+  </div>
+  {% if sessions is defined and sessions %}
+  <div class="mc-nav-section mc-file-tree">
+    <div class="mc-nav-label">Sessions</div>
+    <details open>
+      <summary>Session list</summary>
+      {% for s in sessions %}
+      <a
+        class="mc-file-item {% if session and s.id == session.id and active_nav == 'workspace' %}is-active{% endif %}"
+        href="{{ workspace_url(campaign.id, session_id=s.id, mode=workspace_mode) }}"
+      >{{ s.title }}{% if s.date %} · {{ s.date }}{% endif %}</a>
+      <a
+        class="mc-file-item mc-file-item-sub {% if session and s.id == session.id and active_nav == 'sessions' %}is-active{% endif %}"
+        href="/campaigns/{{ campaign.id }}/sessions/{{ s.id }}"
+        style="padding-left: 24px; font-size: 11px;"
+      >↳ Session Workflow</a>
+      {% else %}
+      <p class="mc-sidebar-sub" style="padding: 8px 12px;">No sessions yet.</p>
+      {% endfor %}
+    </details>
+  </div>
+  {% endif %}
+  {% if session %}
+  <div class="mc-nav-section">
+    <div class="mc-nav-label">Current Session</div>
+    <a class="mc-nav-link" href="{{ session_workflow_href }}">Session Workflow</a>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/edit{% if return_to is defined and return_to %}?return_to={{ return_to | urlencode }}{% endif %}">Edit Session</a>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player">Player View</a>
+  </div>
+  {% endif %}
+  <div class="mc-nav-section">
+    <div class="mc-nav-label">Entities</div>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}#npcs-section">NPCs</a>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}#locations-section">Locations</a>
+    <a class="mc-nav-link {% if active_nav == 'location_admin' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/locations/admin">Location Admin</a>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}#factions-section">Factions</a>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}#items-section">Items</a>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}#creatures-section">Creatures</a>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}#threads-section">Plot Threads</a>
+    <a class="mc-nav-link" href="/campaigns/{{ campaign.id }}#pcs-section">Party Members</a>
+  </div>
+</aside>
+{% endif %}

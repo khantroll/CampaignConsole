@@ -1,0 +1,43 @@
+{% if dashboard_summary and dashboard_summary.intelligence %}
+{% set intel = dashboard_summary.intelligence %}
+<div class="card mb-3 mc-intelligence-strip">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Campaign Intelligence</span>
+    <a href="/campaigns/{{ campaign.id }}/briefing" class="btn btn-outline-info btn-sm">Brief Me</a>
+  </div>
+  <div class="card-body">
+    {% if intel.dormant_count or intel.stale_count %}
+    <div class="row g-3">
+      {% if intel.dormant_threads %}
+      <div class="col-md-6">
+        <h6 class="text-warning mb-2">Dormant Threads</h6>
+        <ul class="list-unstyled mb-0 small">
+          {% for row in intel.dormant_threads %}
+          <li class="mb-2">
+            <a href="/campaigns/{{ campaign.id }}/threads/{{ row.thread.id }}/edit">{{ row.thread.title }}</a>
+            {% if row.last_session %}
+            <span class="text-muted"> · last in <a href="{{ session_workflow_url(campaign.id, row.last_session.id) }}">{{ row.last_session.title }}</a></span>
+            {% else %}
+            <span class="text-muted"> · never linked to a session</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if intel.stale_npcs or intel.stale_locations or intel.stale_factions or intel.stale_items %}
+      <div class="col-md-6">
+        {% include "partials/stale_entity_signal_lists.html" %}
+      </div>
+      {% endif %}
+    </div>
+    {% elif dashboard_summary.session_count %}
+    <p class="text-success mb-0 small">
+      <strong>All clear</strong> — no dormant threads or stale entities within the intelligence gap.
+    </p>
+    {% else %}
+    <p class="text-muted mb-0 small">Add sessions and link entities to enable intelligence signals.</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

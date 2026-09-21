@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+  <head>
+
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{% block title %}{{ title | default('GM Mission Control') }}{% endblock %}</title>
+
+    <link rel="stylesheet" href="/static/css/mission_control.css" />
+
+    {% block extra_head %}{% endblock %}
+
+  </head>
+
+  <body
+
+    class="mc-body layout-{{ layout | default('dashboard') }} mode-{{ mode | default('none') }}"
+
+    data-mc-layout="{{ layout | default('dashboard') }}"
+
+    {% if campaign %}data-mc-campaign-id="{{ campaign.id }}"{% endif %}
+
+    {% if session %}data-mc-session-id="{{ session.id }}"{% endif %}
+
+    data-mc-mode="{{ workspace_mode | default(mode | default('prep')) }}"
+
+  >
+
+    <div class="mc-app">
+
+      <header class="mc-topbar">
+
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+
+          {% if campaign %}
+
+          <button type="button" class="mc-sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">☰</button>
+
+          {% endif %}
+
+          <a class="mc-brand" href="{% if campaign %}{{ workspace_href | default(workspace_url(campaign.id)) }}{% else %}/{% endif %}">GM Mission Control</a>
+
+          {% if campaign %}
+
+          <nav class="mc-topnav">
+
+            <a href="{{ workspace_href | default(workspace_url(campaign.id)) }}" class="{% if active_nav == 'workspace' %}is-active{% endif %}">Workspace</a>
+
+            <a href="{{ session_workflow_href | default(session_workflow_url(campaign.id)) }}" class="{% if active_nav == 'sessions' %}is-active{% endif %}">Session Workflow</a>
+
+            <a href="{{ lore_board_href | default(lore_board_url(campaign.id)) }}" class="{% if active_nav == 'dashboard' %}is-active{% endif %}">Lore Board</a>
+
+            <a href="/campaigns/{{ campaign.id }}/ingest" class="{% if active_nav == 'ingest' %}is-active{% endif %}">Ingest</a>
+
+            <a href="/campaigns/{{ campaign.id }}/search" class="{% if active_nav == 'search' %}is-active{% endif %}">Search</a>
+
+            <a href="/settings/llm" class="{% if active_nav == 'settings' %}is-active{% endif %}">Settings</a>
+
+          </nav>
+
+          {% if session and active_nav == 'workspace' %}
+
+          <div class="mc-mode-tabs">
+
+            <a href="{{ workspace_url(campaign.id, session_id=session.id, mode='prep') }}" class="{% if mode == 'prep' %}is-active{% endif %}">Prep Mode</a>
+
+            <a href="{{ workspace_url(campaign.id, session_id=session.id, mode='run') }}" class="{% if mode == 'run' %}is-active{% endif %}">Run Session</a>
+
+            <a href="{{ workspace_url(campaign.id, session_id=session.id, mode='review') }}" class="{% if mode == 'review' %}is-active{% endif %}">Review</a>
+
+          </div>
+
+          {% endif %}
+
+          {% else %}
+
+          <nav class="mc-topnav">
+
+            <a href="/" class="is-active">Campaigns</a>
+
+            <a href="/settings/llm">Settings</a>
+
+          </nav>
+
+          {% endif %}
+
+        </div>
+
+        <div class="mc-topbar-actions">
+
+          {% if campaigns %}
+
+          <select class="mc-campaign-select">
+
+            {% for c in campaigns %}
+
+            <option value="{{ c.id }}" {% if campaign and c.id == campaign.id %}selected{% endif %}>{{ c.name }}</option>
+
+            {% endfor %}
+
+          </select>
+
+          {% endif %}
+
+          <a class="mc-btn mc-btn-ghost" href="/settings/llm">LLM Settings</a>
+
+        </div>
+
+      </header>
+
+
+
+      <div class="mc-shell">
+
+        <div class="mc-sidebar-backdrop" data-mc-sidebar-backdrop hidden></div>
+
+        {% block sidebar %}
+
+          {% include "partials/mc_sidebar_campaign.html" %}
+
+        {% endblock %}
+
+        <main class="mc-main">
+
+          <div class="{% if layout | default('dashboard') != 'workspace' %}mc-page{% endif %}">
+
+            {% if campaign and active_nav != 'workspace' %}
+            {% include "partials/mc_page_actions.html" %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+
+          </div>
+
+        </main>
+
+        {% block ref_panel %}{% endblock %}
+
+      </div>
+
+    </div>
+
+    <script src="/static/js/htmx.min.js"></script>
+
+    <script src="/static/js/mc.js"></script>
+
+    {% block scripts %}{% endblock %}
+
+  </body>
+
+</html>
+
+

@@ -1,0 +1,40 @@
+{% if coappearance and coappearance.entries %}
+<div class="card mb-3 mc-coappearance">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Co-appearance Timeline</span>
+    <span class="text-muted small">{{ coappearance.entry_count }} session{{ 's' if coappearance.entry_count != 1 else '' }} with linked partners</span>
+  </div>
+  <ul class="list-group list-group-flush">
+    {% for entry in coappearance.entries %}
+    <li class="list-group-item">
+      <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-1">
+        <div>
+          <strong>{{ entry.session.title }}</strong>
+          {% if entry.session.date %}<span class="text-muted small"> · {{ entry.session.date }}</span>{% endif %}
+        </div>
+        <div class="d-flex gap-1 flex-shrink-0">
+          <a href="{{ session_workflow_url(campaign.id, entry.session.id) }}" class="btn btn-outline-secondary btn-sm">Sessions</a>
+          <a href="{{ workspace_url(campaign.id, session_id=entry.session.id, mode='prep') }}" class="btn btn-outline-primary btn-sm">Workspace</a>
+        </div>
+      </div>
+      <div class="small text-muted">
+        {% for partner in entry.partners %}
+        <span class="me-2">
+          <span class="text-muted">{{ partner.kind_label }}:</span>
+          {% if partner.edit_url %}
+          <a href="{{ partner.edit_url }}">{{ partner.name }}</a>
+          {% else %}
+          {{ partner.name }}
+          {% endif %}
+        </span>
+        {% endfor %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% elif coappearance is defined %}
+<div class="alert alert-secondary py-2 px-3 mb-3 small">
+  No shared session appearances with linked partners yet. Link this entity and its partners to the same sessions.
+</div>
+{% endif %}

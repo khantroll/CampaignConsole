@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% set layout = 'workspace' %}
+{% block title %}{{ session.title if session else campaign.name }} — Workspace{% endblock %}
+
+{% block content %}
+{% if message == 'saved' %}
+<div class="mc-alert mc-alert-success">Workspace saved.</div>
+{% elif message == 'copied' %}
+<div class="mc-alert mc-alert-success">AI prep copied into workspace.</div>
+{% elif message == 'no_prep' %}
+<div class="mc-alert mc-alert-info">No AI session prep available to copy.</div>
+{% elif message == 'scene_active' %}
+<div class="mc-alert mc-alert-success">Active scene updated.</div>
+{% endif %}
+
+{% if not session %}
+<div class="mc-empty">
+  <p>No session selected. Create a session from the <a href="{{ lore_board_href }}">Lore Board</a> first.</p>
+</div>
+{% else %}
+<div class="mc-workspace-toolbar">
+  <div>
+    <span class="mc-status-dot"></span>
+    <span style="font-size: 11px; color: var(--muted); margin-left: 6px;">WORKSPACE · {{ mode | upper }} MODE</span>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="mc-btn mc-btn-primary" href="{{ session_workflow_href }}">Session Workflow</a>
+    <a class="mc-btn mc-btn-ghost" href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player">Player View</a>
+  </div>
+</div>
+
+{% if workspace_intel and workspace_intel.prep_gap %}
+<div class="mc-alert mc-alert-info mb-2" style="margin: 8px 16px 0;">
+  {% if workspace_intel.prep_gap == 'needs_analysis' %}
+  Session has notes but no AI analysis yet. <a href="{{ session_workflow_href }}">Run analysis in Sessions</a>.
+  {% elif workspace_intel.prep_gap == 'needs_prep' %}
+  Analysis complete but no prep draft. <a href="{{ session_workflow_href }}">Generate prep in Sessions</a>.
+  {% endif %}
+</div>
+  {% endif %}
+
+  {% include "partials/workspace_session_builder.html" %}
+
+  <div class="mc-workspace-editor-wrap">
+  <h1 class="mc-session-title">{{ session.title }}</h1>
+  {% if session.date %}
+  <p style="color: var(--muted); font-size: 12px; margin: -8px 0 12px;">{{ session.date }}</p>
+  {% endif %}
+
+  <form action="/campaigns/{{ campaign.id }}/workspace/save" method="post">
+    <input type="hidden" name="session_id" value="{{ session.id }}" />
+    <input type="hidden" name="mode" value="{{ mode }}" />
+    <textarea
+      name="workspace_notes"
+      class="mc-workspace-textarea"
+      data-workspace-editor
+      data-rules-lookup-source
+      placeholder="Markdown workspace — prep notes, scene beats, improvisation prompts..."
+    >{{ session.workspace_notes or '' }}</textarea>
+    <div class="mc-workspace-actions">
+      <span id="mc-workspace-save-status" class="mc-save-status" data-state="saved">Saved</span>
+      <button type="submit" class="mc-btn mc-btn-primary">Save Workspace</button>
+    </div>
+  </form>
+
+  <form action="/campaigns/{{ campaign.id }}/workspace/copy-prep" method="post" style="margin-top: 8px;">
+    <input type="hidden" name="session_id" value="{{ session.id }}" />
+    <input type="hidden" name="mode" value="{{ mode }}" />
+    <button type="submit" class="mc-btn mc-btn-accent">Copy AI Prep to Workspace</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block ref_panel %}
+<aside class="mc-ref-panel">
+{% if session %}
+  {% set ws_return = workspace_url(campaign.id, session_id=session.id, mode=mode) %}
+  <div class="mc-ref-head">
+    <span class="mc-ref-label">{% if ref_source == 'active_scene' %}Active Scene Intelligence{% else %}In-Context References{% endif %}</span>
+  </div>
+
+  {% if workspace_intel and workspace_intel.active_scene %}
+  <div class="visually-hidden" aria-hidden="true" data-rules-lookup-source>
+    {{ workspace_intel.active_scene.title }}
+    {{ workspace_intel.active_scene.narrative_goal or '' }}
+    {{ workspace_intel.active_scene.summary or '' }}
+    {{ workspace_intel.active_scene.notes or '' }}
+    {% if workspace_intel.scene_open_clues %}{% for clue in workspace_intel.scene_open_clues %}{{ clue }}
+    {% endfor %}{% endif %}
+  </div>
+  <div class="mc-alert mc-alert-info py-2 px-3 small mb-2">
+    <strong>{{ workspace_intel.active_scene.title }}</strong>
+    {% if workspace_intel.active_scene.narrative_goal %}<div class="mt-1">{{ workspace_intel.active_scene.narrative_goal }}</div>{% endif %}
+    {% if workspace_intel.scene_open_clues %}
+    <div class="mt-2"><strong>Open Clues</strong>
+      <ul class="mb-0 ps-3">{% for clue in workspace_intel.scene_open_clues %}<li>{{ clue }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if ref_source == 'active_scene' %}
+  <div
+    class="mc-ref-section mc-quick-rules-section is-open"
+    id="mc-quick-rules-section"
+    data-mc-quick-rules
+    data-campaign-id="{{ campaign.id }}"
+  >
+    <button
+      type="button"
+      class="mc-quick-rules-toggle"
+      data-mc-quick-rules-toggle
+      aria-expanded="true"
+      aria-controls="mc-quick-rules-drawer"
+    >
+      <span class="mc-ref-section-title mb-0">Quick Rules Reference</span>
+      <span class="mc-quick-rules-chevron" aria-hidden="true">▾</span>
+    </button>
+    <div class="mc-quick-rules-drawer" id="mc-quick-rules-drawer" data-mc-quick-rules-drawer>
+      <p class="mc-quick-rules-status" data-mc-quick-rules-status>Type in the workspace to surface matching rules.</p>
+      <div class="mc-quick-rules-results" data-mc-quick-rules-results></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="mc-quick-capture mc-panel-run-focus {% if mode == 'run' %}d-block{% elif mode == 'review' %}d-none{% endif %}">
+    <a class="mc-quick-btn" href="{{ lore_board_href }}#npcs-section" title="Add NPC on Lore Board">+ NPC</a>
+    <a class="mc-quick-btn" href="{{ lore_board_href }}#pcs-section" title="Add Party Member on Lore Board">+ PC</a>
+    <a class="mc-quick-btn" href="{{ lore_board_href }}#locations-section" title="Add Location on Lore Board">+ Loc</a>
+    <a class="mc-quick-btn" href="{{ lore_board_href }}#factions-section" title="Add Faction on Lore Board">+ Faction</a>
+    <a class="mc-quick-btn" href="{{ lore_board_href }}#items-section" title="Add Item on Lore Board">+ Item</a>
+    <a class="mc-quick-btn" href="{{ lore_board_href }}#threads-section" title="Add Thread on Lore Board">+ Thread</a>
+  </div>
+
+  <div class="mc-ref-section {% if mode == 'prep' %}mc-panel-prep{% elif mode == 'run' %}mc-panel-run{% else %}d-none{% endif %}">
+    <h3 class="mc-ref-section-title">Mentioned NPCs</h3>
+    {% if linked_npcs %}
+      {% for npc in linked_npcs %}
+      {% set npc_flag = workspace_intel.npc_flags.get(npc.id) if workspace_intel else none %}
+      <div class="mc-ref-card">
+        <a href="{{ append_return_to('/campaigns/' ~ campaign.id ~ '/npcs/' ~ npc.id ~ '/edit', ws_return) }}"><strong>{{ npc.name }}</strong></a>
+        {% if npc_flag == 'returning' %}<span class="mc-intel-badge mc-intel-returning">returning</span>{% elif npc_flag == 'new' %}<span class="mc-intel-badge mc-intel-new">new</span>{% endif %}
+        {% if npc.role %}<p>{{ npc.role }}</p>{% elif npc.description %}<p>{{ npc.description | preview_text(120) }}</p>{% endif %}
+        {% if workspace_intel and workspace_intel.npc_histories.get(npc.id) %}
+        {% set entity_history = workspace_intel.npc_histories.get(npc.id) %}
+        {% set current_session_id = session.id %}
+        {% include "partials/workspace_ref_entity_history.html" %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p style="font-size: 12px; color: var(--muted);">Link NPCs in Session Workflow or session edit.</p>
+    {% endif %}
+  </div>
+
+  <div class="mc-ref-section">
+    <h3 class="mc-ref-section-title" style="color: var(--accent);">Active Locations</h3>
+    {% if linked_locations %}
+      {% for loc in linked_locations %}
+      {% set loc_flag = workspace_intel.location_flags.get(loc.id) if workspace_intel else none %}
+      <div class="mc-ref-card">
+        <a href="{{ append_return_to('/campaigns/' ~ campaign.id ~ '/locations/' ~ loc.id ~ '/edit', ws_return) }}"><strong>{{ loc.name }}</strong></a>
+        {% if loc_flag == 'returning' %}<span class="mc-intel-badge mc-intel-returning">returning</span>{% elif loc_flag == 'new' %}<span class="mc-intel-badge mc-intel-new">new</span>{% endif %}
+        {% if loc.description %}<p>{{ loc.description | preview_text(120) }}</p>{% endif %}
+        {% if workspace_intel and workspace_intel.location_histories.get(loc.id) %}
+        {% set entity_history = workspace_intel.location_histories.get(loc.id) %}
+        {% set current_session_id = session.id %}
+        {% include "partials/workspace_ref_entity_history.html" %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p style="font-size: 12px; color: var(--muted);">No locations linked to this session.</p>
+    {% endif %}
+  </div>
+
+  <div class="mc-ref-section">
+    <h3 class="mc-ref-section-title">Active Factions</h3>
+    {% if linked_factions %}
+      {% for faction in linked_factions %}
+      {% set faction_flag = workspace_intel.faction_flags.get(faction.id) if workspace_intel else none %}
+      <div class="mc-ref-card">
+        <a href="{{ append_return_to('/campaigns/' ~ campaign.id ~ '/factions/' ~ faction.id ~ '/edit', ws_return) }}"><strong>{{ faction.name }}</strong></a>
+        {% if faction_flag == 'returning' %}<span class="mc-intel-badge mc-intel-returning">returning</span>{% elif faction_flag == 'new' %}<span class="mc-intel-badge mc-intel-new">new</span>{% endif %}
+        {% if faction.summary %}<p>{{ faction.summary | preview_text(120) }}</p>{% elif faction.description %}<p>{{ faction.description | preview_text(120) }}</p>{% endif %}
+        {% if workspace_intel and workspace_intel.faction_histories.get(faction.id) %}
+        {% set entity_history = workspace_intel.faction_histories.get(faction.id) %}
+        {% set current_session_id = session.id %}
+        {% include "partials/workspace_ref_entity_history.html" %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p style="font-size: 12px; color: var(--muted);">No factions linked to this session.</p>
+    {% endif %}
+  </div>
+
+  <div class="mc-ref-section">
+    <h3 class="mc-ref-section-title">Active Items</h3>
+    {% if linked_items %}
+      {% for item in linked_items %}
+      {% set item_flag = workspace_intel.item_flags.get(item.id) if workspace_intel else none %}
+      <div class="mc-ref-card">
+        <a href="{{ append_return_to('/campaigns/' ~ campaign.id ~ '/items/' ~ item.id ~ '/edit', ws_return) }}"><strong>{{ item.name }}</strong></a>
+        {% if item_flag == 'returning' %}<span class="mc-intel-badge mc-intel-returning">returning</span>{% elif item_flag == 'new' %}<span class="mc-intel-badge mc-intel-new">new</span>{% endif %}
+        {% if item.description %}<p>{{ item.description | preview_text(120) }}</p>{% endif %}
+        {% if workspace_intel and workspace_intel.item_histories.get(item.id) %}
+        {% set entity_history = workspace_intel.item_histories.get(item.id) %}
+        {% set current_session_id = session.id %}
+        {% include "partials/workspace_ref_entity_history.html" %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p style="font-size: 12px; color: var(--muted);">No items linked to this session.</p>
+    {% endif %}
+  </div>
+
+  <div class="mc-ref-section">
+    <h3 class="mc-ref-section-title" style="color: var(--warning);">Active Plot Threads</h3>
+    {% if linked_threads %}
+      {% for thread in linked_threads %}
+      {% set thread_flag = workspace_intel.thread_flags.get(thread.id) if workspace_intel else none %}
+      <div class="mc-ref-card">
+        <a href="{{ append_return_to('/campaigns/' ~ campaign.id ~ '/threads/' ~ thread.id ~ '/edit', ws_return) }}"><strong>{{ thread.title }}</strong></a>
+        {% if thread_flag == 'dormant' %}<span class="mc-intel-badge mc-intel-dormant">dormant</span>{% elif thread_flag == 'new' %}<span class="mc-intel-badge mc-intel-new">new</span>{% elif thread_flag == 'unlinked' %}<span class="mc-intel-badge mc-intel-dormant">unlinked</span>{% endif %}
+        {% if thread.status %}
+        <span class="badge bg-{{ world_status_badge_class(thread.status, 'threads') }} ms-1">{{ world_status_label(thread.status, 'threads') }}</span>
+        {% endif %}
+        {% if thread.mystery_status %}
+        <span class="badge bg-secondary ms-1">{{ mystery_status_label(thread.mystery_status) }}</span>
+        {% endif %}
+        {% if thread.state_notes %}<p class="small text-muted mb-1">{{ thread.state_notes }}</p>{% elif thread.details %}<p>{{ thread.details | preview_text(120) }}</p>{% endif %}
+        {% if workspace_intel and workspace_intel.thread_open_clues.get(thread.id) %}
+        <ul class="small mb-1 ps-3" style="color: var(--muted);">
+          {% for clue in workspace_intel.thread_open_clues[thread.id] %}
+          <li>{{ clue }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if workspace_intel and workspace_intel.thread_histories.get(thread.id) %}
+        {% set entity_history = workspace_intel.thread_histories.get(thread.id) %}
+        {% set current_session_id = session.id %}
+        {% include "partials/workspace_ref_entity_history.html" %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p style="font-size: 12px; color: var(--muted);">No plot threads linked to this session.</p>
+    {% endif %}
+  </div>
+
+  <div class="mc-ref-section mc-panel-prep">
+    <h3 class="mc-ref-section-title">Session Prep</h3>
+    {% if session.next_session_prep %}
+    <div class="mc-ref-prep">{{ session.next_session_prep }}</div>
+    {% else %}
+    <p style="font-size: 12px; color: var(--muted);">Generate prep in <a href="{{ session_workflow_href }}">Session Workflow</a> or Campaign AI Review.</p>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="mc-ref-head">
+    <span class="mc-ref-label">In-Context References</span>
+  </div>
+  <p style="font-size: 12px; color: var(--muted); padding: 12px;">Select a session from the sidebar to see linked entities and prep.</p>
+{% endif %}
+</aside>
+{% endblock %}

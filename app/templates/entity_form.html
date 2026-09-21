@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+{% if message %}
+<div class="alert alert-info">{{ message }}</div>
+{% endif %}
+{% if entity_health %}
+<div class="d-flex align-items-center gap-2 mb-2">
+  <span class="badge bg-{{ entity_health.badge_class }}">{{ entity_health.score }}% · {{ entity_health.status_label }}</span>
+  {% if entity_health.missing %}
+  <span class="text-muted small" title="{{ entity_health_tooltip }}">Missing: {{ entity_health.missing | join(', ') }}</span>
+  {% endif %}
+</div>
+{% endif %}
+{% if entity_section_key is defined and entity_section_key == 'threads' %}
+{% set open_clue_lines = (entity.open_clues or '').splitlines() if entity.open_clues else [] %}
+{% set revealed_clue_lines = (entity.revealed_clues or '').splitlines() if entity.revealed_clues else [] %}
+<div class="mb-3 border rounded p-2">
+  <div class="d-flex flex-wrap gap-2 mb-2">
+    {% if entity.status %}<span class="badge bg-{{ world_status_badge_class(entity.status, 'threads') }}">{{ world_status_label(entity.status, 'threads') }}</span>{% endif %}
+    {% if entity.mystery_status and entity.mystery_status != 'unknown' %}<span class="badge bg-{{ mystery_status_badge_class(entity.mystery_status) }}">Mystery: {{ mystery_status_label(entity.mystery_status) }}</span>{% endif %}
+  </div>
+  {% if entity.state_notes %}<p class="small text-muted mb-2">{{ entity.state_notes }}</p>{% endif %}
+  {% if open_clue_lines %}
+  <div class="small mb-2"><strong>Open Clues</strong><ul class="mb-0 ps-3">{% for clue in open_clue_lines if clue.strip() %}<li>{{ clue }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  {% if revealed_clue_lines %}
+  <div class="small mb-2"><strong>Revealed Clues</strong><ul class="mb-0 ps-3">{% for clue in revealed_clue_lines if clue.strip() %}<li>{{ clue }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  {% if entity.secret_notes %}
+  <div class="small"><strong>Secret Notes</strong> <span class="badge bg-secondary">GM only</span><div class="text-preserve mt-1">{{ entity.secret_notes }}</div></div>
+  {% endif %}
+</div>
+{% elif entity_section_key is defined and entity_section_key in ['npcs', 'locations', 'factions', 'items', 'creatures'] and (entity.world_status or entity.state_notes) %}
+<div class="mb-3">
+  {% if entity.world_status and entity.world_status != 'unknown' %}
+  <span class="badge bg-{{ world_status_badge_class(entity.world_status, entity_section_key) }}">{{ world_status_label(entity.world_status, entity_section_key) }}</span>
+  {% endif %}
+  {% if entity.state_notes %}<p class="small text-muted mb-0 mt-1">{{ entity.state_notes }}</p>{% endif %}
+</div>
+{% endif %}
+
+<div class="card mb-3" id="entity-edit-form">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>{{ title }}</span>
+    {% if convert_action %}
+    <form action="{{ convert_action.url }}" method="post" class="mb-0" onsubmit="return confirm('{{ convert_action.confirm }}');">
+      {% if return_to %}
+      <input type="hidden" name="return_to" value="{{ return_to }}" />
+      {% endif %}
+      <button type="submit" class="btn btn-outline-warning btn-sm">{{ convert_action.label }}</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <form action="{{ action }}" method="post">
+      {% if return_to %}
+      <input type="hidden" name="return_to" value="{{ return_to }}" />
+      {% endif %}
+      {% for field in fields %}
+      <div class="mb-3"{% if field.reveal_target %} data-mc-reveal-target="{{ field.reveal_target }}"{% if not field.initially_visible %} hidden{% endif %}{% endif %}>
+        <label class="form-label">{{ field.label }}</label>
+        {% if field.type == 'textarea' %}
+        <textarea name="{{ field.name }}" class="form-control text-preserve" rows="{{ field.rows|default(3) }}">{{ field.value if field.value is defined else getattr(entity, field.name, '') }}</textarea>
+        {% elif field.type == 'select' %}
+        <select name="{{ field.name }}" class="form-select"{% if field.reveals %} data-mc-reveals="{{ field.reveals }}" data-mc-reveals-value="{{ field.reveals_value|default('other') }}"{% endif %}>
+          {% for option in field.options %}
+          <option value="{{ option.value }}" {% if option.selected is defined %}{% if option.selected %}selected{% endif %}{% elif (getattr(entity, field.name, '')|string) == (option.value|string) %}selected{% endif %}>{{ option.label }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input name="{{ field.name }}" class="form-control" value="{{ field.value if field.value is defined else getattr(entity, field.name, '') }}" {% if field.required %}required{% endif %} />
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      {% if select_fields %}
+      <div class="border-top pt-3 mb-2" id="entity-relationships">
+        <h2 class="h6 text-muted mb-3">Relationships</h2>
+        {% for select in select_fields %}
+        <div class="mb-3">
+          <label class="form-label">{{ select.label }}</label>
+          {% if select.options %}
+          {% set list_size = 8 if select.options|length > 8 else select.options|length %}
+          {% if list_size < 4 %}{% set list_size = 4 %}{% endif %}
+          <select name="{{ select.name }}" class="form-select mc-relationship-select" multiple size="{{ list_size }}">
+            {% for option in select.options %}
+            <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label }}</option>
+            {% endfor %}
+          </select>
+          {% else %}
+          <p class="text-muted small mb-0">
+            {% if select.empty_hint %}
+            {{ select.empty_hint }}
+            {% else %}
+            No {{ select.label|lower }} in this campaign yet.
+            {% endif %}
+          </p>
+          {% endif %}
+          <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) while clicking to select multiple. Deselect all to clear links.</div>
+          {% if select.name == 'selected_factions' %}
+          {% include "partials/inline_faction_create.html" %}
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+      <a href="{{ cancel_url }}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+  </div>
+</div>
+
+{% include "partials/entity_narrative_blocks.html" %}
+{% include "partials/entity_history_panel.html" %}
+{% include "partials/entity_relationship_history.html" %}
+{% include "partials/entity_coappearance.html" %}
+{% endblock %}

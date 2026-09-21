@@ -1,0 +1,114 @@
+{% if entity_history_panel %}
+<div class="card mb-3 mc-entity-history-panel">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>History</span>
+    <div class="d-flex align-items-center gap-2">
+      {% if entity_history_panel.world_status %}
+      <span class="badge bg-{{ entity_history_panel.world_status_badge_class }}">{{ entity_history_panel.world_status_label }}</span>
+      {% endif %}
+      {% if entity_history_panel.mystery_status_label %}
+      <span class="badge bg-secondary">{{ entity_history_panel.mystery_status_label }}</span>
+      {% endif %}
+      {% if entity_history_panel.status_badge == 'new' %}
+      <span class="mc-intel-badge mc-intel-new">new</span>
+      {% elif entity_history_panel.status_badge == 'dormant' %}
+      <span class="mc-intel-badge mc-intel-dormant">dormant</span>
+      {% elif entity_history_panel.status_badge == 'active' %}
+      <span class="mc-intel-badge mc-intel-returning">active</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body">
+    {% if entity_history_panel.state_notes %}
+    <p class="small text-muted mb-3">{{ entity_history_panel.state_notes }}</p>
+    {% endif %}
+    {% if entity_history_panel.open_clues %}
+    <div class="mb-3">
+      <h6 class="text-muted mb-1">Open Clues</h6>
+      <ul class="small mb-0 ps-3">{% for clue in entity_history_panel.open_clues %}<li>{{ clue }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    {% if entity_history_panel.first_seen %}
+    <div class="mb-3">
+      <h6 class="text-muted mb-1">First Seen</h6>
+      <p class="mb-0">
+        <a href="{{ session_workflow_url(campaign.id, entity_history_panel.first_seen.id) }}">{{ entity_history_panel.first_seen.title }}</a>
+        {% if entity_history_panel.first_seen.date %}<span class="text-muted small"> · {{ entity_history_panel.first_seen.date }}</span>{% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+    {% if entity_history_panel.last_seen %}
+    <div class="mb-3">
+      <h6 class="text-muted mb-1">Last Seen</h6>
+      <p class="mb-0">
+        <a href="{{ session_workflow_url(campaign.id, entity_history_panel.last_seen.id) }}">{{ entity_history_panel.last_seen.title }}</a>
+        {% if entity_history_panel.last_seen.date %}<span class="text-muted small"> · {{ entity_history_panel.last_seen.date }}</span>{% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+    {% if entity_history_panel.sessions %}
+    <div class="mb-3">
+      <h6 class="text-muted mb-2">Appears In Sessions</h6>
+      <ul class="list-unstyled mb-0">
+        {% for hist_session in entity_history_panel.sessions %}
+        <li class="mb-2 d-flex justify-content-between align-items-start gap-2 flex-wrap">
+          <div>
+            <a href="{{ session_workflow_url(campaign.id, hist_session.id) }}"><strong>{{ hist_session.title }}</strong></a>
+            {% if hist_session.date %}<span class="text-muted small"> · {{ hist_session.date }}</span>{% endif %}
+            {% if loop.first and loop.last %}
+            <span class="badge bg-secondary ms-1">only</span>
+            {% elif loop.first %}
+            <span class="badge bg-info ms-1">first</span>
+            {% elif loop.last %}
+            <span class="badge bg-success ms-1">latest</span>
+            {% endif %}
+          </div>
+          <a href="{{ workspace_url(campaign.id, session_id=hist_session.id, mode='prep') }}" class="btn btn-outline-primary btn-sm">Workspace</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if entity_history_panel.related %}
+    <div class="mb-3">
+      <h6 class="text-muted mb-2">Related Entities</h6>
+      {% for kind, rows in entity_history_panel.related.items() %}
+      {% if rows %}
+      <div class="mb-2">
+        <div class="small text-muted">{{ related_kind_labels[kind] }}</div>
+        <ul class="list-unstyled mb-0 small">
+          {% for row in rows %}
+          <li>
+            {% if row.edit_url %}<a href="{{ row.edit_url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="border-top pt-3">
+      <h6 class="text-muted mb-2">Statistics</h6>
+      <ul class="list-unstyled mb-0 small">
+        <li>Appears in {{ entity_history_panel.session_count }} session{{ 's' if entity_history_panel.session_count != 1 else '' }}</li>
+        <li>{{ entity_history_panel.relationship_count }} relationship{{ 's' if entity_history_panel.relationship_count != 1 else '' }}</li>
+        {% if entity_history_panel.created_at %}
+        <li>Created {{ entity_history_panel.created_at.strftime('%Y-%m-%d') }}</li>
+        {% endif %}
+        {% if entity_history_panel.updated_at %}
+        <li>Modified {{ entity_history_panel.updated_at.strftime('%Y-%m-%d') }}</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% elif entity_history_panel is defined %}
+<div class="alert alert-secondary py-2 px-3 mb-3 small">
+  No session links yet. Link this entity from Session Workflow or ingest review.
+</div>
+{% endif %}

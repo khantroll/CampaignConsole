@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set campaign_id = campaign.id %}
+
+<div class="mc-hero">
+  <span class="mc-hero-label">Lore Board</span>
+  <h1 class="mc-hero-title">{{ campaign.name }}</h1>
+  <p class="mc-hero-sub">{{ campaign.system or 'No system specified' }}</p>
+  <p class="mc-lore-board-tagline">Campaign entities, completeness, and session admin — open Workspace for live prep and play.</p>
+  {% if campaign.description %}
+  <p class="text-preserve" style="margin-top: 8px; color: var(--muted-variant);">{{ campaign.description }}</p>
+  {% endif %}
+</div>
+
+<div class="mc-command-grid">
+  <a class="mc-command-tile mc-command-tile-accent" href="/campaigns/{{ campaign.id }}/briefing">Brief Me</a>
+  <a class="mc-command-tile mc-command-tile-primary" href="{{ workspace_href | default(workspace_url(campaign.id)) }}">Workspace</a>
+  <a class="mc-command-tile" href="/campaigns/{{ campaign.id }}/ingest">Ingest Notes</a>
+  <a class="mc-command-tile" href="/campaigns/{{ campaign.id }}/ai/review">AI Review</a>
+  <a class="mc-command-tile" href="/campaigns/{{ campaign.id }}/search">Search</a>
+  <a class="mc-command-tile" href="/campaigns/{{ campaign.id }}/timeline">Timeline</a>
+  <a class="mc-command-tile" href="/campaigns/{{ campaign.id }}#sessions-section">Sessions</a>
+  <a class="mc-command-tile" href="/campaigns/{{ campaign.id }}#npcs-section">NPCs</a>
+  <a class="mc-command-tile" href="/campaigns/{{ campaign.id }}#pcs-section">Party Members</a>
+  <a class="mc-command-tile" href="/campaigns/{{ campaign.id }}/locations/admin">Location Admin</a>
+</div>
+
+<div class="mb-3 d-flex flex-wrap gap-2">
+  <a href="/" class="btn btn-secondary btn-sm">All Campaigns</a>
+  <a href="/campaigns/{{ campaign.id }}/export/markdown" class="btn btn-outline-success btn-sm">Export Markdown</a>
+  <a href="/campaigns/{{ campaign.id }}/backup/json" class="btn btn-outline-secondary btn-sm">Backup JSON</a>
+  <a href="/campaigns/{{ campaign.id }}/backup/db" class="btn btn-outline-secondary btn-sm">Backup SQLite</a>
+  <a href="/campaigns/{{ campaign.id }}/backup/markdown" class="btn btn-outline-secondary btn-sm">Export Zip</a>
+  <a href="/campaigns/{{ campaign.id }}/delete" class="btn btn-outline-danger btn-sm">Delete Campaign</a>
+  <a href="/llm/test" class="btn btn-outline-primary btn-sm">Test LLM</a>
+</div>
+
+<div class="row g-4">
+
+  <div class="col-lg-6">
+
+    {% include "partials/campaign_dashboard_summary.html" %}
+
+    {% include "partials/entity_completeness_widget.html" %}
+
+    {% include "partials/campaign_sessions_section.html" %}
+
+    <div class="card mb-3">
+
+      <div class="card-header">AI Notes / Future Prep</div>
+
+      <div class="card-body">
+
+        <p class="text-muted mb-0">Open a session for the full GM workflow (notes, analyze, prep drafts). Use Campaign AI Review here to generate prep for any session from campaign context.</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="col-lg-6">
+
+    {% with section_key='npcs', section_title='NPCs', items=npcs, action='npcs', fields=[('name','Name'), ('role','Role'), ('description','Description')], add_label='Add NPC', form_name='add-npcs', health_map=health_maps['npcs'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+
+    {% include "partials/campaign_entity_section.html" %}
+
+    {% endwith %}
+
+
+
+    {% with section_key='locations', section_title='Locations', items=locations, action='locations', fields=[('name','Name'), ('location_type','Type'), ('description','Description'), ('notes','Notes')], add_label='Add Location', form_name='add-locations', location_filter=location_filter, location_type_label=location_type_label, health_map=health_maps['locations'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+
+    {% include "partials/campaign_entity_section.html" %}
+
+    {% endwith %}
+
+
+
+    {% with section_key='factions', section_title='Factions', items=factions, action='factions', fields=[('name','Name'), ('faction_type','Type'), ('summary','Description'), ('plot_notes','Plot Notes')], add_label='Add Faction', form_name='add-factions', faction_type_label=faction_type_label, health_map=health_maps['factions'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+
+    {% include "partials/campaign_entity_section.html" %}
+
+    {% endwith %}
+
+
+
+    {% with section_key='items', section_title='Items', items=items, action='items', fields=[('name','Name'), ('item_type','Type'), ('description','Description'), ('origin','Origin'), ('plot_notes','Plot Notes')], add_label='Add Item', form_name='add-items', item_type_label=item_type_label, item_type_options=item_type_options, health_map=health_maps['items'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+
+    {% include "partials/campaign_entity_section.html" %}
+
+    {% endwith %}
+
+
+
+    {% with section_key='creatures', section_title='Creatures', items=creatures, action='creatures', fields=[('name','Name'), ('classification','Classification'), ('habitat','Habitat'), ('threat_level','Threat Level'), ('physical_description','Physical Description'), ('special_traits','Special Traits & Abilities'), ('campaign_context_tactics','Campaign Context & Tactics'), ('notes','Additional Notes')], add_label='Add Creature', form_name='add-creatures', creature_type_label=creature_type_label, health_map=health_maps['creatures'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+
+    {% include "partials/campaign_entity_section.html" %}
+
+    {% endwith %}
+
+
+
+    {% with section_key='threads', section_title='Plot Threads', items=threads, action='threads', fields=[('title','Title'), ('status','Status'), ('details','Details')], add_label='Add Plot Thread', form_name='add-threads', health_map=health_maps['threads'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+
+    {% include "partials/campaign_entity_section.html" %}
+
+    {% endwith %}
+
+
+
+    {% with section_key='pcs', section_title='Party Members', items=pc_notes, action='pcs', fields=[('character_name','Character'), ('character_archetype','Archetype'), ('description','Description'), ('signature_gear','Signature Gear'), ('key_ties_history','Key Ties & History'), ('campaign_role_plot_notes','Campaign Role & Plot Notes'), ('notes','Additional Notes')], add_label='Add Party Member', form_name='add-pcs', health_map=health_maps['pcs'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+
+    {% include "partials/campaign_entity_section.html" %}
+
+    {% endwith %}
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+

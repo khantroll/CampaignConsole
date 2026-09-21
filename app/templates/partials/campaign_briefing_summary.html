@@ -1,0 +1,26 @@
+{% if briefing.narrative %}
+<section class="mc-briefing-section mc-briefing-summary">
+  <h2>Summary</h2>
+  {% if briefing.narrative.ai %}
+  <p class="mc-briefing-narrative">{{ briefing.narrative.ai }}</p>
+  <p class="mc-briefing-meta mb-2">
+    AI summary
+    {% if briefing.narrative.ai_generated_at %} · {{ briefing.narrative.ai_generated_at.strftime('%Y-%m-%d %H:%M UTC') }}{% endif %}
+    {% if briefing.narrative.ai_provider %} · {{ briefing.narrative.ai_provider }}{% endif %}
+  </p>
+  {% else %}
+  <p class="mc-briefing-narrative">{{ briefing.narrative.local }}</p>
+  {% endif %}
+  {% if not print_view is defined or not print_view %}
+  {% if briefing.narrative.llm_available %}
+  <form action="/campaigns/{{ campaign.id }}/briefing/generate-narrative" method="post" class="mt-2">
+    <button type="submit" class="btn btn-outline-info btn-sm">
+      {% if briefing.narrative.ai %}Refresh AI Summary{% else %}Generate AI Summary{% endif %}
+    </button>
+  </form>
+  {% else %}
+  <p class="text-muted small mb-0 mt-2">Configure an LLM provider to generate an AI summary paragraph.</p>
+  {% endif %}
+  {% endif %}
+</section>
+{% endif %}

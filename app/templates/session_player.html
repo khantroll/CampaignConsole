@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <p class="text-muted mb-1">Player view · {{ campaign.name }}</p>
+      <h1>{{ session.title }}</h1>
+      <p class="text-muted mb-0">{{ session.date or 'Date not set' }}</p>
+    </div>
+    <a href="{{ workspace_href }}" class="btn btn-primary">Workspace</a>
+    <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}" class="btn btn-outline-secondary">GM View</a>
+  </div>
+</div>
+
+<div class="alert alert-info">
+  This page shows only player-safe recap content. GM notes, prep, and secrets are hidden.
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">Session Recap</div>
+  <div class="card-body">
+    {% if session.player_recap %}
+    <div class="markdown-body">{{ session.player_recap | markdown }}</div>
+    {% else %}
+    <p class="text-muted mb-0">No player recap has been published for this session yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if session.npcs or session.locations or session.factions or session.items or session.creatures or session.plot_threads %}
+<div class="card mb-4">
+  <div class="card-header">What Happened</div>
+  <div class="card-body">
+    {% if session.npcs %}
+    <h5 class="h6">NPCs</h5>
+    <ul class="mb-3">
+      {% for npc in session.npcs %}
+      <li>
+        <strong>{{ npc.name }}</strong>{% if npc.role %} — {{ npc.role }}{% endif %}
+        {% if npc.description %}<div class="text-muted small text-preserve">{{ npc.description }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if session.locations %}
+    <h5 class="h6">Locations</h5>
+    <ul class="mb-3">
+      {% for location in session.locations %}
+      <li>
+        <strong>{{ location.name }}</strong>
+        {% if location.description %}<div class="text-muted small text-preserve">{{ location.description }}</div>{% endif %}
+        {% if location.notes %}<div class="text-muted small text-preserve mt-1">{{ location.notes }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if session.factions %}
+    <h5 class="h6">Factions</h5>
+    <ul class="mb-3">
+      {% for faction in session.factions %}
+      <li>
+        <strong>{{ faction.name }}</strong>
+        {% if faction.summary %}<div class="text-muted small text-preserve">{{ faction.summary }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if session.items %}
+    <h5 class="h6">Items</h5>
+    <ul class="mb-3">
+      {% for item in session.items %}
+      <li>
+        <strong>{{ item.name }}</strong>
+        {% if item.description %}<div class="text-muted small text-preserve">{{ item.description }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if session.creatures %}
+    <h5 class="h6">Creatures</h5>
+    <ul class="mb-3">
+      {% for creature in session.creatures %}
+      <li>
+        <strong>{{ creature.name }}</strong>
+        {% if creature.description %}<div class="text-muted small text-preserve">{{ creature.description }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if session.plot_threads %}
+    <h5 class="h6">Plot Threads</h5>
+    <ul class="mb-0">
+      {% for thread in session.plot_threads %}
+      <li>
+        <strong>{{ thread.title }}</strong>{% if thread.status %} — {{ thread.status }}{% endif %}
+        {% if thread.details %}<div class="text-muted small text-preserve">{{ thread.details }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% macro world_status_badge(entity, entity_kind) %}
+{% set status_value = entity.status if entity_kind == 'threads' else entity.world_status %}
+{% if status_value %}
+<span class="badge bg-{{ world_status_badge_class(status_value, entity_kind) }} mc-world-status-badge">
+  {{ world_status_label(status_value, entity_kind) }}
+</span>
+{% if entity.state_notes %}
+<div class="small text-muted mt-1">{{ entity.state_notes }}</div>
+{% endif %}
+{% endif %}
+{% endmacro %}
+
+{% macro mystery_status_badge(thread) %}
+{% if thread.mystery_status and thread.mystery_status != 'unknown' %}
+<span class="badge bg-{{ mystery_status_badge_class(thread.mystery_status) }} mc-mystery-status-badge">
+  Mystery: {{ mystery_status_label(thread.mystery_status) }}
+</span>
+{% endif %}
+{% endmacro %}
+
+{% macro clue_list_block(label, clues, gm_only=false) %}
+{% if clues %}
+<div class="mb-2">
+  <div class="small text-muted">
+    {{ label }}
+    {% if gm_only %}<span class="badge bg-secondary ms-1">GM only</span>{% endif %}
+  </div>
+  <ul class="small mb-0 ps-3">
+    {% for clue in clues %}
+    <li>{{ clue }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endmacro %}

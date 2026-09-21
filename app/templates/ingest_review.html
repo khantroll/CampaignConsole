@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <h1>Review Ingested Candidates</h1>
+      <p class="text-muted mb-0">Approve session links and optional entity relationships. Named characters are not assumed to be PCs or NPCs until you choose.</p>
+    </div>
+  </div>
+</div>
+
+<form action="/campaigns/{{ campaign.id }}/ingest/save" method="post" id="ingest-review-form">
+  <input type="hidden" name="session_title" value="{{ session_title }}" />
+  <input type="hidden" name="session_date" value="{{ session_date }}" />
+  <textarea hidden name="raw_notes">{{ raw_notes }}</textarea>
+  {% if message %}
+  <div class="alert {% if 'partially parsed' in message %}alert-info{% else %}alert-warning{% endif %}">{{ message }}</div>
+  {% endif %}
+
+  {% if known_party_names %}
+  <div class="alert alert-info py-2">
+    Known party members for this campaign: {{ known_party_names | join(', ') }}
+  </div>
+  {% endif %}
+
+  {% if matched_session %}
+  <div class="alert alert-warning">
+    <strong>Matching session found.</strong>
+    A session titled <strong>{{ matched_session.title }}</strong>
+    {% if matched_session.date %}({{ matched_session.date }}){% endif %}
+    already exists. Choose whether to update it or create a duplicate.
+    <div class="mt-3">
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="ingest_save_mode" id="ingest-save-update" value="update_existing" checked />
+        <label class="form-check-label" for="ingest-save-update">
+          Update existing session — replace notes and session entity links (keeps recaps, analysis, and workspace notes)
+        </label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="ingest_save_mode" id="ingest-save-create" value="create_new" />
+        <label class="form-check-label" for="ingest-save-create">
+          Create new session — keep both records
+        </label>
+      </div>
+    </div>
+    <input type="hidden" name="matched_session_id" value="{{ matched_session.id }}" />
+  </div>
+  {% else %}
+  <input type="hidden" name="ingest_save_mode" value="create_new" />
+  {% endif %}
+
+  {% for key, values in candidate_links.items() %}
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>
+        {% if key == 'PartyMembers' %}Party Members Present
+        {% elif key == 'NPCs' %}Matched NPCs (session links)
+        {% elif key == 'UnclassifiedCharacters' %}Unclassified Characters
+        {% elif key == 'Locations' %}Extracted Locations (session links)
+        {% elif key == 'Factions' %}Extracted Factions (session links)
+        {% elif key == 'Items' %}Extracted Items (session links)
+        {% elif key == 'Creatures' %}Extracted Creatures (session links)
+        {% elif key == 'PlotThreads' %}Extracted Plot Threads (session links)
+        {% else %}{{ key }}{% endif %}
+      </span>
+      {% if key == 'PartyMembers' and values %}
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-secondary" data-party-action="skip-all">Skip all PCs</button>
+        <button type="button" class="btn btn-outline-primary" data-party-action="mark-all">Use all existing PCs</button>
+      </div>
+      {% elif key == 'UnclassifiedCharacters' and values %}
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-secondary" data-unclassified-action="skip-all">Skip all</button>
+        <button type="button" class="btn btn-outline-primary" data-unclassified-action="create-npc-all">Create all as NPCs</button>
+      </div>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      {% if key in ['PartyMembers', 'NPCs', 'UnclassifiedCharacters', 'Locations', 'Factions', 'Items', 'Creatures', 'PlotThreads'] %}
+        {% if values %}
+          <p class="text-muted small">
+            {% if key == 'PartyMembers' %}
+            Names that exactly match an existing party member. Nothing is created automatically.
+            {% elif key == 'NPCs' %}
+            Names that exactly match an existing NPC. Nothing is created automatically.
+            {% elif key == 'UnclassifiedCharacters' %}
+            New names found in the notes. Choose Create NPC, Create PC, or Skip. Default is Create NPC, but nothing is saved until you submit.
+            {% elif key == 'Locations' %}
+            Scene features (chests, passages, pools) are skipped by default. Major and sub-locations default to create when no existing match is found.
+            {% else %}
+            Choose how each extracted name links to this session only. Skipped names are not linked.
+            {% endif %}
+          </p>
+          {% for candidate in values %}
+          <div class="mb-3">
+            <label class="form-label">
+              {{ candidate.candidate }}
+              {% if key == 'Locations' and candidate.location_type_label %}
+              <span class="badge bg-secondary">{{ candidate.location_type_label }}</span>
+              {% if candidate.extraction_confidence is not none %}
+              <span class="text-muted small">({{ (candidate.extraction_confidence * 100) | round(0) | int }}% confidence)</span>
+              {% endif %}
+              {% endif %}
+            </label>
+            <select
+              class="form-select {% if key == 'PartyMembers' %}party-member-select{% elif key == 'UnclassifiedCharacters' %}unclassified-character-select{% endif %}"
+              name="{% if key == 'PartyMembers' %}selected_party_links{% elif key == 'NPCs' %}selected_npc_links{% elif key == 'UnclassifiedCharacters' %}selected_unclassified_links{% elif key == 'Locations' %}selected_location_links{% elif key == 'Factions' %}selected_faction_links{% elif key == 'Items' %}selected_item_links{% elif key == 'Creatures' %}selected_creature_links{% elif key == 'PlotThreads' %}selected_thread_links{% endif %}"
+            >
+              {% for option in candidate.options %}
+              <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted">No candidates found.</p>
+        {% endif %}
+      {% elif key == 'SecretsClues' %}
+        {% if values %}
+        <div class="row gy-2">
+          {% for value in values %}
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="{{ key }}-{{ loop.index }}" name="selected_secretsclues" value="{{ value }}" checked />
+              <label class="form-check-label" for="{{ key }}-{{ loop.index }}">{{ value }}</label>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+          <p class="text-muted">No secrets or clues suggested.</p>
+        {% endif %}
+      {% elif key == 'UnresolvedHooks' %}
+        {% if values %}
+        <div class="row gy-2">
+          {% for value in values %}
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="{{ key }}-{{ loop.index }}" name="selected_unresolvedhooks" value="{{ value }}" checked />
+              <label class="form-check-label" for="{{ key }}-{{ loop.index }}">{{ value }}</label>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+          <p class="text-muted">No unresolved hooks suggested.</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if clue_review and clue_review.clue_rows %}
+  <input type="hidden" name="ingest_clues_json" value="{{ clue_review.clue_rows | map(attribute='text') | list | tojson }}" />
+  <div class="card mb-3">
+    <div class="card-header">Suggested Clues (plot thread updates)</div>
+    <div class="card-body">
+      <p class="text-muted small">Approve clues to attach to plot threads. Nothing is saved until you submit. Skipped clues remain available in Secrets/Clues below for session prep only.</p>
+      {% for row in clue_review.clue_rows %}
+      <div class="mb-3">
+        <label class="form-label">
+          {{ row.text }}
+          <span class="badge bg-{% if row.suggested_kind == 'revealed' %}success{% else %}info{% endif %}">{{ row.suggested_kind_label }}</span>
+          {% if row.matched_thread and row.confidence >= 0.35 %}
+          <span class="text-muted small">→ suggested: {{ row.matched_thread.title }}</span>
+          {% endif %}
+        </label>
+        <select class="form-select" name="selected_clue_actions">
+          {% for option in row.options %}
+          <option value="{{ row.index }}|{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if clue_review.unassigned_clues %}
+  <div class="card mb-3 border-warning">
+    <div class="card-header text-warning">Unassigned Clues</div>
+    <div class="card-body">
+      <p class="text-muted small">These clues could not be confidently matched to an existing plot thread. Choose attach, create thread, or skip above.</p>
+      <ul class="small mb-0">
+        {% for row in clue_review.unassigned_clues %}
+        <li>{{ row.text }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <div class="card mb-3">
+    <div class="card-header">Optional Entity Relationships</div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">Optional links between entities. Only checked relationships are created. Existing entity relationships are preserved and not removed.</p>
+      {% if relationship_options %}
+      <div class="row gy-2">
+        {% for option in relationship_options %}
+        <div class="col-12">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="entity-rel-{{ loop.index }}"
+              name="selected_entity_relationships"
+              value="{{ option.value }}"
+              {% if option.checked %}checked{% endif %}
+            />
+            <label class="form-check-label" for="entity-rel-{{ loop.index }}">
+              {{ option.label }}
+              {% if option.confidence is not none %}
+              <span class="text-muted small">({{ (option.confidence * 100) | round(0) | int }}% confidence, {{ option.source }})</span>
+              {% endif %}
+            </label>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">No explicit entity relationships were detected in the notes.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Review Debug</div>
+    <div class="card-body">
+      <p class="text-muted small">Suggested bucket, action, match, and confidence for each extracted candidate.</p>
+      {% if debug_rows %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Bucket</th>
+              <th>Action</th>
+              <th>Matched Record</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in debug_rows %}
+            <tr>
+              <td>{{ row.candidate }}</td>
+              <td>{{ row.bucket }}</td>
+              <td>{{ row.action }}</td>
+              <td>{{ row.matched_record or '—' }}</td>
+              <td>{% if row.confidence is not none %}{{ (row.confidence * 100) | round(0) | int }}%{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">No extracted candidates to show.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-success">Save Selected Items and Create Session</button>
+</form>
+
+<script>
+  (function () {
+    function setPartySelects(matchPrefix) {
+      document.querySelectorAll(".party-member-select").forEach(function (select) {
+        var match = Array.from(select.options).find(function (option) {
+          return option.value.startsWith(matchPrefix);
+        });
+        if (match) {
+          select.value = match.value;
+        } else if (matchPrefix === "skip") {
+          select.value = "skip";
+        }
+      });
+    }
+
+    document.querySelectorAll("[data-party-action]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var action = button.getAttribute("data-party-action");
+        if (action === "skip-all") {
+          setPartySelects("skip");
+        } else if (action === "mark-all") {
+          setPartySelects("party:existing:");
+        }
+      });
+    });
+
+    function setUnclassifiedSelects(matchPrefix) {
+      document.querySelectorAll(".unclassified-character-select").forEach(function (select) {
+        var match = Array.from(select.options).find(function (option) {
+          return option.value.startsWith(matchPrefix);
+        });
+        if (match) {
+          select.value = match.value;
+        } else if (matchPrefix === "skip") {
+          select.value = "skip";
+        }
+      });
+    }
+
+    document.querySelectorAll("[data-unclassified-action]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var action = button.getAttribute("data-unclassified-action");
+        if (action === "skip-all") {
+          setUnclassifiedSelects("skip");
+        } else if (action === "create-npc-all") {
+          setUnclassifiedSelects("npc:new:");
+        }
+      });
+    });
+  })();
+</script>
+{% endblock %}

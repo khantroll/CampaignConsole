@@ -1,0 +1,37 @@
+{% if relationship_history and relationship_history.events %}
+<div class="card mb-3 mc-relationship-history">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Relationship History</span>
+    <span class="text-muted small">{{ relationship_history.event_count }} change{{ 's' if relationship_history.event_count != 1 else '' }}</span>
+  </div>
+  <ul class="list-group list-group-flush">
+    {% for event in relationship_history.events %}
+    <li class="list-group-item d-flex justify-content-between align-items-start gap-2 flex-wrap">
+      <div>
+        <span class="badge {% if event.action == 'linked' %}bg-success{% else %}bg-secondary{% endif %} me-1">{{ event.action_label }}</span>
+        <span class="text-muted small">{{ event.partner_kind_label }}:</span>
+        {% if event.partner_edit_url %}
+        <a href="{{ event.partner_edit_url }}">{{ event.partner_name }}</a>
+        {% else %}
+        <strong>{{ event.partner_name }}</strong>
+        {% endif %}
+        <span class="text-muted small"> · {{ event.source_label }}</span>
+        {% if event.created_at %}
+        <span class="text-muted small"> · {{ event.created_at.strftime('%Y-%m-%d') }}</span>
+        {% endif %}
+      </div>
+      {% if event.session_id %}
+      <div class="d-flex gap-1 flex-shrink-0">
+        <a href="{{ session_workflow_url(campaign.id, event.session_id) }}" class="btn btn-outline-secondary btn-sm">Sessions</a>
+        <a href="{{ workspace_url(campaign.id, session_id=event.session_id, mode='prep') }}" class="btn btn-outline-primary btn-sm">Workspace</a>
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% elif relationship_history is defined %}
+<div class="alert alert-secondary py-2 px-3 mb-3 small">
+  No relationship changes recorded yet. Edits and ingest review will track links going forward.
+</div>
+{% endif %}

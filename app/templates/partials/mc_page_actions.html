@@ -1,0 +1,12 @@
+{% if campaign %}
+<nav class="mc-hub-actions mb-3 d-flex flex-wrap gap-2 align-items-center">
+  {% set ws_href = workspace_href | default(workspace_url(campaign.id, session_id=session.id if session else none, mode=workspace_mode | default('prep'))) %}
+  {% set sw_href = session_workflow_href | default(session_workflow_url(campaign.id, session.id if session else none)) %}
+  {% set lb_href = lore_board_href | default(lore_board_url(campaign.id)) %}
+  <a class="mc-btn mc-btn-primary {% if active_nav == 'workspace' %}is-active{% endif %}" href="{{ ws_href }}">Back to Workspace</a>
+  {% if session %}
+  <a class="mc-btn mc-btn-ghost {% if active_nav == 'sessions' %}is-active{% endif %}" href="{{ sw_href }}">Session Workflow</a>
+  {% endif %}
+  <a class="mc-btn mc-btn-ghost {% if active_nav == 'dashboard' %}is-active{% endif %}" href="{{ lb_href }}">Lore Board</a>
+</nav>
+{% endif %}

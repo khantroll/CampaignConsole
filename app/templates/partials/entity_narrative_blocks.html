@@ -1,0 +1,41 @@
+{% if entity_narrative_blocks %}
+<div class="card mb-3">
+  <div class="card-header">Narrative Blocks</div>
+  <div class="card-body small">
+    {% if entity_narrative_blocks.scenes %}
+    <h6 class="text-muted">Scenes</h6>
+    <ul class="mb-2">
+      {% for row in entity_narrative_blocks.scenes %}
+      <li>
+        <strong>{{ row.block.title }}</strong>
+        {% if row.session %}<span class="text-muted"> · {{ row.session.title }}</span>{% endif %}
+        <span class="badge bg-secondary">{{ row.block.status }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if entity_narrative_blocks.encounters %}
+    <h6 class="text-muted">Encounters</h6>
+    <ul class="mb-2">
+      {% for row in entity_narrative_blocks.encounters %}
+      <li>
+        <strong>{{ row.block.title }}</strong>
+        {% if row.session %}<span class="text-muted"> · {{ row.session.title }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if entity_narrative_blocks.objectives %}
+    <h6 class="text-muted">Objectives</h6>
+    <ul class="mb-0">
+      {% for row in entity_narrative_blocks.objectives %}
+      <li>
+        <strong>{{ row.block.title }}</strong>
+        {% if row.session %}<span class="text-muted"> · {{ row.session.title }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

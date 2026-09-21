@@ -1,0 +1,234 @@
+{% set s = briefing.sections if briefing.sections is defined else none %}
+{% if not print_view is defined %}{% set print_view = false %}{% endif %}
+
+{% if s and s.campaign_health and not print_view %}
+<section class="mc-briefing-section mc-briefing-health">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+      <h2 class="h5 mb-2">Campaign Health</h2>
+      <p class="mb-1">
+        <span class="badge bg-{{ s.campaign_health.badge_class }}">Campaign Health: {{ s.campaign_health.average }}%</span>
+      </p>
+      <p class="mc-briefing-meta mb-0">
+        NPC Coverage: {{ s.campaign_health.npc_coverage }}%
+        · Location Coverage: {{ s.campaign_health.location_coverage }}%
+        · Thread Coverage: {{ s.campaign_health.thread_coverage }}%
+      </p>
+    </div>
+    {% if s.quick_actions %}
+    <div>
+      <h2 class="h6 text-muted mb-2">Quick Actions</h2>
+      <div class="d-flex flex-wrap gap-2">
+        {% for action in s.quick_actions %}
+        <a href="{{ action.href }}" class="btn btn-outline-primary btn-sm">{{ action.label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section class="mc-briefing-section" id="last-session">
+  <h2>Last Session</h2>
+  {% if s and s.last_session %}
+  <p>
+    <strong>{% if print_view %}{{ s.last_session.session.title }}{% else %}<a href="{{ session_workflow_url(campaign.id, s.last_session.session.id) }}">{{ s.last_session.session.title }}</a>{% endif %}</strong>
+    {% if s.last_session.session.date %}<span class="mc-briefing-meta"> · {{ s.last_session.session.date }}</span>{% endif %}
+  </p>
+  {% if s.last_session.recap_preview %}
+  <p class="mc-briefing-narrative">{{ s.last_session.recap_preview }}</p>
+  {% else %}
+  <p class="text-muted small">No recap or analysis recorded yet.</p>
+  {% endif %}
+  {% if not print_view %}
+  <div class="mc-briefing-actions">
+    <a href="{{ session_workflow_url(campaign.id, s.last_session.session.id) }}">Open Session</a>
+    <a href="{{ workspace_url(campaign.id, session_id=s.last_session.session.id, mode='prep') }}">Workspace</a>
+  </div>
+  {% endif %}
+  {% else %}
+  <p class="text-muted mb-0">No sessions yet.</p>
+  {% endif %}
+</section>
+
+<section class="mc-briefing-section" id="active-threads">
+  <h2>Active Plot Threads</h2>
+  {% if s and s.active_threads %}
+  <ul class="list-unstyled mb-0">
+    {% for row in s.active_threads %}
+    <li class="mb-2">
+      {% if print_view %}{{ row.thread.title }}{% else %}<a href="/campaigns/{{ campaign.id }}/threads/{{ row.thread.id }}/edit">{{ row.thread.title }}</a>{% endif %}
+      {% if row.thread.status %}<span class="mc-briefing-meta"> · {{ row.thread.status }}</span>{% endif %}
+      {% if row.thread.importance %}<span class="mc-briefing-meta"> · {{ row.thread.importance }}</span>{% endif %}
+      {% if row.last_session %}<span class="mc-briefing-meta"> · last: {{ row.last_session.title }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">No active plot threads.</p>
+  {% endif %}
+</section>
+
+<section class="mc-briefing-section" id="important-npcs">
+  <h2>Important NPCs</h2>
+  {% if s and s.important_npcs %}
+  <ul class="list-unstyled mb-0">
+    {% for row in s.important_npcs %}
+    <li class="mb-2">
+      {% if print_view %}{{ row.npc.name }}{% else %}<a href="/campaigns/{{ campaign.id }}/npcs/{{ row.npc.id }}/edit">{{ row.npc.name }}</a>{% endif %}
+      {% if row.status %}<span class="mc-briefing-meta"> · {{ row.status }}</span>{% endif %}
+      {% if row.last_seen_title %}<span class="mc-briefing-meta"> · last seen: {{ row.last_seen_title }}</span>{% endif %}
+      {% if row.thread_link_count %}<span class="mc-briefing-meta"> · {{ row.thread_link_count }} active thread link{{ 's' if row.thread_link_count != 1 else '' }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">Link NPCs to recent sessions to surface important characters.</p>
+  {% endif %}
+</section>
+
+<section class="mc-briefing-section" id="recent-developments">
+  <h2>Recent Developments</h2>
+  {% if s and s.recent_developments %}
+  <ul class="list-unstyled mb-0">
+    {% for row in s.recent_developments %}
+    <li class="mb-3">
+      <strong>{{ row.label }}</strong>
+      {% if row.session %}<span class="mc-briefing-meta"> · {% if print_view %}{{ row.session.title }}{% else %}<a href="{{ session_workflow_url(campaign.id, row.session.id) }}">{{ row.session.title }}</a>{% endif %}</span>{% endif %}
+      <p class="mb-0 small">{{ row.text }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">Run session analysis or add recaps to populate recent developments.</p>
+  {% endif %}
+</section>
+
+<section class="mc-briefing-section" id="unresolved-questions">
+  <h2>Unresolved Questions</h2>
+  {% if s and s.unresolved_questions %}
+  <ul class="list-unstyled mb-0">
+    {% for row in s.unresolved_questions %}
+    <li class="mb-2">
+      {{ row.text }}
+      <span class="mc-briefing-meta"> · {{ row.source }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">No open questions extracted from threads, prep, or analysis.</p>
+  {% endif %}
+</section>
+
+{% if s and s.world_state %}
+<section class="mc-briefing-section" id="open-mysteries">
+  <h2>Open Mysteries</h2>
+  {% if s.world_state.open_mysteries %}
+  <ul class="list-unstyled mb-0">
+    {% for row in s.world_state.open_mysteries %}
+    <li class="mb-3">
+      {% if print_view %}{{ row.thread.title }}{% else %}<a href="/campaigns/{{ campaign.id }}/threads/{{ row.thread.id }}/edit">{{ row.thread.title }}</a>{% endif %}
+      <span class="mc-briefing-meta"> · {{ row.status_label }} · {{ row.mystery_label }}</span>
+      <ul class="small mb-0 ps-3">{% for clue in row.open_clues %}<li>{{ clue }}</li>{% endfor %}</ul>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">No plot threads with open clues.</p>
+  {% endif %}
+</section>
+
+<section class="mc-briefing-section" id="unrevealed-clues">
+  <h2>Unrevealed / Open Clues</h2>
+  {% if s.world_state.unrevealed_clues %}
+  <ul class="list-unstyled mb-0">
+    {% for row in s.world_state.unrevealed_clues %}
+    <li class="mb-1">{{ row.clue }} <span class="mc-briefing-meta">· {% if print_view %}{{ row.thread.title }}{% else %}<a href="/campaigns/{{ campaign.id }}/threads/{{ row.thread.id }}/edit">{{ row.thread.title }}</a>{% endif %}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">No open clues recorded.</p>
+  {% endif %}
+</section>
+
+<section class="mc-briefing-section" id="revealed-clues">
+  <h2>Recently Revealed Clues</h2>
+  {% if s.world_state.recently_revealed_clues %}
+  <ul class="list-unstyled mb-0">
+    {% for row in s.world_state.recently_revealed_clues %}
+    <li class="mb-1">{{ row.clue }} <span class="mc-briefing-meta">· {% if print_view %}{{ row.thread.title }}{% else %}<a href="/campaigns/{{ campaign.id }}/threads/{{ row.thread.id }}/edit">{{ row.thread.title }}</a>{% endif %}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">No revealed clues recorded.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="mc-briefing-section" id="dormant-threads">
+  <h2>Dormant Threads</h2>
+  {% if s and s.dormant_threads %}
+  <ul class="list-unstyled mb-0">
+    {% for row in s.dormant_threads %}
+    <li class="mb-2">
+      {% if print_view %}{{ row.thread.title }}{% else %}<a href="/campaigns/{{ campaign.id }}/threads/{{ row.thread.id }}/edit">{{ row.thread.title }}</a>{% endif %}
+      {% if row.never_linked %}
+      <span class="mc-briefing-meta"> · never linked to a session</span>
+      {% elif row.last_session %}
+      <span class="mc-briefing-meta"> · last advanced: {{ row.last_session.title }}</span>
+      {% if row.sessions_since is not none %}<span class="mc-briefing-meta"> · dormant: {{ row.sessions_since }} session{{ 's' if row.sessions_since != 1 else '' }}</span>{% endif %}
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">No dormant threads in the current intelligence window.</p>
+  {% endif %}
+</section>
+
+<section class="mc-briefing-section" id="needs-attention">
+  <h2>Needs Attention</h2>
+  {% if s and s.needs_attention and s.needs_attention.lines %}
+  <ul class="mb-3">
+    {% for line in s.needs_attention.lines %}
+    <li>{{ line.text }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-3">Nothing flagged right now.</p>
+  {% endif %}
+  {% if s and s.needs_attention and s.needs_attention.needs_attention_items %}
+  <h3 class="h6 text-muted">Incomplete Entities</h3>
+  <ul class="list-unstyled mb-0">
+    {% for item in s.needs_attention.needs_attention_items %}
+    <li class="mb-2">
+      <span class="mc-briefing-badge">{{ item.type_badge }}</span>
+      {% if print_view %}{{ item.name }}{% else %}<a href="{{ item.edit_url }}">{{ item.name }}</a>{% endif %}
+      <span class="mc-briefing-meta"> · {{ item.score }}% complete</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if s and s.needs_attention and s.needs_attention.unanalyzed_sessions %}
+  <h3 class="h6 text-muted mt-3">Unanalyzed Sessions</h3>
+  <ul class="list-unstyled mb-0">
+    {% for session in s.needs_attention.unanalyzed_sessions %}
+    <li class="mb-1">
+      {% if print_view %}{{ session.title }}{% else %}<a href="{{ session_workflow_url(campaign.id, session.id) }}">{{ session.title }}</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+{% set intel = briefing.signals %}
+{% if intel and (intel.stale_count or (intel.dormant_threads and not (s and s.dormant_threads))) %}
+<section class="mc-briefing-section" id="attention-required">
+  <h2>Stale Entities</h2>
+  {% if intel.stale_count %}
+  {% set use_briefing_headings = true %}
+  {% include "partials/stale_entity_signal_lists.html" %}
+  {% endif %}
+</section>
+{% endif %}

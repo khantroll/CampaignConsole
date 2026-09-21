@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .provider-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+  }
+  .provider-opt {
+    text-align: left;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    background: var(--panel);
+    color: var(--text);
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .provider-opt:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(0, 218, 243, 0.25);
+  }
+  .provider-opt.selected {
+    border-color: var(--accent);
+    background: var(--panel-high);
+    box-shadow: 0 0 8px rgba(0, 218, 243, 0.35);
+  }
+  .provider-opt:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+  .provider-opt-name {
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+  }
+  .provider-opt-model {
+    font-size: 0.8rem;
+    margin-bottom: 0.35rem;
+  }
+  .provider-opt-desc {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+  }
+  .provider-opt-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+</style>
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1>LLM Settings</h1>
+    <p class="text-muted mb-0">Configure the active provider and credentials. Settings are saved to <code>.env</code> in the project root.</p>
+  </div>
+  <div>
+    <a href="/" class="btn btn-secondary">Home</a>
+    <a href="/llm/test" class="btn btn-outline-primary">Test Connection</a>
+  </div>
+</div>
+
+{% if message %}
+<div class="alert alert-{{ message_type | default('info') }}">{{ message }}</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <strong>Current status:</strong>
+      {% if llm_available %}
+      <span class="badge bg-success">LLM configured</span>
+      <span class="text-muted small ms-2">Active provider: {{ active_provider }}</span>
+      {% else %}
+      <span class="badge bg-warning text-dark">LLM not configured</span>
+      <span class="text-muted small ms-2">Choose a provider and add the required credentials below.</span>
+      {% endif %}
+    </div>
+    <span class="text-muted small">Copy <code>.env.example</code> to <code>.env</code> to get started.</span>
+  </div>
+</div>
+
+<form action="/settings/llm" method="post">
+  <div class="card mb-3">
+    <div class="card-header">Active LLM Provider</div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">
+        Click a provider to switch immediately. One provider, one request — no automatic fallbacks.
+      </p>
+      <div class="provider-grid mb-3" id="provider-grid">
+        {% for opt in provider_toggle_options %}
+        <button
+          type="button"
+          class="provider-opt{% if opt.active %} selected{% endif %}"
+          id="provider-opt-{{ opt.id }}"
+          data-provider="{{ opt.id }}"
+          onclick="selectProvider('{{ opt.id }}')"
+        >
+          <div class="provider-opt-name">{{ opt.label }}</div>
+          <div class="provider-opt-model"><code>{{ opt.model }}</code></div>
+          <div class="provider-opt-desc">{{ opt.description }}</div>
+          <div class="provider-opt-badges">
+            {% if opt.active %}
+            <span class="badge bg-primary">Active</span>
+            {% endif %}
+            {% if opt.disabled %}
+            <span class="badge bg-warning text-dark">Disabled</span>
+            {% elif opt.configured %}
+            <span class="badge bg-success">Configured</span>
+            {% else %}
+            <span class="badge bg-secondary">Not configured</span>
+            {% endif %}
+          </div>
+        </button>
+        {% endfor %}
+      </div>
+      <input type="hidden" id="provider" name="CAMPAIGN_CONSOLE_LLM_PROVIDER" value="{{ settings.CAMPAIGN_CONSOLE_LLM_PROVIDER or active_provider or '' }}" />
+      <div id="provider-switch-msg" class="alert d-none mb-0" role="alert"></div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Advanced</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="disabled_providers">Disabled providers (legacy, comma-separated)</label>
+          <input class="form-control" id="disabled_providers" name="CAMPAIGN_CONSOLE_DISABLED_LLM_PROVIDERS" value="{{ settings.CAMPAIGN_CONSOLE_DISABLED_LLM_PROVIDERS or '' }}" placeholder="gemini,mistral" />
+          <div class="form-text">Not used by the current provider router. Kept for compatibility only.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">OpenAI</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="openai_api_key">API key</label>
+          <input class="form-control" type="password" id="openai_api_key" name="OPENAI_API_KEY" placeholder="{% if settings.OPENAI_API_KEY__configured %}Leave blank to keep {{ settings.OPENAI_API_KEY__masked }}{% else %}sk-...{% endif %}" autocomplete="off" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="openai_model">Model</label>
+          <input class="form-control" id="openai_model" name="OPENAI_MODEL" value="{{ settings.OPENAI_MODEL or 'gpt-4o-mini' }}" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Ollama</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="ollama_base_url">Base URL</label>
+          <input class="form-control" id="ollama_base_url" name="OLLAMA_BASE_URL" value="{{ settings.OLLAMA_BASE_URL or 'http://127.0.0.1:11434' }}" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="ollama_model">Model</label>
+          <input class="form-control" id="ollama_model" name="OLLAMA_MODEL" value="{{ settings.OLLAMA_MODEL or 'llama2' }}" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Claude / Anthropic</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="anthropic_api_key">API key</label>
+          <input class="form-control" type="password" id="anthropic_api_key" name="ANTHROPIC_API_KEY" placeholder="{% if settings.ANTHROPIC_API_KEY__configured %}Leave blank to keep {{ settings.ANTHROPIC_API_KEY__masked }}{% else %}sk-ant-...{% endif %}" autocomplete="off" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="claude_model">Model</label>
+          <input class="form-control" id="claude_model" name="CLAUDE_MODEL" value="{{ settings.CLAUDE_MODEL or 'claude-3-5-sonnet-20241022' }}" />
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="claude_api_url">API URL (optional)</label>
+          <input class="form-control" id="claude_api_url" name="CLAUDE_API_URL" value="{{ settings.CLAUDE_API_URL or settings.ANTHROPIC_API_URL or '' }}" placeholder="https://api.anthropic.com/v1/messages" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Google Gemini</div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">Only the API key is required. The base URL is optional; leave it blank to use Google's default endpoint.</p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="gemini_api_key">API key</label>
+          <input class="form-control" type="password" id="gemini_api_key" name="GEMINI_API_KEY" placeholder="{% if settings.GEMINI_API_KEY__configured %}Leave blank to keep {{ settings.GEMINI_API_KEY__masked }}{% else %}AIza...{% endif %}" autocomplete="off" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="gemini_model">Default model</label>
+          <input class="form-control" id="gemini_model" name="GEMINI_MODEL" value="{{ settings.GEMINI_MODEL or 'gemini-2.5-flash-lite' }}" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="gemini_fast_model">Fast model</label>
+          <input class="form-control" id="gemini_fast_model" name="GEMINI_FAST_MODEL" value="{{ settings.GEMINI_FAST_MODEL or 'gemini-2.5-flash-lite' }}" />
+          <div class="form-text">Ingestion and extraction.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="gemini_reasoning_model">Reasoning model</label>
+          <input class="form-control" id="gemini_reasoning_model" name="GEMINI_REASONING_MODEL" value="{{ settings.GEMINI_REASONING_MODEL or 'gemini-2.5-flash' }}" />
+          <div class="form-text">Analysis and RAG answers.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="gemini_disabled">Gemini kill switch</label>
+          <select class="form-select" id="gemini_disabled" name="GEMINI_DISABLED">
+            <option value="false" {% if settings.GEMINI_DISABLED | lower not in ['1', 'true', 'yes'] %}selected{% endif %}>Enabled</option>
+            <option value="true" {% if settings.GEMINI_DISABLED | lower in ['1', 'true', 'yes'] %}selected{% endif %}>Disabled (GEMINI_DISABLED=true)</option>
+          </select>
+          <div class="form-text">When disabled, Gemini calls are blocked even if a key is configured.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="gemini_min_interval">Min seconds between requests</label>
+          <input class="form-control" id="gemini_min_interval" name="GEMINI_MIN_INTERVAL_SECONDS" type="number" min="0" step="0.5" value="{{ settings.GEMINI_MIN_INTERVAL_SECONDS or '30' }}" />
+          <div class="form-text">Use 30+ on Gemini free tier to reduce rate-limit errors. Set 0 to disable.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="gemini_api_url">API base URL (optional)</label>
+          <input class="form-control" id="gemini_api_url" name="GEMINI_API_URL" value="{{ settings.GEMINI_API_URL or '' }}" placeholder="https://generativelanguage.googleapis.com" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Other HTTP Providers</div>
+    <div class="card-body">
+      <p class="text-muted small">Set the URL and API key for the provider selected above.</p>
+      {% for provider_name, url_key, key_key in other_providers %}
+      <div class="border rounded p-3 mb-3">
+        <h6 class="mb-3 text-capitalize">{{ provider_name }}</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="{{ url_key | lower }}">API URL</label>
+            <input class="form-control" id="{{ url_key | lower }}" name="{{ url_key }}" value="{{ settings[url_key] or '' }}" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="{{ key_key | lower }}">API key</label>
+            <input class="form-control" type="password" id="{{ key_key | lower }}" name="{{ key_key }}" placeholder="Leave blank to keep an existing key" autocomplete="off" />
+            {% if settings[key_key ~ '__configured'] %}
+            <div class="form-text">Configured: {{ settings[key_key ~ '__masked'] }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">Embeddings (semantic search)</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="embedding_provider">Embedding provider</label>
+          <select class="form-select" id="embedding_provider" name="CAMPAIGN_CONSOLE_EMBEDDING_PROVIDER">
+            {% for mode in embedding_providers %}
+            <option value="{{ mode }}" {% if settings.CAMPAIGN_CONSOLE_EMBEDDING_PROVIDER == mode or (settings.CAMPAIGN_CONSOLE_EMBEDDING_PROVIDER in ['', 'auto'] and mode == 'local_fallback') %}selected{% endif %}>{{ mode }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Defaults to local_fallback. OpenAI is never auto-selected from an API key alone.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="openai_embedding_model">OpenAI embedding model</label>
+          <input class="form-control" id="openai_embedding_model" name="OPENAI_EMBEDDING_MODEL" value="{{ settings.OPENAI_EMBEDDING_MODEL or 'text-embedding-3-small' }}" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="openai_embedding_bulk_ok">Allow OpenAI bulk embedding (&gt;5 texts)</label>
+          <select class="form-select" id="openai_embedding_bulk_ok" name="OPENAI_EMBEDDING_BULK_OK">
+            <option value="false" {% if settings.OPENAI_EMBEDDING_BULK_OK | lower not in ['1', 'true', 'yes'] %}selected{% endif %}>No</option>
+            <option value="true" {% if settings.OPENAI_EMBEDDING_BULK_OK | lower in ['1', 'true', 'yes'] %}selected{% endif %}>Yes</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="ollama_embed_model">Ollama embedding model</label>
+          <input class="form-control" id="ollama_embed_model" name="OLLAMA_EMBED_MODEL" value="{{ settings.OLLAMA_EMBED_MODEL or 'nomic-embed-text' }}" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="ollama_embed_enabled">Enable Ollama embeddings</label>
+          <select class="form-select" id="ollama_embed_enabled" name="OLLAMA_EMBED_ENABLED">
+            <option value="" {% if not settings.OLLAMA_EMBED_ENABLED %}selected{% endif %}>Auto / off</option>
+            <option value="true" {% if settings.OLLAMA_EMBED_ENABLED and settings.OLLAMA_EMBED_ENABLED|lower in ['1','true','yes'] %}selected{% endif %}>Enabled</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Save Settings</button>
+</form>
+
+<script>
+function setProviderSwitchMessage(text, type) {
+  const el = document.getElementById("provider-switch-msg");
+  if (!el) return;
+  el.textContent = text;
+  el.className = "alert alert-" + type + " mt-3 mb-0";
+  el.classList.remove("d-none");
+}
+
+function highlightProvider(providerId) {
+  document.querySelectorAll(".provider-opt").forEach((button) => {
+    const isSelected = button.dataset.provider === providerId;
+    button.classList.toggle("selected", isSelected);
+    const badges = button.querySelector(".provider-opt-badges");
+    if (!badges) return;
+    badges.querySelectorAll(".badge.bg-primary").forEach((badge) => badge.remove());
+    if (isSelected) {
+      const activeBadge = document.createElement("span");
+      activeBadge.className = "badge bg-primary";
+      activeBadge.textContent = "Active";
+      badges.prepend(activeBadge);
+    }
+  });
+  const hidden = document.getElementById("provider");
+  if (hidden) hidden.value = providerId;
+}
+
+async function selectProvider(providerId) {
+  const buttons = document.querySelectorAll(".provider-opt");
+  buttons.forEach((button) => {
+    button.disabled = true;
+  });
+  setProviderSwitchMessage("Switching provider…", "info");
+  try {
+    const body = new FormData();
+    body.append("provider", providerId);
+    const response = await fetch("/settings/llm/provider", {
+      method: "POST",
+      headers: { Accept: "application/json" },
+      body,
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || data.message || "Provider switch failed.");
+    }
+    highlightProvider(providerId);
+    setProviderSwitchMessage(data.message || "Provider updated.", "success");
+  } catch (error) {
+    setProviderSwitchMessage(error.message || "Provider switch failed.", "danger");
+  } finally {
+    buttons.forEach((button) => {
+      button.disabled = false;
+    });
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,221 @@
+<div id="{{ section_key }}-section" class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>{{ section_title }}</span>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      {% if section_key == 'locations' %}
+      <div class="btn-group btn-group-sm">
+        <a href="/campaigns/{{ campaign_id }}?location_filter=major&amp;entity_sort={{ entity_sort | default('name') }}" class="btn btn-outline-secondary {% if location_filter == 'major' %}active{% endif %}">Major</a>
+        <a href="/campaigns/{{ campaign_id }}?location_filter=sub&amp;entity_sort={{ entity_sort | default('name') }}" class="btn btn-outline-secondary {% if location_filter == 'sub' %}active{% endif %}">Sub</a>
+        <a href="/campaigns/{{ campaign_id }}?location_filter=major_sub&amp;entity_sort={{ entity_sort | default('name') }}" class="btn btn-outline-secondary {% if location_filter == 'major_sub' %}active{% endif %}">Major + Sub</a>
+        <a href="/campaigns/{{ campaign_id }}?location_filter=all&amp;entity_sort={{ entity_sort | default('name') }}" class="btn btn-outline-secondary {% if location_filter == 'all' %}active{% endif %}">All</a>
+      </div>
+      <a href="/campaigns/{{ campaign_id }}/locations/admin" class="btn btn-sm btn-outline-primary">Manage</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body">
+    {% if items %}
+    <ul class="list-group mb-3">
+      {% for item in items %}
+      {% set health = health_map[item.id] if health_map is defined and health_map and item.id in health_map else {} %}
+      <li class="list-group-item">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div class="flex-grow-1 pe-2">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+              <span class="badge bg-dark">{{ entity_type_badges[section_key] if entity_type_badges is defined and section_key in entity_type_badges else section_key|upper }}</span>
+              <strong>{% if section_key == 'pcs' %}<a href="/campaigns/{{ campaign_id }}/pcs/{{ item.id }}/edit">{{ item.character_name }}</a>{% else %}{{ item.name or item.title }}{% endif %}</strong>
+              {% if health %}
+              <span
+                class="badge bg-{{ health.badge_class }}"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="{% if health.missing %}Missing: {{ health.missing | join(', ') }}{% else %}All tracked fields complete.{% endif %}"
+              >
+                {{ health.status_label }} · {{ health.score }}%
+              </span>
+              {% endif %}
+              {% if section_key in ['npcs', 'locations', 'factions', 'items', 'creatures', 'threads'] %}
+              {% set ws = item.status if section_key == 'threads' else item.world_status %}
+              {% if ws and ws != 'unknown' %}
+              <span class="badge bg-{{ world_status_badge_class(ws, section_key) }}">{{ world_status_label(ws, section_key) }}</span>
+              {% endif %}
+              {% if section_key == 'threads' and item.mystery_status and item.mystery_status != 'unknown' %}
+              <span class="badge bg-{{ mystery_status_badge_class(item.mystery_status) }}">Mystery: {{ mystery_status_label(item.mystery_status) }}</span>
+              {% endif %}
+              {% endif %}
+            </div>
+            {% if section_key == 'pcs' and item.character_archetype %}
+            <div class="small text-muted">{{ item.character_archetype }}</div>
+            {% elif section_key != 'pcs' and (item.role or item.status or (section_key == 'threads' and item.thread_type) or (section_key == 'locations' and item.location_type) or (section_key == 'factions' and item.faction_type) or (section_key == 'items' and item.item_type) or (section_key == 'creatures' and (item.classification or item.creature_type or item.threat_level))) %}
+            <div class="small text-muted">
+              {% if section_key == 'locations' %}
+              {{ location_type_label(item.location_type) if location_type_label else item.location_type }}
+              {% elif section_key == 'factions' %}
+              {{ faction_type_label(item.faction_type) if faction_type_label else item.faction_type }}
+              {% elif section_key == 'items' %}
+              {{ item_type_label(item.item_type) if item_type_label else item.item_type }}
+              {% elif section_key == 'creatures' %}
+              {{ item.classification or (creature_type_label(item.creature_type) if creature_type_label else item.creature_type) or '' }}{% if item.threat_level %} · {{ item.threat_level }}{% endif %}
+              {% elif section_key == 'threads' %}
+              {{ item.thread_type or item.status or '' }}
+              {% else %}
+              {{ item.role or item.status or '' }}
+              {% endif %}
+            </div>
+            {% elif section_key == 'threads' and item.status and not item.thread_type %}
+            <div class="small text-muted">{{ item.status }}</div>
+            {% endif %}
+            {% if section_key in ['npcs', 'locations', 'factions', 'items', 'creatures', 'threads'] %}
+            {% set last_session_id = item.last_touched_session_id if section_key == 'threads' else item.last_seen_session_id %}
+            {% set last_label = 'Last touched' if section_key == 'threads' else 'Last seen' %}
+            {% if last_session_id and session_lookup is defined and last_session_id in session_lookup %}
+            <div class="small text-muted">{{ last_label }}: <a href="{{ session_workflow_url(campaign_id, last_session_id) }}">{{ session_lookup[last_session_id].title }}</a></div>
+            {% endif %}
+            {% endif %}
+            <div class="text-preserve long-text-card mt-1">
+              {% if section_key == 'pcs' %}
+              {% if item.description %}<div>{{ item.description }}</div>{% endif %}
+              {% if item.signature_gear %}<div class="mt-1 small text-muted"><strong>Signature Gear:</strong> {{ item.signature_gear }}</div>{% endif %}
+              {% if item.key_ties_history %}<div class="mt-1 small text-muted"><strong>Key Ties &amp; History:</strong> {{ item.key_ties_history }}</div>{% endif %}
+              {% if item.campaign_role_plot_notes %}<div class="mt-1 small text-muted"><strong>Campaign Role:</strong> {{ item.campaign_role_plot_notes }}</div>{% endif %}
+              {% if item.notes %}<div class="mt-1 small text-muted"><strong>Additional Notes:</strong> {{ item.notes }}</div>{% endif %}
+              {% if not (item.description or item.signature_gear or item.key_ties_history or item.campaign_role_plot_notes or item.notes) %}No details yet{% endif %}
+              {% elif section_key == 'locations' %}
+              {% if item.description %}<div>{{ item.description }}</div>{% endif %}
+              {% if item.notes %}<div class="{% if item.description %}mt-1 small text-muted{% endif %}">{% if item.description %}<strong>Notes:</strong> {% endif %}{{ item.notes }}</div>{% endif %}
+              {% if not item.description and not item.notes %}No details yet{% endif %}
+              {% elif section_key == 'factions' %}
+              {% if item.summary %}<div>{{ item.summary }}</div>{% endif %}
+              {% if item.plot_notes %}<div class="{% if item.summary %}mt-1 small text-muted{% endif %}">{% if item.summary %}<strong>Plot notes:</strong> {% endif %}{{ item.plot_notes }}</div>{% endif %}
+              {% if not item.summary and not item.plot_notes %}No details yet{% endif %}
+              {% elif section_key == 'items' %}
+              {% if item.description %}<div>{{ item.description }}</div>{% endif %}
+              {% if item.origin %}<div class="mt-1 small text-muted"><strong>Origin:</strong> {{ item.origin }}</div>{% endif %}
+              {% if item.plot_notes %}<div class="mt-1 small text-muted"><strong>Plot notes:</strong> {{ item.plot_notes }}</div>{% endif %}
+              {% if not item.description and not item.origin and not item.plot_notes %}No details yet{% endif %}
+              {% elif section_key == 'creatures' %}
+              {% if item.physical_description %}<div>{{ item.physical_description }}</div>{% elif item.description %}<div>{{ item.description }}</div>{% endif %}
+              {% if item.habitat %}<div class="mt-1 small text-muted"><strong>Habitat:</strong> {{ item.habitat }}</div>{% endif %}
+              {% if item.special_traits %}<div class="mt-1 small text-muted"><strong>Special Traits:</strong> {{ item.special_traits }}</div>{% endif %}
+              {% if item.campaign_context_tactics %}<div class="mt-1 small text-muted"><strong>Campaign Context:</strong> {{ item.campaign_context_tactics }}</div>{% endif %}
+              {% if item.notes %}<div class="mt-1 small text-muted"><strong>Additional Notes:</strong> {{ item.notes }}</div>{% endif %}
+              {% if not (item.physical_description or item.description or item.habitat or item.special_traits or item.campaign_context_tactics or item.notes) %}No details yet{% endif %}
+              {% elif section_key == 'threads' %}
+              {% if item.details %}<div>{{ item.details }}</div>{% endif %}
+              {% if item.plot_significance_notes %}<div class="mt-1 small text-muted"><strong>Plot Significance:</strong> {{ item.plot_significance_notes }}</div>{% endif %}
+              {% if not item.details and not item.plot_significance_notes %}No details yet{% endif %}
+              {% else %}
+              {{ item.description or item.summary or item.details or item.notes or 'No details yet' }}
+              {% endif %}
+            </div>
+          </div>
+          <div class="btn-group btn-group-sm" role="group">
+            {% if section_key == 'npcs' %}
+            <a href="/campaigns/{{ campaign_id }}/npcs/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            <a href="/campaigns/{{ campaign_id }}/npcs/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            {% elif section_key == 'locations' %}
+            <a href="/campaigns/{{ campaign_id }}/locations/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            <a href="/campaigns/{{ campaign_id }}/locations/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            {% elif section_key == 'factions' %}
+            <a href="/campaigns/{{ campaign_id }}/factions/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            <a href="/campaigns/{{ campaign_id }}/factions/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            {% elif section_key == 'items' %}
+            <a href="/campaigns/{{ campaign_id }}/items/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            <a href="/campaigns/{{ campaign_id }}/items/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            {% elif section_key == 'creatures' %}
+            <a href="/campaigns/{{ campaign_id }}/creatures/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            <a href="/campaigns/{{ campaign_id }}/creatures/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            {% elif section_key == 'threads' %}
+            <a href="/campaigns/{{ campaign_id }}/threads/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            <a href="/campaigns/{{ campaign_id }}/threads/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            {% elif section_key == 'pcs' %}
+            <a href="/campaigns/{{ campaign_id }}/pcs/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            {% endif %}
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">No {{ section_title.lower() }} yet.</p>
+    {% endif %}
+
+    <form
+      action="/campaigns/{{ campaign_id }}/{{ action }}"
+      method="post"
+      data-draft-form="{{ form_name }}"
+      data-campaign-id="{{ campaign_id }}"
+      hx-post="/campaigns/{{ campaign_id }}/{{ action }}"
+      hx-target="#{{ section_key }}-section"
+      hx-swap="outerHTML"
+    >
+      {% for field_name, label in fields %}
+      <div class="mb-2">
+        <label class="form-label">{{ label }}</label>
+        {% if field_name in ['description', 'summary', 'details', 'notes', 'plot_notes', 'plot_significance_notes', 'physical_description', 'special_traits', 'campaign_context_tactics', 'origin', 'signature_gear', 'key_ties_history', 'campaign_role_plot_notes'] %}
+        <textarea name="{{ field_name }}" class="form-control text-preserve" rows="2"></textarea>
+        {% elif field_name == 'location_type' %}
+        <select name="{{ field_name }}" class="form-select">
+          <option value="major">Major Location</option>
+          <option value="sub">Sub-Location</option>
+          <option value="scene_feature">Scene Feature</option>
+        </select>
+        {% elif field_name == 'faction_type' %}
+        <select name="{{ field_name }}" class="form-select" data-mc-reveals="faction_type_custom" data-mc-reveals-value="other">
+          <option value="">— Unspecified —</option>
+          <option value="guild">Guild</option>
+          <option value="religious_order">Religious Order</option>
+          <option value="cult">Cult</option>
+          <option value="mercenary_company">Mercenary Company</option>
+          <option value="criminal_syndicate">Criminal Syndicate</option>
+          <option value="other">Other</option>
+        </select>
+        <div class="mt-2" data-mc-reveal-target="faction_type_custom" hidden>
+          <label class="form-label">Custom Faction Type</label>
+          <input name="faction_type_custom" class="form-control" placeholder="e.g. Noble House" />
+        </div>
+        {% elif field_name == 'item_type' %}
+        <select name="{{ field_name }}" class="form-select" data-mc-reveals="item_type_custom" data-mc-reveals-value="other">
+          {% if item_type_options is defined %}
+          {% for option in item_type_options %}
+          <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label }}</option>
+          {% endfor %}
+          {% else %}
+          <option value="">— Unspecified —</option>
+          <option value="magic_weapon">Magic Weapon</option>
+          <option value="wondrous_item">Wondrous Item</option>
+          <option value="quest_item">Quest Item</option>
+          <option value="relic">Relic</option>
+          <option value="consumable">Consumable</option>
+          <option value="other">Other</option>
+          {% endif %}
+        </select>
+        <div class="mt-2" data-mc-reveal-target="item_type_custom" hidden>
+          <label class="form-label">Custom Item Type</label>
+          <input name="item_type_custom" class="form-control" placeholder="e.g. Cursed Artifact" />
+        </div>
+        {% elif field_name == 'creature_type' %}
+        <select name="{{ field_name }}" class="form-select" data-mc-reveals="creature_type_custom" data-mc-reveals-value="other">
+          <option value="">— Unspecified —</option>
+          <option value="beast">Beast</option>
+          <option value="monster">Monster</option>
+          <option value="undead">Undead</option>
+          <option value="wildlife">Wildlife</option>
+          <option value="hostile">Hostile Creature</option>
+          <option value="other">Other</option>
+        </select>
+        <div class="mt-2" data-mc-reveal-target="creature_type_custom" hidden>
+          <label class="form-label">Custom Creature Type</label>
+          <input name="creature_type_custom" class="form-control" placeholder="e.g. Aberration" />
+        </div>
+        {% else %}
+        <input name="{{ field_name }}" class="form-control" required />
+        {% endif %}
+      </div>
+      {% endfor %}
+      <div class="mt-2">
+        <button type="submit" class="btn btn-sm btn-outline-primary">{{ add_label }}</button>
+      </div>
+    </form>
+  </div>
+</div>

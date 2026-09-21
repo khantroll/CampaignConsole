@@ -1,0 +1,60 @@
+{% macro stale_heading(title) %}
+{% if use_briefing_headings is defined and use_briefing_headings %}
+<h3>{{ title }}</h3>
+{% else %}
+<h6 class="{% if heading_class %}{{ heading_class }}{% else %}text-muted{% endif %} mb-2">{{ title }}</h6>
+{% endif %}
+{% endmacro %}
+
+{% if intel.stale_npcs %}
+{{ stale_heading('Stale NPCs') }}
+<ul class="list-unstyled mb-3 small">
+  {% for row in intel.stale_npcs %}
+  <li class="mb-2">
+    {% if print_view is defined and print_view %}{{ row.name }}{% else %}<a href="{{ row.edit_url or ('/campaigns/' ~ campaign.id ~ '/npcs/' ~ row.npc.id ~ '/edit') }}">{{ row.name }}</a>{% endif %}
+    {% if row.last_session %}
+    <span class="text-muted"> · last in {% if print_view is defined and print_view %}{{ row.last_session.title }}{% else %}<a href="{{ session_workflow_url(campaign.id, row.last_session.id) }}">{{ row.last_session.title }}</a>{% endif %}</span>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if intel.stale_locations %}
+{{ stale_heading('Stale Locations') }}
+<ul class="list-unstyled mb-3 small">
+  {% for row in intel.stale_locations %}
+  <li class="mb-2">
+    {% if print_view is defined and print_view %}{{ row.name }}{% else %}<a href="{{ row.edit_url }}">{{ row.name }}</a>{% endif %}
+    {% if row.last_session %}
+    <span class="text-muted"> · last in {% if print_view is defined and print_view %}{{ row.last_session.title }}{% else %}<a href="{{ session_workflow_url(campaign.id, row.last_session.id) }}">{{ row.last_session.title }}</a>{% endif %}</span>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if intel.stale_factions %}
+{{ stale_heading('Stale Factions') }}
+<ul class="list-unstyled mb-3 small">
+  {% for row in intel.stale_factions %}
+  <li class="mb-2">
+    {% if print_view is defined and print_view %}{{ row.name }}{% else %}<a href="{{ row.edit_url }}">{{ row.name }}</a>{% endif %}
+    {% if row.last_session %}
+    <span class="text-muted"> · last in {% if print_view is defined and print_view %}{{ row.last_session.title }}{% else %}<a href="{{ session_workflow_url(campaign.id, row.last_session.id) }}">{{ row.last_session.title }}</a>{% endif %}</span>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if intel.stale_items %}
+{{ stale_heading('Stale Items') }}
+<ul class="list-unstyled mb-0 small">
+  {% for row in intel.stale_items %}
+  <li class="mb-2">
+    {% if print_view is defined and print_view %}{{ row.name }}{% else %}<a href="{{ row.edit_url }}">{{ row.name }}</a>{% endif %}
+    {% if row.last_session %}
+    <span class="text-muted"> · last in {% if print_view is defined and print_view %}{{ row.last_session.title }}{% else %}<a href="{{ session_workflow_url(campaign.id, row.last_session.id) }}">{{ row.last_session.title }}</a>{% endif %}</span>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}

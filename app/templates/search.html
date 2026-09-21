@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <h1>Search {{ campaign.name }}</h1>
+      <p class="text-muted">Keyword search, semantic vector search, or ask questions over indexed campaign lore. Semantic search and ask require a manually rebuilt index.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      {% if index_status.indexed and not index_status.stale %}
+      <span class="badge bg-success">Lore index ready</span>
+      <span class="text-muted small ms-2">{{ index_status.chunk_count }} chunks · {{ index_status.embedding_provider }}</span>
+      {% elif index_status.indexed and index_status.stale %}
+      <span class="badge bg-warning text-dark">Index stale</span>
+      <span class="text-muted small ms-2">Semantic search and ask require a manually rebuilt index.</span>
+      {% else %}
+      <span class="badge bg-secondary">Not indexed yet</span>
+      <span class="text-muted small ms-2">Semantic search and ask require a manually rebuilt index.</span>
+      {% endif %}
+    </div>
+    <form action="/campaigns/{{ campaign.id }}/search/reindex" method="post" class="mb-0">
+      <button type="submit" class="btn btn-sm btn-outline-primary">Rebuild Lore Index</button>
+    </form>
+  </div>
+</div>
+
+{% if search_warning %}
+<div class="alert alert-warning">{{ search_warning }}</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form action="/campaigns/{{ campaign.id }}/search" method="post">
+      <div class="mb-3">
+        <label class="form-label">Search mode</label>
+        <div class="d-flex flex-wrap gap-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="mode" id="mode-keyword" value="keyword" {% if mode == 'keyword' %}checked{% endif %}>
+            <label class="form-check-label" for="mode-keyword">Keyword</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="mode" id="mode-semantic" value="semantic" {% if mode == 'semantic' %}checked{% endif %}>
+            <label class="form-check-label" for="mode-semantic">Semantic</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="mode" id="mode-ask" value="ask" {% if mode == 'ask' %}checked{% endif %}>
+            <label class="form-check-label" for="mode-ask">Ask (RAG)</label>
+          </div>
+        </div>
+      </div>
+      <div class="input-group">
+        <input name="query" class="form-control" placeholder="Search or ask about campaign lore..." value="{{ query or '' }}" required />
+        <button class="btn btn-primary" type="submit">Search</button>
+      </div>
+      <p class="small text-muted mt-2 mb-0">
+        Active embedding mode: <strong>{{ embedding_provider }}</strong>.
+        Semantic search uses vector similarity; Ask retrieves relevant lore and synthesizes an answer.
+        {% if embedding_provider == 'local_fallback' %}
+        <span class="text-warning">Local fallback uses hashed token vectors, not true semantic embeddings.</span>
+        {% endif %}
+      </p>
+    </form>
+  </div>
+</div>
+
+{% if query and mode == 'keyword' %}
+<div class="mb-4">
+  <h3>Keyword results for “{{ query }}”</h3>
+  {% if results %}
+    {% for section, items in results.items() %}
+      <div class="card mb-3">
+        <div class="card-header">{{ section }}</div>
+        <div class="card-body">
+          {% if items %}
+            <ul class="list-group">
+              {% for item in items %}
+                <li class="list-group-item">
+                  <strong>{{ item.title }}</strong>
+                  <div class="small text-muted">{{ item.subtitle }}</div>
+                  <div class="text-preserve">{{ item.snippet }}</div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No matches in {{ section.lower() }}.</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted">No results found.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if query and mode == 'semantic' %}
+<div class="mb-4">
+  <h3>Semantic matches for “{{ query }}”</h3>
+  {% if semantic_results %}
+    <ul class="list-group">
+      {% for item in semantic_results %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start gap-3">
+            <div>
+              <strong><a href="{{ item.url }}">{{ item.title }}</a></strong>
+              <div class="small text-muted">{{ item.subtitle }}</div>
+              <div class="text-preserve">{{ item.snippet }}</div>
+            </div>
+            <span class="badge bg-primary">{{ item.score }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted">No semantic matches found. Try rebuilding the lore index or broadening your query.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if query and mode == 'ask' %}
+<div class="mb-4">
+  <h3>Answer for “{{ query }}”</h3>
+  {% if rag_answer %}
+  <div class="card mb-3">
+    <div class="card-header">AI Answer</div>
+    <div class="card-body">
+      <div class="markdown-body">{{ rag_answer | markdown }}</div>
+    </div>
+  </div>
+  {% endif %}
+  {% if rag_sources %}
+  <div class="card">
+    <div class="card-header">Retrieved Sources</div>
+    <div class="card-body">
+      <ul class="list-group">
+        {% for item in rag_sources %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <strong><a href="{{ item.url }}">{{ item.title }}</a></strong>
+                <div class="small text-muted">{{ item.subtitle }}</div>
+                <div class="text-preserve">{{ item.snippet }}</div>
+              </div>
+              <span class="badge bg-secondary">{{ item.score }}</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">No lore sources were retrieved for that question.</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

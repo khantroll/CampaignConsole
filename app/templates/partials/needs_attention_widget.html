@@ -1,0 +1,31 @@
+{% if dashboard_summary and dashboard_summary.needs_attention %}
+<div class="card mb-3 mc-needs-attention">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Needs Attention</span>
+    <span class="badge bg-warning">{{ dashboard_summary.needs_attention | length }} incomplete</span>
+  </div>
+  <div class="card-body p-0">
+    <ul class="list-group list-group-flush">
+      {% for item in dashboard_summary.needs_attention %}
+      <li class="list-group-item d-flex justify-content-between align-items-start gap-2">
+        <div>
+          <span class="badge bg-dark me-1">{{ item.type_badge }}</span>
+          <a href="{{ item.edit_url }}">{{ item.name }}</a>
+          {% if item.missing %}
+          <div class="small text-muted">Missing: {{ item.missing | join(', ') }}</div>
+          {% endif %}
+        </div>
+        <span class="badge bg-{{ item.badge_class }}">{{ item.score }}%</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% elif dashboard_summary %}
+<div class="card mb-3">
+  <div class="card-header">Needs Attention</div>
+  <div class="card-body">
+    <p class="text-muted mb-0">All tracked entities are in good shape.</p>
+  </div>
+</div>
+{% endif %}

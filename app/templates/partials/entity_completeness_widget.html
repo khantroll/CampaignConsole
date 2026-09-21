@@ -1,0 +1,61 @@
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Entity Completeness Overview</span>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <div class="btn-group btn-group-sm">
+        <a href="/campaigns/{{ campaign.id }}?location_filter={{ location_filter | default('major_sub') }}&amp;entity_sort=name" class="btn btn-outline-secondary {% if entity_sort | default('name') == 'name' %}active{% endif %}">Sort: Name</a>
+        <a href="/campaigns/{{ campaign.id }}?location_filter={{ location_filter | default('major_sub') }}&amp;entity_sort=updated" class="btn btn-outline-secondary {% if entity_sort == 'updated' %}active{% endif %}">Recently Updated</a>
+        <a href="/campaigns/{{ campaign.id }}?location_filter={{ location_filter | default('major_sub') }}&amp;entity_sort=completeness" class="btn btn-outline-secondary {% if entity_sort == 'completeness' %}active{% endif %}">Completeness</a>
+      </div>
+      <span class="badge bg-{{ completeness_overview.campaign_badge_class }}">
+        Campaign {{ completeness_overview.campaign_average }}%
+      </span>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if completeness_overview.total_entities == 0 %}
+    <p class="text-muted mb-0">Add entities to track completeness across your campaign.</p>
+    {% else %}
+    <div class="row g-3">
+      {% for section in completeness_overview.sections %}
+      <div class="col-md-6">
+        <div class="border rounded p-3 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <span class="badge bg-dark me-1">{{ section.type_badge }}</span>
+              <a href="/campaigns/{{ campaign.id }}#{{ section.key }}-section" class="text-decoration-none"><strong>{{ section.label }}</strong></a>
+              <span class="text-muted small">({{ section.count }})</span>
+            </div>
+            <span class="badge bg-{% if section.average_score >= 80 %}success{% elif section.average_score >= 40 %}warning{% else %}danger{% endif %}">
+              {{ section.average_score }}%
+            </span>
+          </div>
+          <div class="progress mb-2" style="height: 8px;">
+            <div
+              class="progress-bar bg-success"
+              style="width: {{ (section.complete / section.count * 100) if section.count else 0 }}%"
+              title="Complete"
+            ></div>
+            <div
+              class="progress-bar bg-warning"
+              style="width: {{ (section.partial / section.count * 100) if section.count else 0 }}%"
+              title="Partial"
+            ></div>
+            <div
+              class="progress-bar bg-danger"
+              style="width: {{ (section.minimal / section.count * 100) if section.count else 0 }}%"
+              title="Minimal"
+            ></div>
+          </div>
+          <div class="small text-muted">
+            <span class="text-success">{{ section.complete }} complete</span> ·
+            <span class="text-warning">{{ section.partial }} partial</span> ·
+            <span class="text-danger">{{ section.minimal }} minimal</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>

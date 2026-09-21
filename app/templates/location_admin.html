@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <h1>Location Admin</h1>
+      <p class="text-muted mb-0">{{ campaign.name }} — merge, reclassify, and clean up location records.</p>
+    </div>
+  </div>
+</div>
+
+{% if message %}
+<div class="alert alert-success">{{ message }}</div>
+{% endif %}
+
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Filter</span>
+    <div class="btn-group btn-group-sm">
+      <a href="/campaigns/{{ campaign.id }}/locations/admin?filter=major" class="btn btn-outline-secondary {% if filter == 'major' %}active{% endif %}">Major Locations</a>
+      <a href="/campaigns/{{ campaign.id }}/locations/admin?filter=sub" class="btn btn-outline-secondary {% if filter == 'sub' %}active{% endif %}">Sub-Locations</a>
+      <a href="/campaigns/{{ campaign.id }}/locations/admin?filter=major_sub" class="btn btn-outline-secondary {% if filter == 'major_sub' %}active{% endif %}">Major + Sub</a>
+      <a href="/campaigns/{{ campaign.id }}/locations/admin?filter=scene_feature" class="btn btn-outline-secondary {% if filter == 'scene_feature' %}active{% endif %}">Scene Features</a>
+      <a href="/campaigns/{{ campaign.id }}/locations/admin?filter=all" class="btn btn-outline-secondary {% if filter == 'all' %}active{% endif %}">All Locations</a>
+    </div>
+  </div>
+</div>
+
+<form action="/campaigns/{{ campaign.id }}/locations/admin/reclassify" method="post" class="card mb-3">
+  <input type="hidden" name="filter" value="{{ filter }}" />
+  <div class="card-header">Reclassify Locations</div>
+  <div class="card-body">
+    {% if locations %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for location in locations %}
+          <tr>
+            <td><strong>{{ location.name }}</strong></td>
+            <td>
+              <select name="location_type_{{ location.id }}" class="form-select form-select-sm">
+                {% for value, label in location_type_choices %}
+                <option value="{{ value }}" {% if location.location_type == value or (not location.location_type and value == 'major') %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td class="small text-muted">{{ location.description or '—' }}</td>
+            <td>
+              <a href="/campaigns/{{ campaign.id }}/locations/{{ location.id }}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Type Changes</button>
+    {% else %}
+    <p class="text-muted mb-0">No locations match this filter.</p>
+    {% endif %}
+  </div>
+</form>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <form action="/campaigns/{{ campaign.id }}/locations/admin/merge" method="post" class="card h-100">
+      <input type="hidden" name="filter" value="{{ filter }}" />
+      <div class="card-header">Merge Locations</div>
+      <div class="card-body">
+        <p class="text-muted small">Choose the canonical location, then check duplicates to merge into it. Links are moved to the canonical record.</p>
+        {% if locations %}
+        <div class="mb-3">
+          <label class="form-label">Canonical location (keep)</label>
+          <select name="canonical_id" class="form-select" required>
+            {% for location in locations %}
+            <option value="{{ location.id }}">{{ location.name }} ({{ location_type_label(location.location_type) }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Merge these into canonical</label>
+          {% for location in locations %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="merge_ids" value="{{ location.id }}" id="merge-{{ location.id }}" />
+            <label class="form-check-label" for="merge-{{ location.id }}">{{ location.name }}</label>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-warning">Merge Selected</button>
+        {% else %}
+        <p class="text-muted mb-0">No locations available to merge.</p>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-6">
+    <form action="/campaigns/{{ campaign.id }}/locations/admin/delete" method="post" class="card mb-3">
+      <input type="hidden" name="filter" value="{{ filter }}" />
+      <div class="card-header">Delete Selected</div>
+      <div class="card-body">
+        <p class="text-muted small">Remove low-value or duplicate location records. This also removes their entity links.</p>
+        {% if locations %}
+        {% for location in locations %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="delete_ids" value="{{ location.id }}" id="delete-{{ location.id }}" />
+          <label class="form-check-label" for="delete-{{ location.id }}">{{ location.name }} ({{ location_type_label(location.location_type) }})</label>
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-outline-danger mt-3">Delete Selected</button>
+        {% else %}
+        <p class="text-muted mb-0">No locations to delete.</p>
+        {% endif %}
+      </div>
+    </form>
+
+    <form action="/campaigns/{{ campaign.id }}/locations/admin/delete-scene-features" method="post" class="card">
+      <input type="hidden" name="filter" value="{{ filter }}" />
+      <div class="card-header">Bulk Cleanup</div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">Delete all scene feature locations in this campaign (chests, passages, pools, etc.).</p>
+        <button type="submit" class="btn btn-outline-danger">Delete All Scene Features</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

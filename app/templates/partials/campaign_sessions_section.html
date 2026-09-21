@@ -1,0 +1,64 @@
+<div id="sessions-section" class="card mb-3">
+  <div class="card-header">Sessions</div>
+  <div class="card-body">
+    {% if sessions %}
+    <ul class="list-group mb-3">
+      {% for session in sessions %}
+      <li class="list-group-item">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1 pe-2">
+            <a href="{{ workspace_url(campaign_id, session_id=session.id, mode='prep') }}" class="text-decoration-none">
+              <strong>{{ session.title }}</strong>
+            </a>
+            <div class="small text-muted">{{ session.date or 'No date' }}</div>
+            <div class="mt-1 d-flex gap-2 flex-wrap">
+              <a href="{{ workspace_url(campaign_id, session_id=session.id, mode='prep') }}" class="small">Workspace</a>
+              <span class="text-muted">·</span>
+              <a href="/campaigns/{{ campaign_id }}/sessions/{{ session.id }}" class="small">Session Workflow</a>
+            </div>
+            {% if session.notes %}
+            <div class="text-preserve session-preview-card mt-2 mb-1">{{ session.notes | preview_text(500) }}</div>
+            {% if session.notes|length > 500 %}
+            <a href="/campaigns/{{ campaign_id }}/sessions/{{ session.id }}" class="small">View full session</a>
+            {% endif %}
+            {% else %}
+            <div class="text-muted mt-1">No notes yet</div>
+            {% endif %}
+          </div>
+          <div class="btn-group btn-group-sm" role="group">
+            <a href="/campaigns/{{ campaign_id }}/sessions/{{ session.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            <a href="/campaigns/{{ campaign_id }}/sessions/{{ session.id }}/delete" class="btn btn-outline-danger">Delete</a>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">No sessions added yet.</p>
+    {% endif %}
+
+    <form
+      action="/campaigns/{{ campaign_id }}/sessions"
+      method="post"
+      data-draft-form="add-sessions"
+      data-campaign-id="{{ campaign_id }}"
+      hx-post="/campaigns/{{ campaign_id }}/sessions"
+      hx-target="#sessions-section"
+      hx-swap="outerHTML"
+    >
+      <div class="mb-2">
+        <label class="form-label">Title</label>
+        <input name="title" class="form-control" required />
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Date</label>
+        <input name="date" class="form-control" placeholder="2026-06-05" />
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Notes</label>
+        <textarea name="notes" class="form-control text-preserve" rows="2"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Add Session</button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,118 @@
+{% if dashboard_summary %}
+<div class="mc-dashboard-grid mb-3">
+  <div class="card mc-dashboard-card">
+    <div class="card-header">Quick Resume</div>
+    <div class="card-body">
+      {% if dashboard_summary.current_session %}
+      <p class="mb-1"><strong>{{ dashboard_summary.current_session.title }}</strong></p>
+      <p class="text-muted small mb-2">{{ dashboard_summary.current_session.date or 'No date' }}</p>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ workspace_url(campaign.id, session_id=dashboard_summary.current_session.id, mode=workspace_mode) }}" class="btn btn-primary btn-sm">Workspace</a>
+        <a href="{{ session_workflow_url(campaign.id, dashboard_summary.current_session.id) }}" class="btn btn-outline-secondary btn-sm">Sessions</a>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">No sessions yet. Add one below or ingest notes.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card mc-dashboard-card">
+    <div class="card-header">Next Session</div>
+    <div class="card-body">
+      {% if dashboard_summary.next_session %}
+      <p class="mb-1"><strong>{{ dashboard_summary.next_session.title }}</strong></p>
+      <p class="text-muted small mb-2">{{ dashboard_summary.next_session.date or 'No date' }}</p>
+      <a href="{{ session_workflow_url(campaign.id, dashboard_summary.next_session.id) }}" class="btn btn-outline-primary btn-sm">Open Session</a>
+      {% elif dashboard_summary.current_session %}
+      <p class="text-muted mb-0">No upcoming session queued. Create one or generate prep from the current session.</p>
+      {% else %}
+      <p class="text-muted mb-0">—</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card mc-dashboard-card">
+    <div class="card-header">Last Analyzed</div>
+    <div class="card-body">
+      {% if dashboard_summary.last_analyzed %}
+      {% set analyzed = dashboard_summary.last_analyzed %}
+      <p class="mb-1"><strong>{{ analyzed.session.title }}</strong></p>
+      <p class="text-muted small mb-2">{{ analyzed.metadata.task or 'Analysis' }} · {{ analyzed.metadata.generated_at or 'Unknown time' }}</p>
+      <a href="{{ session_workflow_url(campaign.id, analyzed.session.id) }}" class="btn btn-outline-info btn-sm">View Session</a>
+      {% else %}
+      <p class="text-muted mb-0">No AI analysis recorded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Active Plot Threads</div>
+      <div class="card-body">
+        {% if dashboard_summary.active_threads %}
+        <ul class="list-unstyled mb-0">
+          {% for thread in dashboard_summary.active_threads %}
+          <li class="mb-2">
+            <a href="/campaigns/{{ campaign.id }}/threads/{{ thread.id }}/edit">{{ thread.title }}</a>
+            {% if thread.status %}<span class="text-muted small"> · {{ thread.status }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">No active plot threads.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Recently Seen NPCs</div>
+      <div class="card-body">
+        {% if dashboard_summary.recent_npcs %}
+        <ul class="list-unstyled mb-0">
+          {% for row in dashboard_summary.recent_npcs %}
+          <li class="mb-2">
+            <a href="/campaigns/{{ campaign.id }}/npcs/{{ row.npc.id }}/edit">{{ row.npc.name }}</a>
+            {% if row.last_seen_title %}
+            <span class="text-muted small"> · last in <a href="{{ session_workflow_url(campaign.id, row.last_seen_id) }}">{{ row.last_seen_title }}</a></span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">Link NPCs to sessions to track appearances.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include "partials/campaign_intelligence_widget.html" %}
+
+{% include "partials/needs_attention_widget.html" %}
+
+{% if dashboard_summary.world_state %}
+<div class="card mb-3">
+  <div class="card-header">World State Summary</div>
+  <div class="card-body small">
+    <p class="mb-2">
+      Open clues: {{ dashboard_summary.world_state.clue_summary.open_clue_count }}
+      · Revealed clues: {{ dashboard_summary.world_state.clue_summary.revealed_clue_count }}
+      · Unresolved mysteries: {{ dashboard_summary.world_state.clue_summary.unresolved_mystery_count }}
+    </p>
+    {% if dashboard_summary.world_state.faction_states %}
+    <p class="mb-1"><strong>Factions:</strong> {% for key, count in dashboard_summary.world_state.faction_states.items() %}{{ key }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {% endif %}
+    {% if dashboard_summary.world_state.location_states %}
+    <p class="mb-1"><strong>Locations:</strong> {% for key, count in dashboard_summary.world_state.location_states.items() %}{{ key }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {% endif %}
+    {% if dashboard_summary.world_state.thread_states %}
+    <p class="mb-0"><strong>Plot Threads:</strong> {% for key, count in dashboard_summary.world_state.thread_states.items() %}{{ key }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endif %}
