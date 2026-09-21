@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Session Workspace: Prep Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-active {
+            box-shadow: 0 0 8px 0 rgba(0, 218, 243, 0.3);
+        }
+        .inset-panel {
+            background-color: #0c1c2e;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #041426;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b494c;
+        }
+        .status-complete { border-left: 3px solid #00e5ff; }
+        .status-partial { border-left: 3px solid #f3bf26; }
+        .status-minimal { border-left: 3px solid #ffb4ab; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ffb4ab",
+                        "surface-tint": "#00daf3",
+                        "primary": "#c3f5ff",
+                        "surface-dim": "#041426",
+                        "surface-container-high": "#1b2b3d",
+                        "on-tertiary-fixed": "#251a00",
+                        "on-primary-fixed": "#001f24",
+                        "primary-container": "#00e5ff",
+                        "inverse-primary": "#006875",
+                        "surface-container-lowest": "#000f20",
+                        "secondary-container": "#334a55",
+                        "secondary": "#b1cad7",
+                        "on-tertiary": "#3e2e00",
+                        "on-background": "#d4e4fc",
+                        "inverse-on-surface": "#223144",
+                        "on-primary-container": "#00626e",
+                        "surface-container": "#102032",
+                        "on-primary": "#00363d",
+                        "tertiary-fixed-dim": "#f3bf26",
+                        "surface-container-low": "#0c1c2e",
+                        "outline-variant": "#3b494c",
+                        "surface-container-highest": "#263649",
+                        "primary-fixed-dim": "#00daf3",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffeac0",
+                        "on-error": "#690005",
+                        "outline": "#849396",
+                        "on-secondary-fixed": "#051e28",
+                        "tertiary-fixed": "#ffdf96",
+                        "on-surface-variant": "#bac9cc",
+                        "on-surface": "#d4e4fc",
+                        "on-secondary-container": "#a0b9c5",
+                        "on-error-container": "#ffdad6",
+                        "background": "#041426",
+                        "inverse-surface": "#d4e4fc",
+                        "primary-fixed": "#9cf0ff",
+                        "on-tertiary-container": "#6f5500",
+                        "on-secondary-fixed-variant": "#334a55",
+                        "secondary-fixed": "#cde6f4",
+                        "on-primary-fixed-variant": "#004f58",
+                        "surface-bright": "#2b3a4d",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "on-secondary": "#1c333e",
+                        "tertiary-container": "#fec931",
+                        "surface-variant": "#263649",
+                        "surface": "#041426",
+                        "secondary-fixed-dim": "#b1cad7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "24px",
+                        "gutter": "12px",
+                        "container-padding": "12px"
+                    },
+                    "fontFamily": {
+                        "mono-data": ["monospace"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "mono-data": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden pb-24">
+<!-- TopAppBar -->
+<header class="bg-surface-container-lowest dark:bg-surface-container-lowest fixed top-0 left-0 w-full z-50 border-b border-outline-variant flex justify-between items-center px-4 py-3">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="terminal">terminal</span>
+<h1 class="text-headline-md font-headline-md font-bold tracking-tight text-on-surface">Campaign Console</h1>
+</div>
+<button class="text-label-caps font-label-caps text-on-surface-variant hover:bg-surface-variant transition-colors px-3 py-1 border border-outline-variant rounded ring-1 ring-transparent active:ring-primary-fixed-dim">
+            LLM Settings
+        </button>
+</header>
+<main class="mt-16 px-4 pt-4 flex flex-col gap-4">
+<!-- Mode Switcher -->
+<div class="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant w-full">
+<button class="flex-1 py-2 text-label-caps font-label-caps text-primary-fixed-dim font-bold bg-secondary-container rounded-sm border-l-2 border-primary-fixed-dim transition-all duration-150">
+                Prep
+            </button>
+<button class="flex-1 py-2 text-label-caps font-label-caps text-on-surface-variant hover:text-on-surface transition-all duration-150">
+                Run
+            </button>
+<button class="flex-1 py-2 text-label-caps font-label-caps text-on-surface-variant hover:text-on-surface transition-all duration-150">
+                Review
+            </button>
+</div>
+<!-- Section: Session Workspace Header -->
+<div class="flex justify-between items-end border-b border-outline-variant pb-2">
+<div>
+<span class="text-label-caps font-label-caps text-primary-fixed-dim">ACTIVE WORKSPACE</span>
+<h2 class="text-headline-md font-headline-md">Session 42: The Neon Heist</h2>
+</div>
+<span class="text-mono-data text-on-surface-variant">V2.4.0_STABLE</span>
+</div>
+<!-- Markdown Editor Module -->
+<section class="flex flex-col gap-2">
+<div class="flex justify-between items-center bg-surface-container-high px-3 py-2 border-t border-x border-outline-variant rounded-t">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="edit_note">edit_note</span>
+<span class="text-label-caps font-label-caps">SESSION_NOTES.MD</span>
+</div>
+<div class="flex gap-2">
+<button class="material-symbols-outlined text-on-surface-variant text-lg hover:text-primary-fixed-dim" data-icon="format_bold">format_bold</button>
+<button class="material-symbols-outlined text-on-surface-variant text-lg hover:text-primary-fixed-dim" data-icon="format_italic">format_italic</button>
+<button class="material-symbols-outlined text-on-surface-variant text-lg hover:text-primary-fixed-dim" data-icon="list">list</button>
+</div>
+</div>
+<div class="inset-panel p-3 min-h-[240px] border border-outline-variant rounded-b">
+<textarea class="w-full bg-transparent border-none focus:ring-0 font-mono-data text-on-surface placeholder:text-outline text-sm leading-relaxed min-h-[220px] resize-none" placeholder="# Start typing session objectives..."></textarea>
+</div>
+</section>
+<!-- AI Prep Suggestions (Collapsible) -->
+<section class="border border-outline-variant rounded bg-surface-container" x-data="{ open: true }">
+<button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 bg-surface-container-highest">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed-dim" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-label-caps font-label-caps">AI PREP SUGGESTIONS</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</button>
+<div class="p-3 flex flex-col gap-3">
+<!-- Suggestion Card 1: Plot Advancement -->
+<div class="p-3 bg-surface-container-low border border-outline-variant status-complete">
+<div class="flex justify-between items-start mb-1">
+<span class="text-label-caps text-on-primary-container bg-primary-container px-1 rounded-sm text-on-primary">PLOT ADVANCEMENT</span>
+<button class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="add_circle">add_circle</button>
+</div>
+<p class="text-body-sm font-body-sm">The players successfully decode the <span class="text-primary-fixed-dim">Chromatic Cipher</span>, revealing the vault's physical location.</p>
+</div>
+<!-- Suggestion Card 2: NPC Reactions -->
+<div class="p-3 bg-surface-container-low border border-outline-variant status-partial">
+<div class="flex justify-between items-start mb-1">
+<span class="text-label-caps text-on-tertiary-container bg-tertiary-container px-1 rounded-sm">NPC REACTIONS</span>
+<button class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="add_circle">add_circle</button>
+</div>
+<p class="text-body-sm font-body-sm"><span class="text-primary-fixed-dim">Vex</span> becomes increasingly erratic as the heist nears, potentially compromising the stealth approach.</p>
+</div>
+<!-- Suggestion Card 3: Complications -->
+<div class="p-3 bg-surface-container-low border border-outline-variant status-minimal">
+<div class="flex justify-between items-start mb-1">
+<span class="text-label-caps text-on-error bg-error-container px-1 rounded-sm">COMPLICATIONS</span>
+<button class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="add_circle">add_circle</button>
+</div>
+<p class="text-body-sm font-body-sm">A <span class="text-primary-fixed-dim">Scythe-Drone</span> patrol cycle is shortened, narrowing the window for the airlock bypass.</p>
+</div>
+<!-- Suggestion Card 4: Foreshadowing -->
+<div class="p-3 bg-surface-container-low border border-outline-variant status-partial">
+<div class="flex justify-between items-start mb-1">
+<span class="text-label-caps text-on-secondary-container bg-secondary-container px-1 rounded-sm">FORESHADOWING</span>
+<button class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="add_circle">add_circle</button>
+</div>
+<p class="text-body-sm font-body-sm">Static on the comms carries the faint, rhythmic pulse of the <span class="text-primary-fixed-dim">Deep-Layer AI</span> waking up.</p>
+</div>
+<!-- Suggestion Card 5: Narrative Opportunities -->
+<div class="p-3 bg-surface-container-low border border-outline-variant status-complete">
+<div class="flex justify-between items-start mb-1">
+<span class="text-label-caps text-on-surface-variant bg-surface-container-highest px-1 rounded-sm border border-outline-variant">NARRATIVE OPPORTUNITIES</span>
+<button class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="add_circle">add_circle</button>
+</div>
+<p class="text-body-sm font-body-sm">Allow a PC with the <span class="text-primary-fixed-dim">Street Urchin</span> background to recognize the graffiti marking the 'ghost path' to the roof.</p>
+</div>
+<!-- Suggestion Card 6: World Reactions -->
+<div class="p-3 bg-surface-container-low border border-outline-variant status-minimal">
+<div class="flex justify-between items-start mb-1">
+<span class="text-label-caps text-on-tertiary-fixed bg-on-tertiary-fixed-variant px-1 rounded-sm">WORLD REACTIONS</span>
+<button class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="add_circle">add_circle</button>
+</div>
+<p class="text-body-sm font-body-sm">District sirens begin a low-frequency hum, signaling a city-wide <span class="text-primary-fixed-dim">Grid-Lockdown</span> protocol is imminent.</p>
+</div>
+</div>
+</section>
+<!-- Plot Threads Summary -->
+<section class="flex flex-col gap-2">
+<h3 class="text-label-caps font-label-caps text-on-surface-variant pl-1">PLOT THREADS</h3>
+<div class="grid grid-cols-1 gap-2">
+<div class="bg-surface-container p-3 border border-outline-variant rounded flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-body-md font-bold">The Chromatic Virus</span>
+<span class="text-mono-data text-primary-fixed-dim">75%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-primary-container" style="width: 75%;"></div>
+</div>
+<div class="flex gap-2">
+<span class="text-label-caps font-label-caps text-[10px] bg-surface-container-highest px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">MAJOR</span>
+<span class="text-label-caps font-label-caps text-[10px] bg-surface-container-highest px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">ACTIVE</span>
+</div>
+</div>
+<div class="bg-surface-container p-3 border border-outline-variant rounded flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-body-md font-bold">Vex's Betrayal</span>
+<span class="text-mono-data text-tertiary-fixed-dim">20%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container" style="width: 20%;"></div>
+</div>
+<div class="flex gap-2">
+<span class="text-label-caps font-label-caps text-[10px] bg-surface-container-highest px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">MINOR</span>
+<span class="text-label-caps font-label-caps text-[10px] bg-surface-container-highest px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">STALLED</span>
+</div>
+</div>
+</div>
+</section>
+<!-- GM Scratchpad -->
+<section class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<h3 class="text-label-caps font-label-caps text-on-surface-variant pl-1">SCRATCHPAD</h3>
+<span class="text-[10px] text-outline">AUTO-SAVING...</span>
+</div>
+<div class="inset-panel p-2 border border-outline-variant rounded min-h-[100px]">
+<textarea class="w-full bg-transparent border-none focus:ring-0 font-body-sm text-on-surface-variant text-xs resize-none" placeholder="Quick jot down ephemeral info (initiative, temporary HP, random names)..."></textarea>
+</div>
+</section>
+</main>
+<!-- FAB for Quick Capture -->
+<div class="fixed bottom-24 right-4 flex flex-col gap-3 items-end">
+<button class="bg-primary-container text-on-primary-container w-12 h-12 rounded shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform ring-1 ring-primary-fixed-dim">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center bg-surface-container-highest dark:bg-surface-container-highest z-50 border-t border-outline-variant">
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-2 flex-1 hover:bg-surface-bright transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span class="text-label-caps font-label-caps mt-1">Database</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-2 flex-1 hover:bg-surface-bright transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="text-label-caps font-label-caps mt-1">Sessions</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary-fixed-dim border-t-2 border-primary-fixed-dim bg-surface-container-high py-2 flex-1 hover:bg-surface-bright transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="text-label-caps font-label-caps mt-1">Workspace</span>
+</a>
+</nav>
+<!-- Quick Capture Strip (Secondary Action Bar) -->
+<div class="fixed bottom-14 left-0 w-full bg-surface-container-low border-t border-outline-variant px-4 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+<span class="text-[10px] font-bold text-outline mr-2 whitespace-nowrap">QUICK CAPTURE:</span>
+<button class="flex items-center gap-1 bg-surface-container-highest px-3 py-1 rounded-sm border border-outline-variant text-on-surface-variant hover:text-on-surface transition-all whitespace-nowrap">
+<span class="material-symbols-outlined text-xs" data-icon="person_add">person_add</span>
+<span class="text-label-caps">NPC</span>
+</button>
+<button class="flex items-center gap-1 bg-surface-container-highest px-3 py-1 rounded-sm border border-outline-variant text-on-surface-variant hover:text-on-surface transition-all whitespace-nowrap">
+<span class="material-symbols-outlined text-xs" data-icon="add_location">add_location</span>
+<span class="text-label-caps">LOC</span>
+</button>
+<button class="flex items-center gap-1 bg-surface-container-highest px-3 py-1 rounded-sm border border-outline-variant text-on-surface-variant hover:text-on-surface transition-all whitespace-nowrap">
+<span class="material-symbols-outlined text-xs" data-icon="inventory_2">inventory_2</span>
+<span class="text-label-caps">ITEM</span>
+</button>
+</div>
+<script>
+        // Simple micro-interaction for the Mode Switcher
+        const modeButtons = document.querySelectorAll('.flex.bg-surface-container-low button');
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeButtons.forEach(b => {
+                    b.classList.remove('text-primary-fixed-dim', 'font-bold', 'bg-secondary-container', 'border-l-2', 'border-primary-fixed-dim');
+                    b.classList.add('text-on-surface-variant');
+                });
+                btn.classList.remove('text-on-surface-variant');
+                btn.classList.add('text-primary-fixed-dim', 'font-bold', 'bg-secondary-container', 'border-l-2', 'border-primary-fixed-dim');
+            });
+        });
+
+        // Toggle logic for collapsible section
+        const toggleBtn = document.querySelector('[x-data] button');
+        const content = document.querySelector('[x-data] div');
+        const icon = toggleBtn.querySelector('.material-symbols-outlined:last-child');
+
+        toggleBtn.addEventListener('click', () => {
+            content.classList.toggle('hidden');
+            icon.innerText = content.classList.contains('hidden') ? 'expand_less' : 'expand_more';
+        });
+    </script>
+</body></html>

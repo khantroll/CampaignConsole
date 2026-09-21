@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GM Mission Control - Session Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #051424; }
+        ::-webkit-scrollbar-thumb { background: #3F4447; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c5c7c8; }
+        
+        .pane-divider { @apply border-outline-variant; }
+        .session-gradient {
+            background: linear-gradient(180deg, rgba(5, 20, 36, 0) 0%, rgba(5, 20, 36, 1) 100%);
+        }
+        .active-glow {
+            box-shadow: 0 0 15px rgba(74, 225, 118, 0.15);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#1c2b3c",
+                      "on-tertiary-fixed": "#002109",
+                      "on-primary-fixed": "#191c1d",
+                      "primary-container": "#1a1d1e",
+                      "error": "#ffb4ab",
+                      "surface-tint": "#c5c7c8",
+                      "primary": "#c5c7c8",
+                      "surface-dim": "#051424",
+                      "inverse-primary": "#5c5f60",
+                      "surface-container-lowest": "#010f1f",
+                      "secondary-container": "#444a4d",
+                      "secondary": "#c2c7cb",
+                      "on-primary": "#2e3132",
+                      "on-tertiary": "#003915",
+                      "on-background": "#d4e4fa",
+                      "inverse-on-surface": "#233143",
+                      "on-surface": "#d4e4fa",
+                      "on-surface-variant": "#c4c7c8",
+                      "surface-container": "#122131",
+                      "surface-container-highest": "#273647",
+                      "primary-fixed-dim": "#c5c7c8",
+                      "error-container": "#93000a",
+                      "tertiary-fixed-dim": "#4ae176",
+                      "surface-container-low": "#0d1c2d",
+                      "outline-variant": "#444749",
+                      "on-secondary-fixed": "#171c1f",
+                      "tertiary-fixed": "#6bff8f",
+                      "tertiary": "#4ae176",
+                      "on-error": "#690005",
+                      "outline": "#8e9193",
+                      "on-error-container": "#ffdad6",
+                      "background": "#051424",
+                      "inverse-surface": "#d4e4fa",
+                      "on-secondary-container": "#b3b9bd",
+                      "surface-bright": "#2c3a4c",
+                      "on-tertiary-fixed-variant": "#005321",
+                      "on-secondary": "#2b3134",
+                      "primary-fixed": "#e1e3e4",
+                      "on-tertiary-container": "#009944",
+                      "on-secondary-fixed-variant": "#42484b",
+                      "secondary-fixed": "#dee3e7",
+                      "on-primary-fixed-variant": "#444748",
+                      "surface": "#051424",
+                      "secondary-fixed-dim": "#c2c7cb",
+                      "tertiary-container": "#00220a",
+                      "surface-variant": "#273647"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter-xs": "4px",
+                      "gutter-sm": "8px",
+                      "max-width": "none",
+                      "gutter-md": "12px",
+                      "unit": "4px",
+                      "pane-margin": "16px"
+              },
+              "fontFamily": {
+                      "data-mono": ["JetBrains Mono"],
+                      "headline-lg": ["Inter"],
+                      "label-caps": ["JetBrains Mono"],
+                      "headline-md": ["Inter"],
+                      "body-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "data-mono": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-caps": ["10px", {"lineHeight": "12px", "fontWeight": "700"}],
+                      "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface overflow-hidden">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-pane-margin h-12 z-50 bg-background dark:bg-background border-b border-outline-variant fixed top-0">
+<div class="flex items-center gap-gutter-md">
+<span class="font-headline-lg text-headline-lg font-bold text-tertiary tracking-tighter">GM Mission Control</span>
+<nav class="hidden md:flex gap-gutter-md ml-gutter-md">
+<a class="text-on-surface-variant font-medium hover:bg-surface-variant transition-colors cursor-pointer active:opacity-80 font-data-mono text-data-mono">Database</a>
+<a class="text-tertiary border-b-2 border-tertiary pb-1 font-data-mono text-data-mono cursor-pointer active:opacity-80">Sessions</a>
+<a class="text-on-surface-variant font-medium hover:bg-surface-variant transition-colors cursor-pointer active:opacity-80 font-data-mono text-data-mono">Workspace</a>
+</nav>
+</div>
+<div class="flex items-center gap-gutter-md">
+<div class="bg-surface-container-highest px-gutter-sm py-1 border border-outline-variant flex items-center gap-gutter-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">timer</span>
+<span class="font-data-mono text-data-mono text-tertiary">02:45:12</span>
+</div>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-variant p-1">notifications</span>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-variant p-1">settings</span>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-variant p-1">account_circle</span>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 pt-12 bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant docked left-0 h-full w-64 z-40">
+<div class="p-gutter-md border-b border-outline-variant">
+<div class="flex items-center gap-gutter-sm mb-gutter-xs">
+<div class="w-8 h-8 bg-surface-container-highest rounded-full border border-outline flex items-center justify-center overflow-hidden">
+<img alt="Campaign Logo" class="w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDm01JBrWKjqmmyVp1ckaPe8d1TmaFBPhDhfjv7iKL5jNpb2nvGQ8d4Q2WE9jFiU0OFoRLpExYgrl990H9B_orSz2dnjgLnqjur09Unve-ZVq7_v5vDBMz39UnEh0XoBZefqhcFjSFIA9ejn4wn3jkKGfLgVtrHKKGzg7CWHiB4dNmu4KxTfsKiiQnLeoIU-TsERwI1f0lgEyTF_6ZXKsCS-Gi9ycl3Ji0f4SFZfpyBSsmMQQClpOAXDK6uOg-ADrzGqeWHujA-fX51"/>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface leading-tight">Aethelgard</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">High Fantasy - Tier 3</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 py-gutter-sm overflow-y-auto">
+<div class="bg-tertiary-container text-tertiary border-l-2 border-tertiary px-gutter-md py-gutter-sm flex items-center gap-gutter-md cursor-pointer transition-all duration-150 ease-in-out">
+<span class="material-symbols-outlined">public</span>
+<span class="font-label-caps text-label-caps">WORLD</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm flex items-center gap-gutter-md hover:bg-surface-container-high hover:text-on-surface cursor-pointer transition-all duration-150 ease-in-out">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-caps text-label-caps">NPCS</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm flex items-center gap-gutter-md hover:bg-surface-container-high hover:text-on-surface cursor-pointer transition-all duration-150 ease-in-out">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-label-caps text-label-caps">FACTIONS</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm flex items-center gap-gutter-md hover:bg-surface-container-high hover:text-on-surface cursor-pointer transition-all duration-150 ease-in-out">
+<span class="material-symbols-outlined">category</span>
+<span class="font-label-caps text-label-caps">ITEMS</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm flex items-center gap-gutter-md hover:bg-surface-container-high hover:text-on-surface cursor-pointer transition-all duration-150 ease-in-out">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label-caps text-label-caps">QUESTS</span>
+</div>
+</nav>
+<div class="mt-auto border-t border-outline-variant p-gutter-sm">
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm flex items-center gap-gutter-md hover:bg-surface-container-high cursor-pointer transition-all">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-body-sm text-body-sm">Help</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm flex items-center gap-gutter-md hover:bg-surface-container-high cursor-pointer transition-all">
+<span class="material-symbols-outlined">terminal</span>
+<span class="font-body-sm text-body-sm">Logs</span>
+</div>
+</div>
+</aside>
+<!-- Main Workspace Container -->
+<main class="pl-64 pt-12 h-screen flex flex-col">
+<!-- Top Workspace Area -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Editor Column (60% Width) -->
+<section class="w-3/5 border-r border-outline-variant flex flex-col bg-background">
+<div class="h-8 border-b border-outline-variant px-gutter-md flex items-center justify-between bg-surface-container-low">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Live Script Editor</span>
+<div class="flex gap-gutter-sm">
+<span class="material-symbols-outlined text-[16px] cursor-pointer hover:text-on-surface">save</span>
+<span class="material-symbols-outlined text-[16px] cursor-pointer hover:text-on-surface">share</span>
+</div>
+</div>
+<div class="flex-1 p-pane-margin overflow-y-auto">
+<div class="max-w-3xl mx-auto space-y-gutter-md">
+<h1 class="font-headline-lg text-headline-lg text-primary">Chapter 4: The Whispering Spire</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                            The players arrive at the base of the Spire. The air is thick with the scent of ozone and ancient dust. 
+                            <span class="bg-surface-container-highest text-tertiary px-1 rounded">Read Aloud:</span> 
+                            "The shadows here don't behave as they should. They stretch toward the monolith regardless of where your torches flicker."
+                        </p>
+<div class="bg-surface-container-high p-gutter-md border-l-2 border-tertiary">
+<h3 class="font-label-caps text-label-caps text-tertiary mb-gutter-xs">DEVELOPMENT TRIGGER</h3>
+<p class="font-data-mono text-data-mono">If a player uses Detect Magic, reveal the pulsing blue ley-lines beneath the flagstones. DC 16 Arcana to realize they are draining life force from the surrounding woods.</p>
+</div>
+<div class="h-64 bg-surface-container-low rounded border border-outline-variant relative overflow-hidden group">
+<img class="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all duration-700" data-alt="A cinematic low-angle shot of a towering obsidian monolith reaching into a stormy, lightning-filled sky. The base of the spire is surrounded by twisted, leafless trees and a faint, ethereal green fog. The visual style is dark fantasy with a high-density, industrial technical UI aesthetic, using deep blacks, slate greys, and sharp toxic green accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWiX7eHqfyH0QovOr8N4MTcdxgm06fZqqg2L7DHBcTXA6SdO31OzxfE2Ha79lVmDPgTGqB9nq09Z2BVRIAuWABuHruVaT-AbPAHwPxfwi7Tryy8Uev19cSLVAVLwNlOjran3OVWy6uA5On5rKAJomophNJwFQkDP2ySjg8i8Kyik6X7mfBVU3040Z1F0xNfxdUooxliAQGQZk7NVWTxkZnog9WMmxavY8A9SajeU3fwDz9h7lg2y6ssVzQAkBKuweRRKeZTLoHkrsS"/>
+<div class="absolute inset-0 session-gradient pointer-events-none"></div>
+<div class="absolute bottom-gutter-md left-gutter-md">
+<span class="font-label-caps text-label-caps bg-background/80 px-2 py-1 border border-outline-variant">VIEW: THE MONOLITH BASE</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                            The guardian, a skeletal construct known as the <span class="text-error cursor-pointer underline decoration-dotted">Null-Blade Warden</span>, waits in the archway. It does not move until the threshold is crossed or it is attacked from range.
+                        </p>
+</div>
+</div>
+</section>
+<!-- Dual-Column Sidebar (40% Width) -->
+<section class="w-2/5 flex">
+<!-- Column 1: Active NPC Stat Blocks -->
+<div class="w-1/2 border-r border-outline-variant flex flex-col bg-surface-container-low">
+<div class="h-8 border-b border-outline-variant px-gutter-md flex items-center bg-surface-container">
+<span class="font-label-caps text-label-caps text-tertiary">ACTIVE STAT BLOCKS</span>
+</div>
+<div class="flex-1 overflow-y-auto p-gutter-sm space-y-gutter-sm">
+<!-- Stat Block Card -->
+<div class="bg-background border border-outline-variant p-gutter-sm rounded active-glow">
+<div class="flex justify-between items-start mb-gutter-xs">
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface">Null-Blade Warden</h4>
+<p class="font-data-mono text-label-caps text-on-surface-variant uppercase">Large Undead Construct, LE</p>
+</div>
+<div class="bg-error-container text-on-error-container px-2 py-1 font-data-mono text-data-mono border border-error">HP: 145/145</div>
+</div>
+<div class="grid grid-cols-6 gap-1 mb-gutter-sm">
+<div class="bg-surface-container-high p-1 text-center border border-outline-variant">
+<div class="font-label-caps text-[8px] text-on-surface-variant">STR</div>
+<div class="font-data-mono text-data-mono">20(+5)</div>
+</div>
+<div class="bg-surface-container-high p-1 text-center border border-outline-variant">
+<div class="font-label-caps text-[8px] text-on-surface-variant">DEX</div>
+<div class="font-data-mono text-data-mono">12(+1)</div>
+</div>
+<div class="bg-surface-container-high p-1 text-center border border-outline-variant">
+<div class="font-label-caps text-[8px] text-on-surface-variant">CON</div>
+<div class="font-data-mono text-data-mono">18(+4)</div>
+</div>
+<div class="bg-surface-container-high p-1 text-center border border-outline-variant">
+<div class="font-label-caps text-[8px] text-on-surface-variant">INT</div>
+<div class="font-data-mono text-data-mono">6(-2)</div>
+</div>
+<div class="bg-surface-container-high p-1 text-center border border-outline-variant">
+<div class="font-label-caps text-[8px] text-on-surface-variant">WIS</div>
+<div class="font-data-mono text-data-mono">10(+0)</div>
+</div>
+<div class="bg-surface-container-high p-1 text-center border border-outline-variant">
+<div class="font-label-caps text-[8px] text-on-surface-variant">CHA</div>
+<div class="font-data-mono text-data-mono">5(-3)</div>
+</div>
+</div>
+<div class="space-y-gutter-xs text-body-sm font-body-sm">
+<p><strong class="text-tertiary">Magic Resistance.</strong> Advantage on saves vs spells.</p>
+<p><strong class="text-tertiary">Null-Aura.</strong> Spells level 2 or lower fail within 10ft.</p>
+<div class="pt-gutter-xs border-t border-outline-variant mt-gutter-xs">
+<div class="flex justify-between items-center text-error hover:bg-surface-variant p-1 cursor-pointer">
+<span>Multiattack (2x Sword)</span>
+<span class="font-data-mono">+9 to hit</span>
+</div>
+<div class="flex justify-between items-center text-error hover:bg-surface-variant p-1 cursor-pointer">
+<span>Void Gaze (Recharge 5-6)</span>
+<span class="font-data-mono">DC 15 CON</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Mini NPC Card -->
+<div class="bg-background border border-outline-variant p-gutter-sm rounded opacity-80">
+<div class="flex justify-between items-center">
+<span class="font-headline-md text-headline-md">Skeletal Archer x4</span>
+<span class="font-data-mono text-data-mono">HP: 22ea</span>
+</div>
+<div class="mt-gutter-xs flex gap-gutter-sm">
+<span class="text-on-surface-variant font-label-caps text-[9px] border border-outline-variant px-1">AC: 13</span>
+<span class="text-on-surface-variant font-label-caps text-[9px] border border-outline-variant px-1">SPD: 30ft</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: GM Reminders / Rules -->
+<div class="w-1/2 flex flex-col bg-surface-container-low">
+<div class="h-8 border-b border-outline-variant px-gutter-md flex items-center bg-surface-container">
+<span class="font-label-caps text-label-caps text-secondary">GM REMINDERS / RULES</span>
+</div>
+<div class="flex-1 overflow-y-auto p-gutter-sm">
+<div class="space-y-gutter-sm">
+<div class="bg-surface-container-highest border border-outline-variant p-gutter-sm">
+<div class="flex items-center gap-gutter-sm text-tertiary mb-1">
+<span class="material-symbols-outlined text-[16px]">lightbulb</span>
+<span class="font-label-caps text-label-caps">SESSION GOALS</span>
+</div>
+<ul class="font-body-sm text-body-sm list-disc pl-4 text-on-surface-variant space-y-1">
+<li>Reveal the identity of the Spire's creator.</li>
+<li>Introduce the "Cursed Coin" mechanic.</li>
+<li>Ensure PC: Theron notices the Raven heraldry.</li>
+</ul>
+</div>
+<div class="bg-background border border-outline-variant p-gutter-sm">
+<span class="font-label-caps text-label-caps text-secondary block border-b border-outline-variant mb-1">QUICK REFERENCE: COVER</span>
+<div class="font-data-mono text-data-mono space-y-1">
+<div class="flex justify-between"><span>Half Cover:</span> <span class="text-tertiary">+2 AC/DEX</span></div>
+<div class="flex justify-between"><span>3/4 Cover:</span> <span class="text-tertiary">+5 AC/DEX</span></div>
+<div class="flex justify-between"><span>Total:</span> <span class="text-tertiary">Can't target</span></div>
+</div>
+</div>
+<div class="bg-error-container/20 border border-error/30 p-gutter-sm">
+<span class="font-label-caps text-label-caps text-error block mb-1">URGENT: TRACKING</span>
+<p class="font-body-sm text-body-sm text-on-surface">The party has 4 rounds before the ritual in the basement completes. Track 'Ritual Progress' tokens.</p>
+</div>
+<div class="relative group h-32 overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A detailed parchment map of a multi-level stone dungeon spire. The map is covered in technical callouts, red tactical circles, and intricate geometric diagrams showing magical flow. The lighting is low and focused, like a spotlight on a strategist's table. The aesthetic matches a high-density, mission control dashboard with dark-mode colors and functional industrial accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAonw379HYI7Q72mRd44jb4YsaV0e7m1uygvyImkbd4oInnR0aUISDUgP3CO3dqm2Y6lVyfGYzu8CTgIQdXI-g6EeCWFUf1X3HDOG2DnX9U38NMlmO73KnN5p7J1khEHK73mmkVWgP2LPFz5hoVAo_BBlZp9HmcXHTtX-vnAx_Jbig9WkYwY3t4H41RmHyIFoe7QM0EDJT3XA6y7DXP55VPVzt7qFTvMW8564bI-KCsLFbeP2dD3vSqedyc6_lEuviU7MLmhX6DrMU7"/>
+<div class="absolute inset-0 bg-background/40 group-hover:bg-transparent transition-colors"></div>
+<div class="absolute bottom-1 right-1 font-label-caps text-[8px] bg-background px-1">FLOOR PLAN B-1</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Active Encounter Tracker (Bottom 30%) -->
+<footer class="h-1/3 bg-surface-container border-t border-outline-variant flex flex-col z-30">
+<div class="h-10 border-b border-outline-variant flex items-center justify-between px-pane-margin bg-surface-container-high">
+<div class="flex items-center gap-gutter-md">
+<span class="font-headline-md text-headline-md text-tertiary">INITIATIVE TRACKER</span>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<span class="font-data-mono text-data-mono text-on-surface-variant">ROUND: 3</span>
+</div>
+<div class="flex gap-gutter-md">
+<button class="bg-tertiary-container text-tertiary border border-tertiary px-gutter-md py-1 font-label-caps text-label-caps hover:bg-tertiary hover:text-on-tertiary transition-colors">NEXT TURN</button>
+<button class="border border-outline text-on-surface px-gutter-md py-1 font-label-caps text-label-caps hover:bg-surface-variant transition-colors">ADD ENTITY</button>
+</div>
+</div>
+<div class="flex-1 flex overflow-x-auto p-gutter-sm gap-gutter-sm items-center scroll-smooth">
+<!-- Initiative Cards -->
+<div class="flex-shrink-0 w-48 h-full bg-background border-2 border-tertiary p-gutter-sm relative active-glow">
+<div class="absolute -top-2 left-2 bg-tertiary text-on-tertiary-fixed font-data-mono text-[10px] px-1 font-bold">CURRENT</div>
+<div class="flex justify-between items-start mb-gutter-xs">
+<span class="font-data-mono text-headline-md text-tertiary">22</span>
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<div class="font-headline-md text-on-surface leading-tight mb-2">Null-Blade Warden</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-full"></div>
+</div>
+<div class="mt-2 text-on-surface-variant font-label-caps text-[9px]">ACTIONS REMAINING: 2</div>
+</div>
+<div class="flex-shrink-0 w-40 h-5/6 bg-surface-container-high border border-outline-variant p-gutter-sm opacity-90">
+<div class="flex justify-between items-start mb-gutter-xs">
+<span class="font-data-mono text-headline-md text-on-surface">18</span>
+<span class="material-symbols-outlined text-on-surface-variant">swords</span>
+</div>
+<div class="font-body-sm font-bold text-on-surface leading-tight">Theron (PC)</div>
+<div class="mt-4 w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-error h-full w-[40%]"></div>
+</div>
+<div class="mt-1 text-on-surface-variant font-label-caps text-[8px]">HP: 28 / 65</div>
+</div>
+<div class="flex-shrink-0 w-40 h-5/6 bg-surface-container-high border border-outline-variant p-gutter-sm opacity-90">
+<div class="flex justify-between items-start mb-gutter-xs">
+<span class="font-data-mono text-headline-md text-on-surface">15</span>
+<span class="material-symbols-outlined text-on-surface-variant">auto_fix_high</span>
+</div>
+<div class="font-body-sm font-bold text-on-surface leading-tight">Elara (PC)</div>
+<div class="mt-4 w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[95%]"></div>
+</div>
+<div class="mt-1 text-on-surface-variant font-label-caps text-[8px]">HP: 42 / 45</div>
+</div>
+<div class="flex-shrink-0 w-40 h-5/6 bg-surface-container-high border border-outline-variant p-gutter-sm opacity-70">
+<div class="flex justify-between items-start mb-gutter-xs">
+<span class="font-data-mono text-headline-md text-on-surface">12</span>
+<span class="material-symbols-outlined text-on-surface-variant">skull</span>
+</div>
+<div class="font-body-sm font-bold text-on-surface leading-tight">Skeletal Archers</div>
+<div class="mt-4 w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-1/2"></div>
+</div>
+<div class="mt-1 text-on-surface-variant font-label-caps text-[8px]">4 UNITS REMAINING</div>
+</div>
+<div class="flex-shrink-0 w-40 h-5/6 bg-surface-container-high border border-outline-variant p-gutter-sm opacity-50 grayscale">
+<div class="flex justify-between items-start mb-gutter-xs">
+<span class="font-data-mono text-headline-md text-on-surface">08</span>
+<span class="material-symbols-outlined text-on-surface-variant">shield</span>
+</div>
+<div class="font-body-sm font-bold text-on-surface leading-tight">Korg (PC)</div>
+<div class="mt-4 w-full bg-surface-container-highest h-1 rounded-full overflow-hidden text-center text-[8px] font-data-mono text-on-error">STUNNED</div>
+</div>
+<!-- Add more as needed for visual density -->
+</div>
+</footer>
+</main>
+<!-- Global Dice Roller (Floating Overlay) -->
+<div class="fixed bottom-gutter-md right-gutter-md z-50 flex items-center gap-gutter-sm">
+<div class="bg-tertiary text-on-tertiary-fixed font-data-mono text-headline-md px-gutter-md py-2 border-2 border-on-tertiary-fixed hidden animate-pulse" id="dice-result">
+            20!
+        </div>
+<button class="w-12 h-12 rounded-full bg-tertiary text-on-tertiary-fixed flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-transform group" onclick="rollDice()">
+<span class="material-symbols-outlined group-hover:rotate-45 transition-transform">casino</span>
+</button>
+</div>
+<script>
+        function rollDice() {
+            const resultDisplay = document.getElementById('dice-result');
+            const roll = Math.floor(Math.random() * 20) + 1;
+            resultDisplay.textContent = roll === 20 ? 'CRIT!' : roll;
+            resultDisplay.classList.remove('hidden');
+            
+            // Interaction logic for visual feedback
+            setTimeout(() => {
+                resultDisplay.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Toggle active navigation highlighting based on context
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('nav a').forEach(l => {
+                    l.classList.remove('text-tertiary', 'border-b-2', 'border-tertiary', 'pb-1');
+                    l.classList.add('text-on-surface-variant');
+                });
+                this.classList.add('text-tertiary', 'border-b-2', 'border-tertiary', 'pb-1');
+                this.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

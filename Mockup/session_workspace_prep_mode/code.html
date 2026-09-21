@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GM Mission Control - Session Prep Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            font-size: 18px;
+        }
+        /* Custom Scrollbar for Industrial Feel */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #051424; }
+        ::-webkit-scrollbar-thumb { background: #3F4447; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c5c7c8; }
+        
+        .editor-bg {
+            background-image: radial-gradient(circle at 2px 2px, #273647 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+
+        .glass-panel {
+            background: rgba(13, 28, 45, 0.8);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "surface-container-high": "#1c2b3c",
+                "on-tertiary-fixed": "#002109",
+                "on-primary-fixed": "#191c1d",
+                "primary-container": "#1a1d1e",
+                "error": "#ffb4ab",
+                "surface-tint": "#c5c7c8",
+                "primary": "#c5c7c8",
+                "surface-dim": "#051424",
+                "inverse-primary": "#5c5f60",
+                "surface-container-lowest": "#010f1f",
+                "secondary-container": "#444a4d",
+                "secondary": "#c2c7cb",
+                "on-primary": "#2e3132",
+                "on-background": "#d4e4fa",
+                "inverse-on-surface": "#233143",
+                "on-surface-variant": "#c4c7c8",
+                "tertiary": "#4ae176",
+                "on-error": "#690005",
+                "outline": "#8e9193",
+                "on-error-container": "#ffdad6",
+                "background": "#051424",
+                "inverse-surface": "#d4e4fa",
+                "on-surface": "#d4e4fa",
+                "on-secondary-container": "#b3b9bd",
+                "surface-bright": "#2c3a4c",
+                "on-tertiary-fixed-variant": "#005321",
+                "on-secondary": "#2b3134",
+                "primary-fixed": "#e1e3e4",
+                "on-tertiary-container": "#009944",
+                "on-secondary-fixed-variant": "#42484b",
+                "secondary-fixed": "#dee3e7",
+                "on-primary-fixed-variant": "#444748",
+                "surface": "#051424",
+                "secondary-fixed-dim": "#c2c7cb",
+                "tertiary-container": "#00220a",
+                "surface-variant": "#273647"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+              },
+              "spacing": {
+                "gutter-xs": "4px",
+                "gutter-sm": "8px",
+                "max-width": "none",
+                "gutter-md": "12px",
+                "unit": "4px",
+                "pane-margin": "16px"
+              },
+              "fontFamily": {
+                "data-mono": ["JetBrains Mono"],
+                "headline-lg": ["Inter"],
+                "label-caps": ["JetBrains Mono"],
+                "headline-md": ["Inter"],
+                "body-sm": ["Inter"]
+              },
+              "fontSize": {
+                "data-mono": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "label-caps": ["10px", {"lineHeight": "12px", "fontWeight": "700"}],
+                "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-sm selection:bg-tertiary selection:text-on-tertiary">
+<!-- TopAppBar Component -->
+<header class="flex justify-between items-center w-full px-pane-margin h-12 z-50 bg-background dark:bg-background border-b border-outline-variant fixed top-0">
+<div class="flex items-center gap-gutter-md">
+<span class="font-headline-lg text-headline-lg font-bold text-tertiary tracking-tighter">GM Mission Control</span>
+<nav class="hidden md:flex ml-8 gap-gutter-md">
+<a class="font-data-mono text-data-mono text-on-surface-variant font-medium hover:bg-surface-variant transition-colors px-2 py-1" href="#">Database</a>
+<a class="font-data-mono text-data-mono text-tertiary border-b-2 border-tertiary pb-1 px-2 py-1" href="#">Sessions</a>
+<a class="font-data-mono text-data-mono text-on-surface-variant font-medium hover:bg-surface-variant transition-colors px-2 py-1" href="#">Workspace</a>
+</nav>
+</div>
+<div class="flex items-center gap-gutter-sm">
+<div class="relative group">
+<input class="bg-surface-container-low border border-outline-variant px-2 py-1 text-data-mono font-data-mono w-48 focus:w-64 transition-all focus:outline-none focus:border-tertiary" placeholder="GLOBAL SCAN..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded transition-colors" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded transition-colors" data-icon="settings">settings</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant p-2 rounded transition-colors" data-icon="account_circle">account_circle</button>
+</div>
+</header>
+<!-- SideNavBar Component -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 pt-12 bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant w-64 hidden md:flex">
+<div class="p-pane-margin border-b border-outline-variant mb-gutter-sm">
+<div class="flex items-center gap-gutter-md">
+<div class="w-8 h-8 bg-tertiary flex items-center justify-center rounded">
+<span class="material-symbols-outlined text-on-tertiary-fixed" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Aethelgard</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant opacity-70">High Fantasy - Tier 3</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto py-gutter-sm">
+<div class="px-gutter-md py-gutter-xs text-label-caps font-label-caps text-on-surface-variant opacity-50 mb-gutter-xs">CORE MODULES</div>
+<a class="flex items-center gap-gutter-md text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="public">public</span>
+<span class="font-label-caps text-label-caps">World</span>
+</a>
+<a class="flex items-center gap-gutter-md text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-caps text-label-caps">NPCs</span>
+</a>
+<a class="flex items-center gap-gutter-md text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+<span class="font-label-caps text-label-caps">Factions</span>
+</a>
+<a class="flex items-center gap-gutter-md text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="category">category</span>
+<span class="font-label-caps text-label-caps">Items</span>
+</a>
+<a class="flex items-center gap-gutter-md bg-tertiary-container text-tertiary border-l-2 border-tertiary px-gutter-md py-gutter-sm transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-label-caps text-label-caps">Quests</span>
+</a>
+</nav>
+<div class="p-gutter-md border-t border-outline-variant bg-surface-container-low">
+<a class="flex items-center gap-gutter-md text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span class="font-body-sm text-body-sm">Help</span>
+</a>
+<a class="flex items-center gap-gutter-md text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+<span class="font-body-sm text-body-sm">Logs</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 mt-12 flex h-[calc(100vh-3rem)]">
+<!-- Center Editor Pane (70%) -->
+<section class="w-full lg:w-[65%] flex flex-col border-r border-outline-variant bg-surface-dim editor-bg overflow-hidden">
+<!-- Prep Progress Header -->
+<div class="p-gutter-md border-b border-outline-variant bg-surface-container glass-panel">
+<div class="flex justify-between items-end mb-gutter-sm">
+<div>
+<h1 class="font-headline-md text-headline-md text-tertiary">SESSION 42: THE OBSIDIAN SPIRE</h1>
+<p class="font-data-mono text-data-mono text-on-surface-variant">TARGET DATE: 2024.10.15 | PHASE: GENERATION</p>
+</div>
+<div class="text-right">
+<span class="font-data-mono text-data-mono text-tertiary">READY FOR PLAY: 74%</span>
+</div>
+</div>
+<div class="flex gap-gutter-xs">
+<div class="h-1 flex-1 bg-tertiary"></div>
+<div class="h-1 flex-1 bg-tertiary"></div>
+<div class="h-1 flex-1 bg-tertiary"></div>
+<div class="h-1 flex-1 bg-tertiary opacity-30"></div>
+<div class="h-1 flex-1 bg-surface-variant"></div>
+</div>
+<div class="flex gap-gutter-md mt-4 overflow-x-auto pb-gutter-xs">
+<div class="flex items-center gap-gutter-sm px-2 py-1 bg-surface-container-highest border border-tertiary/50">
+<span class="material-symbols-outlined text-tertiary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1">check_circle</span>
+<span class="font-label-caps text-label-caps whitespace-nowrap">Hook Drafted</span>
+</div>
+<div class="flex items-center gap-gutter-sm px-2 py-1 bg-surface-container-highest border border-tertiary/50">
+<span class="material-symbols-outlined text-tertiary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1">check_circle</span>
+<span class="font-label-caps text-label-caps whitespace-nowrap">NPC Stats Locked</span>
+</div>
+<div class="flex items-center gap-gutter-sm px-2 py-1 bg-surface-container-highest border border-outline">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+<span class="font-label-caps text-label-caps whitespace-nowrap">Loot Table Generated</span>
+</div>
+<div class="flex items-center gap-gutter-sm px-2 py-1 bg-surface-container-highest border border-outline">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+<span class="font-label-caps text-label-caps whitespace-nowrap">Tactical Maps Link</span>
+</div>
+</div>
+</div>
+<!-- Content Editor Area -->
+<div class="flex-1 p-8 overflow-y-auto max-w-4xl mx-auto w-full">
+<div class="bg-surface-container-low p-pane-margin border border-outline-variant">
+<div class="mb-gutter-md flex items-center justify-between border-b border-outline-variant pb-gutter-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant">ENCOUNTER_HOOK_01</span>
+<div class="flex gap-gutter-sm">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-tertiary" data-icon="edit">edit</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-tertiary" data-icon="content_copy">content_copy</span>
+</div>
+</div>
+<h3 class="font-headline-md text-headline-md mb-4 text-primary">The Whispering Cinders</h3>
+<p class="font-body-sm text-body-sm leading-relaxed mb-6">
+                        As the party descends into the lower caldera of the Obsidian Spire, the air becomes thick with metallic ash. Each step crunches with the sound of breaking glass. Suddenly, the party's campfire begins to speak in the voice of a forgotten deity, demanding a sacrifice of memory in exchange for safe passage...
+                    </p>
+<div class="grid grid-cols-2 gap-gutter-md border-t border-outline-variant pt-gutter-md">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">CHECKS</span>
+<div class="font-data-mono text-data-mono">DC 18 ARCANA (DETECTION)</div>
+<div class="font-data-mono text-data-mono">DC 15 CONSTITUTION (ASH LUNGS)</div>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">REWARDS</span>
+<div class="font-data-mono text-data-mono">1,200 XP</div>
+<div class="font-data-mono text-data-mono text-tertiary">SHARD OF VOID-GLASS</div>
+</div>
+</div>
+</div>
+<div class="mt-8 border-t border-outline-variant pt-8">
+<h3 class="font-headline-md text-headline-md mb-4 text-primary">Scene II: The Gate of Teeth</h3>
+<div class="space-y-4 opacity-50 italic">
+                        Click here to start drafting the next scene...
+                    </div>
+</div>
+</div>
+<!-- Editor Toolbar (Floating Bottom) -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-gutter-sm bg-surface-container-high p-gutter-xs border border-outline-variant rounded-lg shadow-xl">
+<button class="flex items-center gap-2 px-3 py-1 bg-tertiary text-on-tertiary font-label-caps text-label-caps rounded-sm hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="save">save</span> SAVE DRAFT
+                </button>
+<div class="w-[1px] bg-outline-variant mx-1"></div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant transition-colors rounded">
+<span class="material-symbols-outlined" data-icon="format_bold">format_bold</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant transition-colors rounded">
+<span class="material-symbols-outlined" data-icon="format_list_bulleted">format_list_bulleted</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant transition-colors rounded">
+<span class="material-symbols-outlined" data-icon="attach_file">attach_file</span>
+</button>
+</div>
+</section>
+<!-- Sidebar Panes (35%) - Two Sub-columns -->
+<section class="hidden lg:flex w-[35%] h-full">
+<!-- AI Suggestions Sub-Column -->
+<div class="w-1/2 border-r border-outline-variant flex flex-col bg-surface-container-low">
+<div class="p-gutter-md bg-surface-container border-b border-outline-variant flex items-center gap-gutter-sm">
+<span class="material-symbols-outlined text-tertiary" data-icon="psychology">psychology</span>
+<span class="font-label-caps text-label-caps text-on-surface">AI PREP ASSIST</span>
+</div>
+<div class="flex-1 overflow-y-auto p-gutter-sm space-y-gutter-md">
+<!-- Suggestion Card 1 -->
+<div class="bg-surface-container-high border border-outline-variant p-gutter-sm hover:border-tertiary/50 transition-colors cursor-pointer group">
+<div class="flex justify-between mb-1">
+<span class="font-label-caps text-label-caps text-tertiary">ENCOUNTER HOOK</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-tertiary text-[14px]" data-icon="add">add</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-tight">The air in the spire begins to freeze, crystallizing the breaths of the party into tiny floating daggers.</p>
+</div>
+<!-- Suggestion Card 2 -->
+<div class="bg-surface-container-high border border-outline-variant p-gutter-sm hover:border-tertiary/50 transition-colors cursor-pointer">
+<div class="flex justify-between mb-1">
+<span class="font-label-caps text-label-caps text-tertiary">LOOT TABLE (CR 12)</span>
+</div>
+<div class="space-y-1 mt-2">
+<div class="flex justify-between font-data-mono text-data-mono text-[10px]">
+<span class="text-on-surface-variant">01-45</span>
+<span>Pouch of Onyx Dust</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono text-[10px]">
+<span class="text-on-surface-variant">46-90</span>
+<span>+2 Shadow Scimitar</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono text-[10px]">
+<span class="text-on-surface-variant">91-00</span>
+<span class="text-tertiary">Scroll of Gate</span>
+</div>
+</div>
+</div>
+<!-- Suggestion Card 3 -->
+<div class="bg-surface-container-high border border-outline-variant p-gutter-sm hover:border-tertiary/50 transition-colors cursor-pointer group">
+<div class="flex justify-between mb-1">
+<span class="font-label-caps text-label-caps text-tertiary">COMPLICATION</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-tight">A rival faction of Githyanki riders arrive, claiming the Spire as ancient ancestral ground.</p>
+</div>
+</div>
+<div class="p-gutter-sm border-t border-outline-variant">
+<button class="w-full bg-surface-container-highest border border-outline-variant py-2 font-label-caps text-label-caps text-on-surface-variant hover:text-tertiary hover:border-tertiary transition-all">GENERATE NEW IDEAS</button>
+</div>
+</div>
+<!-- Quick-Creation Sub-Column -->
+<div class="w-1/2 flex flex-col bg-surface-container-low">
+<div class="p-gutter-md bg-surface-container border-b border-outline-variant flex items-center gap-gutter-sm">
+<span class="material-symbols-outlined text-tertiary" data-icon="add_circle">add_circle</span>
+<span class="font-label-caps text-label-caps text-on-surface">ENTITY DRAFTS</span>
+</div>
+<div class="flex-1 overflow-y-auto p-gutter-sm">
+<div class="space-y-gutter-md">
+<!-- NPC Draft -->
+<div class="border border-outline-variant p-gutter-sm bg-surface-dim">
+<input class="bg-transparent border-none text-headline-md font-headline-md p-0 w-full mb-2 focus:ring-0 text-primary" placeholder="NPC NAME..." type="text" value="Xalthar the Blind"/>
+<div class="flex flex-wrap gap-1 mb-3">
+<span class="bg-surface-variant px-1 text-data-mono text-[9px] border border-outline-variant uppercase">Alignment: LE</span>
+<span class="bg-surface-variant px-1 text-data-mono text-[9px] border border-outline-variant uppercase">Race: Tiefling</span>
+</div>
+<textarea class="w-full bg-surface-container-low border border-outline-variant text-body-sm p-1 h-16 focus:border-tertiary outline-none resize-none" placeholder="Description/Trait..."></textarea>
+<button class="mt-2 w-full text-center font-label-caps text-label-caps border border-outline-variant py-1 text-on-surface-variant hover:bg-tertiary hover:text-on-tertiary hover:border-tertiary transition-all">FINALIZE NPC</button>
+</div>
+<!-- Location Draft -->
+<div class="border border-outline-variant p-gutter-sm bg-surface-dim">
+<input class="bg-transparent border-none text-headline-md font-headline-md p-0 w-full mb-2 focus:ring-0 text-primary" placeholder="LOCATION NAME..." type="text"/>
+<div class="w-full h-24 bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center text-on-surface-variant mb-2">
+<span class="material-symbols-outlined text-[32px] opacity-20" data-icon="image">image</span>
+<span class="text-[9px] font-data-mono uppercase">UPLOAD MAP DRAFT</span>
+</div>
+<button class="w-full text-center font-label-caps text-label-caps border border-outline-variant py-1 text-on-surface-variant hover:bg-tertiary hover:text-on-tertiary transition-all">FINALIZE LOCATION</button>
+</div>
+</div>
+</div>
+<!-- Mini Log / Activity -->
+<div class="h-24 border-t border-outline-variant bg-surface-container p-gutter-sm overflow-hidden">
+<span class="font-label-caps text-label-caps text-on-surface-variant opacity-50 block mb-1">SYSTEM_LOG</span>
+<div class="font-data-mono text-[9px] text-tertiary leading-none space-y-1">
+<div>[12:04:12] ENCOUNTER_HOOK SAVED</div>
+<div>[12:04:45] NPC_XALTHAR_CREATED</div>
+<div class="animate-pulse">[12:05:01] AUTO_SAVING...</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB for Quick Actions (Mobile Context/General) -->
+<button class="fixed bottom-6 right-6 md:hidden w-12 h-12 bg-tertiary text-on-tertiary flex items-center justify-center rounded-full shadow-2xl active:scale-90 transition-transform z-[100]">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+</button>
+<script>
+        // Simple micro-interaction for the checklist
+        document.querySelectorAll('.flex.items-center.gap-gutter-sm.px-2.py-1').forEach(item => {
+            item.addEventListener('click', function() {
+                const icon = this.querySelector('.material-symbols-outlined');
+                if (icon.innerText === 'check_circle') {
+                    icon.innerText = 'radio_button_unchecked';
+                    icon.style.fontVariationSettings = "'FILL' 0";
+                    this.classList.replace('border-tertiary/50', 'border-outline');
+                    icon.classList.replace('text-tertiary', 'text-on-surface-variant');
+                } else {
+                    icon.innerText = 'check_circle';
+                    icon.style.fontVariationSettings = "'FILL' 1";
+                    this.classList.replace('border-outline', 'border-tertiary/50');
+                    icon.classList.replace('text-on-surface-variant', 'text-tertiary');
+                }
+            });
+        });
+    </script>
+</body></html>

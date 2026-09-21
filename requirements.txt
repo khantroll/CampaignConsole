@@ -1,0 +1,15 @@
+fastapi==0.115.6
+uvicorn[standard]>=0.30.0
+# Pydantic v2 compatible; link_model requires class refs (not strings) in 0.0.14+
+sqlmodel==0.0.38
+Jinja2==3.1.6
+markdown==3.7
+python-multipart==0.0.6
+# Require httpx >=0.28.1 for compatibility with other installed packages
+httpx>=0.28.1
+# Use modern OpenAI client
+openai>=2.0.0
+python-dotenv==1.0.0
+requests>=2.31.0
+# Pydantic v2 for Python 3.14
+pydantic>=2.11.0

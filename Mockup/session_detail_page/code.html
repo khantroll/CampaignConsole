@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Campaign Console - Session 101: Into the Deep</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#00daf3",
+                        "on-secondary": "#1c333e",
+                        "inverse-on-surface": "#223144",
+                        "surface-bright": "#2b3a4d",
+                        "surface-container-high": "#1b2b3d",
+                        "surface-tint": "#00daf3",
+                        "on-primary-fixed-variant": "#004f58",
+                        "primary-container": "#00e5ff",
+                        "secondary-fixed-dim": "#b1cad7",
+                        "on-primary-fixed": "#001f24",
+                        "tertiary-fixed-dim": "#f3bf26",
+                        "tertiary": "#ffeac0",
+                        "on-tertiary-container": "#6f5500",
+                        "primary": "#c3f5ff",
+                        "error-container": "#93000a",
+                        "surface-container": "#102032",
+                        "on-secondary-fixed-variant": "#334a55",
+                        "surface-container-low": "#0c1c2e",
+                        "surface-container-lowest": "#000f20",
+                        "on-surface-variant": "#bac9cc",
+                        "surface-variant": "#263649",
+                        "surface-dim": "#041426",
+                        "on-primary-container": "#00626e",
+                        "on-surface": "#d4e4fc",
+                        "outline-variant": "#3b494c",
+                        "outline": "#849396",
+                        "error": "#ffb4ab",
+                        "on-primary": "#00363d",
+                        "tertiary-fixed": "#ffdf96",
+                        "inverse-primary": "#006875",
+                        "surface": "#041426",
+                        "on-background": "#d4e4fc",
+                        "on-tertiary": "#3e2e00",
+                        "inverse-surface": "#d4e4fc",
+                        "primary-fixed": "#9cf0ff",
+                        "on-secondary-fixed": "#051e28",
+                        "secondary": "#b1cad7",
+                        "on-error": "#690005",
+                        "secondary-container": "#334a55",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#251a00",
+                        "secondary-fixed": "#cde6f4",
+                        "tertiary-container": "#fec931",
+                        "on-secondary-container": "#a0b9c5",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "background": "#041426",
+                        "surface-container-highest": "#263649"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-padding": "12px",
+                        "margin-desktop": "24px",
+                        "unit": "4px",
+                        "gutter": "12px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "mono-data": ["monospace"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                        "mono-data": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-md": ["20px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #041426;
+            color: #d4e4fc;
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .tactical-border {
+            border: 1px solid #1A2C3E;
+        }
+        .status-bar {
+            height: 4px;
+            background: #1A2C3E;
+            position: relative;
+            overflow: hidden;
+        }
+        .inset-panel {
+            background-color: #000f20;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .glow-hover:hover {
+            outline: 1px solid #00daf3;
+            box-shadow: 0 0 8px rgba(0, 218, 243, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen pb-20">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center w-full px-4 py-2 h-14">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="terminal">terminal</span>
+<h1 class="text-headline-md font-headline-md font-bold tracking-tight text-on-surface">Campaign Console</h1>
+</div>
+<button class="bg-surface-variant hover:bg-surface-container-high transition-colors px-3 py-1 rounded text-label-caps font-label-caps text-on-surface ring-1 ring-outline-variant">
+            LLM Settings
+        </button>
+</header>
+<!-- Main Content Canvas -->
+<main class="mt-16 px-4 flex flex-col gap-6">
+<!-- Hero Section -->
+<section class="flex flex-col gap-2 pt-2">
+<div class="flex items-center gap-2 text-primary-fixed-dim">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+<span class="text-label-caps font-label-caps">BACK TO SESSIONS</span>
+</div>
+<h2 class="text-headline-lg font-headline-lg text-primary">Session 101: Into the Deep</h2>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span class="text-body-sm font-body-sm">2024-05-12</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="text-body-sm font-body-sm">4.5 Hours</span>
+</div>
+</div>
+</section>
+<!-- AI Analysis Summary (Pinned at Top) -->
+<section class="bg-surface-container tactical-border rounded-lg p-4 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary-fixed-dim"></div>
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="psychology">psychology</span>
+<h3 class="text-label-caps font-label-caps text-on-surface">AI ANALYSIS &amp; RECAP</h3>
+</div>
+<span class="bg-primary-container text-on-primary-container px-2 py-0.5 text-label-caps font-label-caps rounded">XP: 1,200</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant italic mb-2">
+                "The party successfully breached the Sunken Vault but encountered heavy resistance from the Deepwood Sentinels. Information recovered regarding the 'Shadow Spire' suggests a timeline acceleration of 3 days."
+            </p>
+<div class="flex gap-2">
+<span class="text-body-sm font-body-sm text-primary-fixed-dim">#MajorPlotPoint</span>
+<span class="text-body-sm font-body-sm text-primary-fixed-dim">#BossEncounter</span>
+</div>
+</section>
+<!-- Session Content Tabs (Mobile Optimization) -->
+<div class="bento-grid">
+<!-- Module: Session Notes -->
+<div class="bg-surface-container tactical-border rounded-lg flex flex-col">
+<div class="px-3 py-2 border-b border-outline-variant flex justify-between items-center bg-surface-container-high">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">description</span>
+<span class="text-label-caps font-label-caps">SESSION NOTES</span>
+</div>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">edit_note</span>
+</div>
+<div class="p-4 inset-panel text-body-md font-body-md text-on-surface space-y-4 max-h-96 overflow-y-auto">
+<p>• The group reached the iron gates of <strong>The Deep</strong> at dusk.</p>
+<p>• <strong>Doraedian Mythlord</strong> successfully picked the lock using the celestial key found in the previous session.</p>
+<p>• Combat erupted as 3 Shadow Spiders ambushed the rear guard. <strong>Elestra</strong> used <i>Wall of Flame</i> to create a chokepoint.</p>
+<p>• Discovery: An ancient map etched onto the floor of the main chamber revealed the true purpose of the Spire—it's a siphon, not a lighthouse.</p>
+<p>• Retreat: After the party's health dipped dangerously low, they retreated to the surface, leaving the inner sanctum unexplored.</p>
+</div>
+</div>
+<!-- Module: NPCs Met -->
+<div class="bg-surface-container tactical-border rounded-lg flex flex-col">
+<div class="px-3 py-2 border-b border-outline-variant flex justify-between items-center bg-surface-container-high">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">group</span>
+<span class="text-label-caps font-label-caps">NPCS MET</span>
+</div>
+<span class="text-label-caps font-label-caps text-on-surface-variant">3 ENTITIES</span>
+</div>
+<div class="p-2 space-y-2">
+<!-- NPC Card -->
+<div class="bg-surface-variant p-3 rounded tactical-border flex justify-between items-center glow-hover">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="bg-on-secondary-fixed-variant text-secondary-fixed px-1.5 py-0.5 text-[10px] font-bold rounded">NPC</span>
+<span class="text-body-md font-bold text-on-surface">Dagil the Merchant</span>
+</div>
+<span class="text-body-sm text-on-surface-variant">Sold the group cold resistance potions. Suspicious.</span>
+</div>
+<div class="flex flex-col items-end gap-1">
+<span class="text-[10px] text-error font-bold uppercase">Minimal Info</span>
+<div class="w-12 h-1 bg-error-container rounded-full overflow-hidden">
+<div class="w-1/3 h-full bg-error"></div>
+</div>
+</div>
+</div>
+<!-- NPC Card -->
+<div class="bg-surface-variant p-3 rounded tactical-border flex justify-between items-center glow-hover">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="bg-on-secondary-fixed-variant text-secondary-fixed px-1.5 py-0.5 text-[10px] font-bold rounded">NPC</span>
+<span class="text-body-md font-bold text-on-surface">Jevicca Nor</span>
+</div>
+<span class="text-body-sm text-on-surface-variant">Contact from the Inverted Pyramid.</span>
+</div>
+<div class="flex flex-col items-end gap-1">
+<span class="text-[10px] text-tertiary-fixed-dim font-bold uppercase">Partial Info</span>
+<div class="w-12 h-1 bg-tertiary-container/20 rounded-full overflow-hidden">
+<div class="w-1/2 h-full bg-tertiary-fixed-dim"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Module: Locations Visited -->
+<div class="bg-surface-container tactical-border rounded-lg flex flex-col">
+<div class="px-3 py-2 border-b border-outline-variant bg-surface-container-high">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">location_on</span>
+<span class="text-label-caps font-label-caps">LOCATIONS VISITED</span>
+</div>
+</div>
+<div class="p-3 grid grid-cols-2 gap-2">
+<div class="aspect-square relative rounded tactical-border overflow-hidden">
+<img class="w-full h-full object-cover grayscale brightness-50" data-alt="A dark, industrial fantasy vault entrance carved into ancient black stone. Intense turquoise lighting emanates from runic carvings on the heavy iron doors. The atmosphere is damp, claustrophobic, and filled with a sense of ancient dread. Precise digital painting style with high contrast and tactical interface vibes." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_lisycE6Il7N8nFGjHO-nWewD2BMSK_PUarU_w4QKh28OndZ2ltiyPmnjp3yLAUCw9_d3liMJHR-nAlRk1M7LsYAGrCYxhcfdg-AXvIul7jai9NvR4ewFq767yyNdgStb--i-VwTBOzPo8-weacu42hn7sSt8V8Hown10uykXCJ-Fl9y6J-f1Vc-Wk0Imp5aOjEdURC5CSyLqBZ8jdVaPiDJMGLjKbCMZne5dK9cstPulckbY9o23ZMsUoB40lkWKrMArDYeqVlSV"/>
+<div class="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-surface-dim to-transparent">
+<p class="text-label-caps font-bold text-primary-fixed-dim text-[10px]">THE DEEP GATES</p>
+</div>
+</div>
+<div class="aspect-square relative rounded tactical-border overflow-hidden">
+<img class="w-full h-full object-cover grayscale brightness-50" data-alt="A futuristic terminal console inside a damp cavern. Glowing blue data lines flow across a cracked monitor screen. The surrounding walls are rough stone illuminated by the cold light of the screen. Cyberpunk industrial aesthetic with high detail on cables and hardware." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzsq7mAyBauUuyAz6GkscvrE0iUdpnKjigC98WWiQpziRhxcmin2qLV-YnsVFdL9HfGyMQ5VXNNWqG5gdohJQHNiKhDsprcRQ65oajHcRgYLeWgJ4nIyLmPe_Q0NQYNT5bfRf0jCInLR4pAe1ZdYwLA2JtGDroyANkD07XxfU01-k5vyitdzren-iP1Z-Vij_RgqLQMscripTtShyycdM8VmWCbUtTxl80b0frDPPJq43bPj9v7qxn7PurIBHBNjqHgjU6TM783nV0"/>
+<div class="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-surface-dim to-transparent">
+<p class="text-label-caps font-bold text-primary-fixed-dim text-[10px]">INNER SANCTUM</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Action Component for mobile - Add Note -->
+<div class="fixed bottom-24 right-4 z-40">
+<button class="w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform ring-4 ring-surface-container">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center bg-surface-container-highest border-t border-outline-variant z-50 h-16">
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-1 flex-1 hover:bg-surface-bright transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span class="text-label-caps font-label-caps mt-1">DATABASE</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary-fixed-dim border-t-2 border-primary-fixed-dim bg-surface-container-high py-1 flex-1 transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="text-label-caps font-label-caps mt-1">SESSIONS</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-1 flex-1 hover:bg-surface-bright transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="text-label-caps font-label-caps mt-1">WORKSPACE</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for cards
+        document.querySelectorAll('.glow-hover').forEach(card => {
+            card.addEventListener('touchstart', () => {
+                card.style.outline = '1px solid #00daf3';
+            });
+            card.addEventListener('touchend', () => {
+                card.style.outline = 'none';
+            });
+        });
+    </script>
+</body></html>

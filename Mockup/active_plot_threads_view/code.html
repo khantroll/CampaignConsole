@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Campaign Console - Active Plot Threads</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#00daf3",
+                        "on-secondary": "#1c333e",
+                        "inverse-on-surface": "#223144",
+                        "surface-bright": "#2b3a4d",
+                        "surface-container-high": "#1b2b3d",
+                        "surface-tint": "#00daf3",
+                        "on-primary-fixed-variant": "#004f58",
+                        "primary-container": "#00e5ff",
+                        "secondary-fixed-dim": "#b1cad7",
+                        "on-primary-fixed": "#001f24",
+                        "tertiary-fixed-dim": "#f3bf26",
+                        "tertiary": "#ffeac0",
+                        "on-tertiary-container": "#6f5500",
+                        "primary": "#c3f5ff",
+                        "error-container": "#93000a",
+                        "surface-container": "#102032",
+                        "on-secondary-fixed-variant": "#334a55",
+                        "surface-container-low": "#0c1c2e",
+                        "surface-container-lowest": "#000f20",
+                        "on-surface-variant": "#bac9cc",
+                        "surface-variant": "#263649",
+                        "surface-dim": "#041426",
+                        "on-primary-container": "#00626e",
+                        "on-surface": "#d4e4fc",
+                        "outline-variant": "#3b494c",
+                        "outline": "#849396",
+                        "error": "#ffb4ab",
+                        "on-primary": "#00363d",
+                        "tertiary-fixed": "#ffdf96",
+                        "inverse-primary": "#006875",
+                        "surface": "#041426",
+                        "on-background": "#d4e4fc",
+                        "on-tertiary": "#3e2e00",
+                        "inverse-surface": "#d4e4fc",
+                        "primary-fixed": "#9cf0ff",
+                        "on-secondary-fixed": "#051e28",
+                        "secondary": "#b1cad7",
+                        "on-error": "#690005",
+                        "secondary-container": "#334a55",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#251a00",
+                        "secondary-fixed": "#cde6f4",
+                        "tertiary-container": "#fec931",
+                        "on-secondary-container": "#a0b9c5",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "background": "#041426",
+                        "surface-container-highest": "#263649"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-padding": "12px",
+                        "margin-desktop": "24px",
+                        "unit": "4px",
+                        "gutter": "12px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "mono-data": ["monospace"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                        "mono-data": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-md": ["20px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0c1c2e; }
+        ::-webkit-scrollbar-thumb { background: #3b494c; }
+        .glass-panel {
+            background: rgba(16, 32, 50, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid #3b494c;
+        }
+        .status-bar { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md min-h-screen pb-24">
+<!-- Top AppBar -->
+<header class="bg-surface-container-lowest fixed top-0 left-0 right-0 z-50 border-b border-outline-variant flex justify-between items-center w-full px-4 py-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim">terminal</span>
+<h1 class="text-headline-md font-headline-md font-bold tracking-tight text-on-surface">Campaign Console</h1>
+</div>
+<button class="text-label-caps font-label-caps text-primary-fixed-dim hover:bg-surface-variant transition-colors px-3 py-1 rounded border border-primary-fixed-dim/30">
+            LLM Settings
+        </button>
+</header>
+<main class="pt-20 px-4 max-w-2xl mx-auto space-y-6">
+<!-- Header Section -->
+<section class="space-y-1">
+<h2 class="text-headline-lg font-headline-lg text-on-surface">Plot Threads</h2>
+<p class="text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">history_edu</span>
+                In The Shadow of the Spire • 3rd Edition
+            </p>
+</section>
+<!-- Search & Filter Area (Mobile Optimized Density) -->
+<section class="flex gap-2">
+<div class="relative flex-grow">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded px-10 py-2 text-body-sm focus:ring-1 focus:ring-primary-fixed-dim outline-none transition-all" placeholder="Filter threads..." type="text"/>
+</div>
+<button class="bg-surface-container-high border border-outline-variant p-2 rounded hover:bg-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">sort</span>
+</button>
+</section>
+<!-- Active Priority Section -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 border-l-2 border-primary-fixed-dim pl-3">
+<span class="text-label-caps font-label-caps text-primary-fixed-dim">HIGH PRIORITY</span>
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+</div>
+<!-- Thread Card 1 -->
+<article class="bg-surface-container border border-outline-variant rounded overflow-hidden">
+<header class="p-3 bg-surface-container-high flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-primary-container/20 text-primary-fixed-dim text-[9px] font-bold px-1.5 py-0.5 rounded border border-primary-fixed-dim/30 uppercase tracking-widest">THREAD</span>
+<h3 class="text-body-md font-bold text-on-surface">The Lost Vaults</h3>
+</div>
+<span class="text-[10px] text-on-surface-variant font-mono-data">Updated: 2008-09-17</span>
+</div>
+<div class="bg-surface-container-highest px-2 py-1 rounded border border-outline-variant">
+<span class="text-label-caps text-on-tertiary-fixed-variant">PARTIAL • 50%</span>
+</div>
+</header>
+<div class="px-3 py-2 space-y-3">
+<div class="w-full bg-surface-container-lowest h-1.5 rounded-full overflow-hidden">
+<div class="status-bar h-full bg-tertiary-container" style="width: 50%;"></div>
+</div>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                        A hole in its eastern wall, clearly unnatural destruction, opened like the gap in a half-orc’s teeth. Devastated buildings still smoked...
+                    </p>
+<div class="flex flex-wrap gap-2 pt-1">
+<span class="flex items-center gap-1 bg-surface-variant px-2 py-1 rounded-full text-[10px] text-on-surface">
+<span class="material-symbols-outlined text-[12px]">group</span> Logbrag
+                        </span>
+<span class="flex items-center gap-1 bg-surface-variant px-2 py-1 rounded-full text-[10px] text-on-surface">
+<span class="material-symbols-outlined text-[12px]">location_on</span> Stonemarten
+                        </span>
+</div>
+</div>
+<footer class="p-2 border-t border-outline-variant flex gap-2 bg-surface-container-low">
+<button class="flex-grow py-1.5 text-label-caps text-primary-fixed-dim border border-primary-fixed-dim/20 rounded hover:bg-primary-fixed-dim/10 transition-colors">VIEW FULL SESSION</button>
+<button class="px-3 py-1.5 text-label-caps text-on-surface-variant border border-outline-variant rounded hover:bg-surface-variant">EDIT</button>
+<button class="px-3 py-1.5 text-label-caps text-error border border-error/30 rounded hover:bg-error/10">DELETE</button>
+</footer>
+</article>
+<!-- Thread Card 2 -->
+<article class="bg-surface-container border border-outline-variant rounded overflow-hidden opacity-90">
+<header class="p-3 bg-surface-container-high flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-error-container/20 text-error text-[9px] font-bold px-1.5 py-0.5 rounded border border-error/30 uppercase tracking-widest">CRITICAL</span>
+<h3 class="text-body-md font-bold text-on-surface">The Shadow Spire Ritual</h3>
+</div>
+<span class="text-[10px] text-on-surface-variant font-mono-data">Updated: 2008-09-15</span>
+</div>
+<div class="bg-error-container/40 px-2 py-1 rounded border border-error/30">
+<span class="text-label-caps text-error">MINIMAL • 15%</span>
+</div>
+</header>
+<div class="px-3 py-2 space-y-3">
+<div class="w-full bg-surface-container-lowest h-1.5 rounded-full overflow-hidden">
+<div class="status-bar h-full bg-error" style="width: 15%;"></div>
+</div>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                        The dark cultists have begun the alignment of the obsidian pillars. Time is running out before the veil thins completely...
+                    </p>
+</div>
+<footer class="p-2 border-t border-outline-variant flex gap-2 bg-surface-container-low">
+<button class="flex-grow py-1.5 text-label-caps text-primary-fixed-dim border border-primary-fixed-dim/20 rounded hover:bg-primary-fixed-dim/10 transition-colors">INTERVENE</button>
+<button class="px-3 py-1.5 text-label-caps text-on-surface-variant border border-outline-variant rounded hover:bg-surface-variant">EDIT</button>
+</footer>
+</article>
+</div>
+<!-- Secondary Priority Section -->
+<div class="space-y-4 pb-12">
+<div class="flex items-center gap-2 border-l-2 border-outline pl-3">
+<span class="text-label-caps font-label-caps text-outline">SECONDARY THREADS</span>
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+</div>
+<article class="bg-surface-container border border-outline-variant rounded flex items-center p-3 gap-4">
+<div class="w-12 h-12 bg-surface-container-high rounded border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-outline">inventory_2</span>
+</div>
+<div class="flex-grow">
+<h4 class="text-body-md font-bold text-on-surface">The Merchant's Debt</h4>
+<p class="text-[11px] text-on-surface-variant">Last activity: 3 sessions ago</p>
+</div>
+<div class="text-right">
+<span class="text-label-caps text-tertiary">STALLED</span>
+</div>
+</article>
+<article class="bg-surface-container border border-outline-variant rounded flex items-center p-3 gap-4">
+<div class="w-12 h-12 bg-surface-container-high rounded border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-outline">map</span>
+</div>
+<div class="flex-grow">
+<h4 class="text-body-md font-bold text-on-surface">Mapping the Undercity</h4>
+<p class="text-[11px] text-on-surface-variant">Last activity: Yesterday</p>
+</div>
+<div class="text-right">
+<span class="text-label-caps text-primary-fixed-dim">IN PROGRESS</span>
+</div>
+</article>
+</div>
+</main>
+<!-- FAB for New Thread (Tactical Style) -->
+<button class="fixed bottom-20 right-4 w-12 h-12 bg-primary-fixed-dim text-on-primary rounded-lg shadow-xl shadow-primary-fixed-dim/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 ring-1 ring-white/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 600;">add</span>
+</button>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface-container-highest border-t border-outline-variant flex justify-around items-center z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-2 flex-1 hover:bg-surface-bright transition-all" href="#">
+<span class="material-symbols-outlined">database</span>
+<span class="text-label-caps mt-1">Database</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary-fixed-dim border-t-2 border-primary-fixed-dim bg-surface-container-high py-2 flex-1 scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">event_note</span>
+<span class="text-label-caps mt-1">Sessions</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-2 flex-1 hover:bg-surface-bright transition-all" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="text-label-caps mt-1">Workspace</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for progress bar simulation
+        document.querySelectorAll('.status-bar').forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 300);
+        });
+
+        // Hover glow effect logic for cards
+        const cards = document.querySelectorAll('article');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.boxShadow = '0 0 15px -5px rgba(0, 218, 243, 0.2)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.boxShadow = 'none';
+            });
+        });
+    </script>
+</body></html>

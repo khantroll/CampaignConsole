@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NPC Detail: Doraedian Mythlord | Campaign Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#00daf3",
+                    "on-secondary": "#1c333e",
+                    "inverse-on-surface": "#223144",
+                    "surface-bright": "#2b3a4d",
+                    "surface-container-high": "#1b2b3d",
+                    "surface-tint": "#00daf3",
+                    "on-primary-fixed-variant": "#004f58",
+                    "primary-container": "#00e5ff",
+                    "secondary-fixed-dim": "#b1cad7",
+                    "on-primary-fixed": "#001f24",
+                    "tertiary-fixed-dim": "#f3bf26",
+                    "tertiary": "#ffeac0",
+                    "on-tertiary-container": "#6f5500",
+                    "primary": "#c3f5ff",
+                    "error-container": "#93000a",
+                    "surface-container": "#102032",
+                    "on-secondary-fixed-variant": "#334a55",
+                    "surface-container-low": "#0c1c2e",
+                    "surface-container-lowest": "#000f20",
+                    "on-surface-variant": "#bac9cc",
+                    "surface-variant": "#263649",
+                    "surface-dim": "#041426",
+                    "on-primary-container": "#00626e",
+                    "on-surface": "#d4e4fc",
+                    "outline-variant": "#3b494c",
+                    "outline": "#849396",
+                    "error": "#ffb4ab",
+                    "on-primary": "#00363d",
+                    "tertiary-fixed": "#ffdf96",
+                    "inverse-primary": "#006875",
+                    "surface": "#041426",
+                    "on-background": "#d4e4fc",
+                    "on-tertiary": "#3e2e00",
+                    "inverse-surface": "#d4e4fc",
+                    "primary-fixed": "#9cf0ff",
+                    "on-secondary-fixed": "#051e28",
+                    "secondary": "#b1cad7",
+                    "on-error": "#690005",
+                    "secondary-container": "#334a55",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#251a00",
+                    "secondary-fixed": "#cde6f4",
+                    "tertiary-container": "#fec931",
+                    "on-secondary-container": "#a0b9c5",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "background": "#041426",
+                    "surface-container-highest": "#263649"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "container-padding": "12px",
+                    "margin-desktop": "24px",
+                    "unit": "4px",
+                    "gutter": "12px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "mono-data": ["monospace"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                    "mono-data": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-md": ["20px", {"lineHeight": "26px", "fontWeight": "600"}],
+                    "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .inset-field {
+            background-color: rgba(0, 15, 32, 0.5);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        .glow-active:hover {
+            box-shadow: 0 0 0 2px #00daf3;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-fixed-dim selection:text-on-primary-fixed overflow-x-hidden">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest border-b border-outline-variant px-margin-mobile py-2 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed-dim">terminal</span>
+<h1 class="text-headline-md font-bold tracking-tight text-on-surface">Campaign Console</h1>
+</div>
+<button class="text-label-caps font-label-caps text-primary-fixed-dim border border-primary-fixed-dim px-3 py-1 hover:bg-surface-variant transition-colors">
+            LLM Settings
+        </button>
+</header>
+<main class="pt-16 pb-20 px-margin-mobile max-w-lg mx-auto">
+<!-- Breadcrumb / Back Navigation -->
+<nav class="flex items-center gap-2 mb-4 py-2 border-b border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">arrow_back</span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Database / NPCs / Doraedian Mythlord</span>
+</nav>
+<!-- Header Module: NPC Identification -->
+<section class="bg-surface-container border border-outline-variant p-3 mb-4">
+<div class="flex justify-between items-start mb-2">
+<div class="flex flex-col">
+<span class="bg-surface-container-highest text-on-surface-variant px-2 py-0.5 text-label-caps font-label-caps w-fit mb-1 border border-outline-variant">NPC</span>
+<h2 class="text-headline-lg font-headline-lg text-on-surface">Doraedian Mythlord</h2>
+</div>
+<div class="flex flex-col items-end gap-1">
+<span class="bg-error-container text-on-error-container px-2 py-0.5 text-label-caps font-label-caps border border-error">Minimal · 33%</span>
+<div class="w-20 h-1.5 bg-surface-variant mt-1">
+<div class="h-full bg-error" style="width: 33%;"></div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-4">
+<button class="flex items-center justify-center gap-2 border border-primary-fixed-dim text-primary-fixed-dim text-label-caps font-label-caps py-2 hover:bg-surface-variant glow-active transition-all">
+<span class="material-symbols-outlined text-[16px]">edit</span> EDIT
+                </button>
+<button class="flex items-center justify-center gap-2 border border-error text-error text-label-caps font-label-caps py-2 hover:bg-error-container glow-active transition-all">
+<span class="material-symbols-outlined text-[16px]">delete</span> DELETE
+                </button>
+</div>
+</section>
+<!-- Core Identity Module -->
+<section class="bg-surface-container border border-outline-variant mb-4">
+<div class="bg-surface-container-high px-3 py-1 border-b border-outline-variant">
+<span class="text-label-caps font-label-caps text-on-surface-variant">Core Identity</span>
+</div>
+<div class="p-3 space-y-4">
+<div>
+<label class="text-label-caps font-label-caps text-on-surface-variant block mb-1">Role</label>
+<div class="inset-field p-2 border border-outline-variant text-body-md font-body-md">
+                        Arcane Researcher / Hidden Antagonist
+                    </div>
+</div>
+<div>
+<label class="text-label-caps font-label-caps text-on-surface-variant block mb-1">Description</label>
+<div class="inset-field p-2 border border-outline-variant text-body-md font-body-md italic text-on-surface-variant">
+                        "No details yet. Entity requires deep-scan LLM review or manual entry of physical appearance and known history."
+                    </div>
+</div>
+</div>
+</section>
+<!-- Stat Block Summary Module -->
+<section class="bg-surface-container border border-outline-variant mb-4">
+<div class="bg-surface-container-high px-3 py-1 border-b border-outline-variant flex justify-between items-center">
+<span class="text-label-caps font-label-caps text-on-surface-variant">Stat Block (Partial)</span>
+<span class="material-symbols-outlined text-primary-fixed-dim text-[18px]">monitoring</span>
+</div>
+<div class="p-3">
+<div class="grid grid-cols-3 gap-2 text-center mb-3">
+<div class="border border-outline-variant p-1">
+<span class="text-label-caps block text-on-surface-variant">AC</span>
+<span class="font-mono-data text-headline-md">14</span>
+</div>
+<div class="border border-outline-variant p-1">
+<span class="text-label-caps block text-on-surface-variant">HP</span>
+<span class="font-mono-data text-headline-md">58</span>
+</div>
+<div class="border border-outline-variant p-1">
+<span class="text-label-caps block text-on-surface-variant">CR</span>
+<span class="font-mono-data text-headline-md">4</span>
+</div>
+</div>
+<div class="grid grid-cols-6 gap-1 mb-3">
+<div class="bg-surface-container-lowest p-1 text-center border border-outline-variant">
+<span class="text-[10px] text-on-surface-variant">STR</span>
+<div class="text-[12px] font-bold">10</div>
+</div>
+<div class="bg-surface-container-lowest p-1 text-center border border-outline-variant">
+<span class="text-[10px] text-on-surface-variant">DEX</span>
+<div class="text-[12px] font-bold">12</div>
+</div>
+<div class="bg-surface-container-lowest p-1 text-center border border-outline-variant">
+<span class="text-[10px] text-on-surface-variant">CON</span>
+<div class="text-[12px] font-bold">14</div>
+</div>
+<div class="bg-surface-container-lowest p-1 text-center border border-outline-variant">
+<span class="text-[10px] text-on-surface-variant">INT</span>
+<div class="text-[12px] font-bold">18</div>
+</div>
+<div class="bg-surface-container-lowest p-1 text-center border border-outline-variant">
+<span class="text-[10px] text-on-surface-variant">WIS</span>
+<div class="text-[12px] font-bold">15</div>
+</div>
+<div class="bg-surface-container-lowest p-1 text-center border border-outline-variant">
+<span class="text-[10px] text-on-surface-variant">CHA</span>
+<div class="text-[12px] font-bold">11</div>
+</div>
+</div>
+<button class="w-full bg-surface-container-high border border-outline text-label-caps font-label-caps py-2 hover:bg-surface-variant transition-colors">
+                    EXPAND FULL STAT-BLOCK
+                </button>
+</div>
+</section>
+<!-- Linked Sessions History -->
+<section class="bg-surface-container border border-outline-variant mb-4">
+<div class="bg-surface-container-high px-3 py-1 border-b border-outline-variant">
+<span class="text-label-caps font-label-caps text-on-surface-variant">Linked Sessions (History)</span>
+</div>
+<div class="divide-y divide-outline-variant">
+<!-- Session Item -->
+<div class="p-3">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-bold text-primary-fixed-dim">PRELUDE 1A: THE LOST VAULTS-PT2</span>
+<span class="text-label-caps font-mono-data text-on-surface-variant">2008-09-17</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-3">
+                        ... Something was clearly not right with Logbrag the ogre. He was suffering from the same pustules and sores and general sense of corruption...
+                    </p>
+<a class="text-label-caps text-primary-fixed-dim mt-2 inline-block hover:underline" href="#">VIEW FULL SESSION</a>
+</div>
+<!-- Session Item -->
+<div class="p-3">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-caps font-bold text-primary-fixed-dim">PRELUDE 1A: THE LOST VAULTS-PT3</span>
+<span class="text-label-caps font-mono-data text-on-surface-variant">2008-09-17</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-3">
+                        ... Agnarr revealed that his entire village had mysteriously vanished... in coming to Stonemarten he would be able to...
+                    </p>
+<a class="text-label-caps text-primary-fixed-dim mt-2 inline-block hover:underline" href="#">VIEW FULL SESSION</a>
+</div>
+</div>
+</section>
+<!-- AI Assistant Banner -->
+<div class="bg-primary-fixed-dim text-on-primary-fixed p-3 border border-primary flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<div>
+<span class="text-label-caps font-bold block">LLM CONSOLE</span>
+<span class="text-body-sm">Generate NPC background?</span>
+</div>
+</div>
+<button class="bg-on-primary-fixed text-primary-fixed-dim px-3 py-1 text-label-caps font-bold">RUN</button>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center bg-surface-container-highest border-t border-outline-variant z-50 h-16">
+<button class="flex flex-col items-center justify-center text-on-surface-variant py-1 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">database</span>
+<span class="text-label-caps font-label-caps">DATABASE</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant py-1 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">event_note</span>
+<span class="text-label-caps font-label-caps">SESSIONS</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary-fixed-dim border-t-2 border-primary-fixed-dim bg-surface-container-high h-full w-1/3 py-1 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<span class="text-label-caps font-label-caps">WORKSPACE</span>
+</button>
+</nav>
+<script>
+        // Micro-interaction for tactile feedback on module headers
+        document.querySelectorAll('section').forEach(section => {
+            section.addEventListener('click', function() {
+                this.classList.add('ring-1', 'ring-primary-fixed-dim', 'transition-all', 'duration-200');
+                setTimeout(() => {
+                    this.classList.remove('ring-1', 'ring-primary-fixed-dim');
+                }, 400);
+            });
+        });
+    </script>
+</body></html>

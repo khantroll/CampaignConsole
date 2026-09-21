@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GM Mission Control - Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            font-size: 18px;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #051424;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3F4447;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8e9193;
+        }
+        .markdown-editor {
+            caret-color: #4ae176;
+            resize: none;
+        }
+        .syntax-npc {
+            color: #4ae176;
+            background: rgba(74, 225, 118, 0.1);
+            border-bottom: 1px dashed #4ae176;
+        }
+        .syntax-loc {
+            color: #c5c7c8;
+            background: rgba(197, 199, 200, 0.1);
+            border-bottom: 1px dashed #c5c7c8;
+        }
+        .line-numbers {
+            user-select: none;
+            text-align: right;
+            padding-right: 12px;
+            color: #444748;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "surface-container-high": "#1c2b3c",
+                "on-tertiary-fixed": "#002109",
+                "on-primary-fixed": "#191c1d",
+                "primary-container": "#1a1d1e",
+                "error": "#ffb4ab",
+                "surface-tint": "#c5c7c8",
+                "primary": "#c5c7c8",
+                "surface-dim": "#051424",
+                "inverse-primary": "#5c5f60",
+                "surface-container-lowest": "#010f1f",
+                "secondary-container": "#444a4d",
+                "secondary": "#c2c7cb",
+                "on-primary": "#2e3132",
+                "on-tertiary": "#003915",
+                "on-background": "#d4e4fa",
+                "inverse-on-surface": "#233143",
+                "on-surface-variant": "#c4c7c8",
+                "tertiary": "#4ae176",
+                "on-error": "#690005",
+                "outline": "#8e9193",
+                "on-error-container": "#ffdad6",
+                "background": "#051424",
+                "inverse-surface": "#d4e4fa",
+                "on-surface": "#d4e4fa",
+                "on-secondary-container": "#b3b9bd",
+                "surface-bright": "#2c3a4c",
+                "on-tertiary-fixed-variant": "#005321",
+                "on-secondary": "#2b3134",
+                "primary-fixed": "#e1e3e4",
+                "on-tertiary-container": "#009944",
+                "on-secondary-fixed-variant": "#42484b",
+                "secondary-fixed": "#dee3e7",
+                "on-primary-fixed-variant": "#444748",
+                "surface": "#051424",
+                "secondary-fixed-dim": "#c2c7cb",
+                "tertiary-container": "#00220a",
+                "surface-variant": "#273647"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+              },
+              "spacing": {
+                "gutter-xs": "4px",
+                "gutter-sm": "8px",
+                "max-width": "none",
+                "gutter-md": "12px",
+                "unit": "4px",
+                "pane-margin": "16px"
+              },
+              "fontFamily": {
+                "data-mono": ["JetBrains Mono"],
+                "headline-lg": ["Inter"],
+                "label-caps": ["JetBrains Mono"],
+                "headline-md": ["Inter"],
+                "body-sm": ["Inter"]
+              },
+              "fontSize": {
+                "data-mono": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "label-caps": ["10px", {"lineHeight": "12px", "fontWeight": "700"}],
+                "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-sm selection:bg-tertiary/30 selection:text-tertiary overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="flex justify-between items-center w-full px-pane-margin h-12 z-50 bg-background dark:bg-background border-b border-outline-variant fixed top-0">
+<div class="flex items-center gap-gutter-md">
+<span class="font-headline-lg text-headline-lg font-bold text-tertiary tracking-tighter">GM Mission Control</span>
+<nav class="hidden md:flex items-center gap-gutter-md ml-gutter-md">
+<a class="text-on-surface-variant font-medium hover:bg-surface-variant transition-colors px-gutter-sm py-1 cursor-pointer" href="#">Database</a>
+<a class="text-on-surface-variant font-medium hover:bg-surface-variant transition-colors px-gutter-sm py-1 cursor-pointer" href="#">Sessions</a>
+<a class="text-tertiary border-b-2 border-tertiary pb-1 px-gutter-sm font-medium cursor-pointer" href="#">Workspace</a>
+</nav><div class="flex items-center bg-surface-container-low rounded-lg p-1 ml-gutter-md border border-outline-variant/30"><button class="px-3 py-1 rounded bg-tertiary text-on-tertiary-fixed font-label-caps text-[10px]">PREP MODE</button><button class="px-3 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-caps text-[10px] transition-colors">RUN SESSION</button><button class="px-3 py-1 rounded text-on-surface-variant hover:text-on-surface font-label-caps text-[10px] transition-colors">REVIEW</button></div>
+</div>
+<div class="flex items-center gap-gutter-sm">
+<div class="flex items-center bg-surface-container rounded px-gutter-sm py-1 border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant mr-1">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-data-mono font-data-mono w-48 placeholder:text-on-surface-variant/50" placeholder="Search campaign..." type="text"/>
+<span class="text-on-surface-variant/30 text-[10px] ml-2">CTRL+K</span>
+</div>
+<button class="p-gutter-xs hover:bg-surface-variant transition-colors cursor-pointer text-primary">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-gutter-xs hover:bg-surface-variant transition-colors cursor-pointer text-primary">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-tertiary-container flex items-center justify-center cursor-pointer border border-tertiary/20">
+<span class="material-symbols-outlined text-tertiary">account_circle</span>
+</div>
+</div>
+</header>
+<div class="flex h-screen pt-12">
+<!-- Left Sidebar: Campaign File Tree -->
+<aside class="flex flex-col h-full w-64 fixed left-0 top-0 pt-12 bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant z-40">
+<div class="p-gutter-md border-b border-outline-variant mb-gutter-sm">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-tertiary">auto_stories</span>
+<span class="font-headline-md text-headline-md text-on-surface">Aethelgard</span>
+<button class="ml-auto text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-[18px]">side_navigation</span></button></div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">High Fantasy - Tier 3</span>
+</div>
+<div class="flex-1 overflow-y-auto px-gutter-xs">
+<!-- Navigation Tabs from JSON -->
+<div class="space-y-1 mb-gutter-md">
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface cursor-pointer flex items-center gap-3 transition-all duration-150">
+<span class="material-symbols-outlined">public</span>
+<span class="font-label-caps text-label-caps">WORLD</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface cursor-pointer flex items-center gap-3 transition-all duration-150">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-caps text-label-caps">NPCS</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface cursor-pointer flex items-center gap-3 transition-all duration-150">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-label-caps text-label-caps">FACTIONS</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface cursor-pointer flex items-center gap-3 transition-all duration-150">
+<span class="material-symbols-outlined">category</span>
+<span class="font-label-caps text-label-caps">ITEMS</span>
+</div>
+<div class="text-on-surface-variant px-gutter-md py-gutter-sm hover:bg-surface-container-high hover:text-on-surface cursor-pointer flex items-center gap-3 transition-all duration-150">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label-caps text-label-caps">QUESTS</span>
+</div>
+</div>
+<!-- File Tree -->
+<div class="px-gutter-md mt-gutter-md">
+<span class="font-label-caps text-label-caps text-on-surface-variant/60 block mb-gutter-sm">CAMPAIGN FILES</span>
+<div class="space-y-1">
+<details class="group" open="">
+<summary class="flex items-center gap-2 py-1 cursor-pointer text-on-surface-variant hover:text-on-surface group-open:text-on-surface">
+<span class="material-symbols-outlined text-[16px] transition-transform group-open:rotate-90">chevron_right</span>
+<span class="material-symbols-outlined text-[18px]">folder</span>
+<span class="font-body-sm text-body-sm">Session Logs</span>
+</summary>
+<div class="pl-6 border-l border-outline-variant/30 ml-2 space-y-1 mt-1">
+<div class="bg-tertiary-container text-tertiary border-l-2 border-tertiary px-gutter-sm py-1 flex items-center gap-2 cursor-pointer">
+<span class="material-symbols-outlined text-[16px]">description</span>
+<span class="truncate">042-The-Shadow-Keep</span>
+</div>
+<div class="text-on-surface-variant px-gutter-sm py-1 hover:bg-surface-container-high flex items-center gap-2 cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[16px]">description</span>
+<span class="truncate">041-Whispers-in-Dusk</span>
+</div>
+</div>
+</details>
+<details class="group">
+<summary class="flex items-center gap-2 py-1 cursor-pointer text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px] transition-transform group-open:rotate-90">chevron_right</span>
+<span class="material-symbols-outlined text-[18px]">folder_zip</span>
+<span class="font-body-sm text-body-sm">Archives</span>
+</summary>
+</details>
+</div>
+</div>
+</div>
+<div class="p-gutter-xs border-t border-outline-variant bg-surface-container-lowest">
+<div class="flex items-center justify-between text-on-surface-variant px-gutter-md py-gutter-sm hover:text-on-surface cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined">terminal</span>
+<span class="font-label-caps text-label-caps">LOGS</span>
+</div>
+<span class="text-[10px] bg-outline-variant px-1 rounded text-on-surface">v1.4.2</span>
+</div>
+</div>
+</aside>
+<!-- Main Editor (70% Center) -->
+<main class="ml-64 mr-80 flex-1 flex flex-col bg-background">
+<!-- Persistent Toolbar -->
+<div class="h-10 border-b border-outline-variant bg-surface-container-low flex items-center justify-between px-gutter-md">
+<div class="flex items-center gap-gutter-sm">
+<button class="p-1 hover:bg-surface-variant text-on-surface-variant rounded transition-colors" title="Bold"><span class="material-symbols-outlined">format_bold</span></button>
+<button class="p-1 hover:bg-surface-variant text-on-surface-variant rounded transition-colors" title="Italic"><span class="material-symbols-outlined">format_italic</span></button>
+<div class="w-px h-4 bg-outline-variant mx-1"></div>
+<button class="p-1 hover:bg-surface-variant text-on-surface-variant rounded transition-colors" title="Add Link"><span class="material-symbols-outlined">link</span></button>
+<button class="p-1 hover:bg-surface-variant text-on-surface-variant rounded transition-colors" title="Add Image"><span class="material-symbols-outlined">image</span></button>
+<div class="w-px h-4 bg-outline-variant mx-1"></div>
+<button class="flex items-center gap-1 px-2 py-1 bg-surface-container-high border border-outline-variant rounded text-tertiary" title="Entity Tag">
+<span class="material-symbols-outlined text-[16px]">label</span>
+<span class="font-label-caps text-[10px]">ENTITY</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1 text-on-surface-variant text-[11px] font-data-mono">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+                        SAVED
+                    </div>
+<button class="bg-tertiary text-on-tertiary-fixed px-3 py-1 font-label-caps text-label-caps hover:brightness-110 active:opacity-80 transition-all">PUBLISH</button>
+</div>
+</div>
+<!-- Workspace Viewport -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Line Numbers -->
+<div class="line-numbers font-data-mono text-data-mono pt-gutter-md bg-surface-container-lowest w-12 border-r border-outline-variant/30">
+<div>01</div><div>02</div><div>03</div><div>04</div><div>05</div><div>06</div><div>07</div><div>08</div><div>09</div><div>10</div>
+<div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div><div>19</div><div>20</div>
+<div>21</div><div>22</div><div>23</div><div>24</div><div>25</div>
+</div>
+<!-- Editor Surface -->
+<div class="flex-1 overflow-y-auto relative bg-background p-gutter-md">
+<div class="max-w-4xl mx-auto">
+<h1 class="font-headline-lg text-headline-lg mb-gutter-md text-on-surface"># Session 042: The Shadow Keep</h1>
+<div class="markdown-editor font-data-mono text-body-sm leading-relaxed text-on-surface-variant whitespace-pre-wrap">
+<span class="text-on-surface/50">## Arrival at the Iron Gates</span>
+The party stands before the <span class="syntax-loc">Obsidian Threshold</span>. The air is thick with sulfur and the rhythmic clanging of hammers. 
+
+<span class="syntax-npc">@Lord Vaelin</span> watches from the ramparts, his mechanical eye whirring as he tracks the party's movement. He knows about the <span class="syntax-loc">Shattered Compass</span> they recovered from <span class="syntax-loc">Blackwater Marsh</span>.
+
+<span class="text-on-surface/50">## Encounters</span>
+1. **The Gatekeeper:** A massive iron golem powered by a trapped elemental.
+2. **The Spy:** <span class="syntax-npc">@Elara Swift</span> is hidden among the rafters. She will attempt to signal the party if they use the pass-phrase "Mithril-Winter".
+
+<span class="text-on-surface/50">## Plot Threads</span>
+- [ ] Recover the Soul Engine from the lower sanctum.
+- [ ] Negotiate with the <span class="syntax-npc">@Iron Syndicate</span> for safe passage.
+- [!] Warning: The <span class="syntax-loc">Void Rift</span> is expanding every 1d4 rounds.
+                        </div>
+<div class="h-64 mt-8 flex items-center justify-center border-t border-outline-variant pt-8"><div class="grid grid-cols-2 gap-gutter-md w-full h-full"><div class="bg-surface-container-low border border-outline-variant rounded-lg flex flex-col overflow-hidden"><div class="px-3 py-2 border-b border-outline-variant bg-surface-container flex justify-between items-center"><span class="font-label-caps text-label-caps text-on-surface-variant">GM SCRATCHPAD</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant">edit_note</span></div><textarea class="flex-1 bg-transparent border-none focus:ring-0 p-3 text-body-sm text-on-surface resize-none" placeholder="Quick notes for this session..."></textarea></div><div class="bg-surface-container-low border border-outline-variant rounded-lg flex flex-col overflow-hidden"><div class="px-3 py-2 border-b border-outline-variant bg-surface-container flex justify-between items-center"><span class="font-label-caps text-label-caps text-tertiary">AI SUGGESTIONS</span><span class="material-symbols-outlined text-[16px] text-tertiary">auto_awesome</span></div><div class="p-3 space-y-2 overflow-y-auto"><div class="p-2 bg-surface-container-high rounded border border-tertiary/20 text-[11px]"><p class="text-on-surface mb-1">Introduce a complication at the Iron Gates: A merchant caravan is being extorted.</p><button class="text-tertiary font-bold">+ ADD TO LOG</button></div><div class="p-2 bg-surface-container-high rounded border border-outline-variant/30 text-[11px]"><p class="text-on-surface-variant">Lord Vaelin might recognize the Shattered Compass's resonance.</p></div></div></div></div></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Right Sidebar: In-Context Panel -->
+<aside class="w-80 h-full fixed right-0 top-0 pt-12 bg-surface-container-low border-l border-outline-variant z-40 flex flex-col">
+<div class="p-gutter-md border-b border-outline-variant">
+<div class="flex items-center justify-between mb-gutter-sm"><button class="text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-[18px]">dock_to_right</span></button>
+<span class="font-label-caps text-label-caps text-on-surface-variant">IN-CONTEXT</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-tertiary">sync</span>
+<button class="ml-auto text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-[18px]">side_navigation</span></button></div><div class="flex justify-between gap-1 mt-gutter-md pb-gutter-sm border-b border-outline-variant/30"><button class="flex-1 flex flex-col items-center gap-1 p-1 hover:bg-surface-container-high rounded transition-colors" title="Add NPC"><span class="material-symbols-outlined text-tertiary">person_add</span><span class="text-[9px] font-label-caps">NPC</span></button><button class="flex-1 flex flex-col items-center gap-1 p-1 hover:bg-surface-container-high rounded transition-colors" title="Add Location"><span class="material-symbols-outlined text-primary">add_location_alt</span><span class="text-[9px] font-label-caps">LOC</span></button><button class="flex-1 flex flex-col items-center gap-1 p-1 hover:bg-surface-container-high rounded transition-colors" title="Add Item"><span class="material-symbols-outlined text-on-surface-variant">category</span><span class="text-[9px] font-label-caps">ITEM</span></button><button class="flex-1 flex flex-col items-center gap-1 p-1 hover:bg-surface-container-high rounded transition-colors" title="Add Plot Thread"><span class="material-symbols-outlined text-error">tactic</span><span class="text-[9px] font-label-caps">PLOT</span></button></div>
+<!-- Entity Context: NPCs -->
+<div class="mb-gutter-md">
+<div class="flex items-center gap-2 text-tertiary mb-2">
+<span class="material-symbols-outlined text-[18px]">person</span>
+<span class="font-headline-md text-headline-md">Mentioned NPCs</span>
+</div>
+<div class="space-y-2">
+<div class="bg-surface-container-high border border-outline-variant p-gutter-sm group hover:border-tertiary transition-colors cursor-pointer">
+<div class="flex items-center justify-between mb-1">
+<span class="font-bold text-on-surface">Lord Vaelin</span>
+<span class="text-[10px] px-1 bg-error-container text-on-error-container">HOSTILE</span>
+</div>
+<p class="text-[11px] text-on-surface-variant line-clamp-2 italic">"Ruler of the Iron Keep. Modified with arcane cybernetics. Obsessed with the Soul Engine."</p>
+</div>
+<div class="bg-surface-container-high border border-outline-variant p-gutter-sm group hover:border-tertiary transition-colors cursor-pointer">
+<div class="flex items-center justify-between mb-1">
+<span class="font-bold text-on-surface">Elara Swift</span>
+<span class="text-[10px] px-1 bg-tertiary-container text-on-tertiary-container">ALLY</span>
+</div>
+<p class="text-[11px] text-on-surface-variant line-clamp-2 italic">"Master spy for the Resistance. Skilled in infiltration and cryptic messages."</p>
+</div>
+</div>
+</div>
+<!-- Entity Context: Locations -->
+<div class="mb-gutter-md">
+<div class="flex items-center gap-2 text-primary mb-2">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+<span class="font-headline-md text-headline-md">Active Locations</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center justify-between p-2 hover:bg-surface-variant rounded transition-colors cursor-pointer">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-tertiary"></div>
+<span class="font-body-sm text-body-sm">Obsidian Threshold</span>
+</div>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">open_in_new</span>
+</div>
+<div class="flex items-center justify-between p-2 hover:bg-surface-variant rounded transition-colors cursor-pointer">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-outline"></div>
+<span class="font-body-sm text-body-sm">Blackwater Marsh</span>
+</div>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">open_in_new</span>
+</div>
+</div>
+</div>
+<!-- Active Plot Threads -->
+<div>
+<div class="flex items-center gap-2 text-error mb-2">
+<span class="material-symbols-outlined text-[18px]">tactic</span>
+<span class="font-headline-md text-headline-md">Plot Threads</span>
+</div>
+<div class="space-y-2">
+<div class="bg-surface-container-high border border-outline-variant p-gutter-sm space-y-2"><div class="flex justify-between items-start"><div class="flex flex-col"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-error">priority_high</span><span class="font-bold text-on-surface text-[12px]">The Void Rift expansion</span></div><span class="text-[9px] text-on-surface-variant/60 uppercase tracking-wider">Updated 12m ago</span></div><span class="text-[9px] px-1 bg-error/20 text-error border border-error/30 rounded">CRITICAL</span></div><div class="space-y-1"><div class="flex justify-between text-[10px] text-on-surface-variant"><span>Progress</span><span>70%</span></div><div class="h-1 bg-surface-container-lowest w-full rounded-full overflow-hidden"><div class="bg-error h-full w-[70%]"></div></div></div><div class="flex flex-wrap gap-1 pt-1"><span class="flex items-center gap-1 px-1.5 py-0.5 bg-surface-container-highest rounded text-[10px] text-on-surface-variant"><span class="material-symbols-outlined text-[12px]">location_on</span>Obsidian</span><span class="flex items-center gap-1 px-1.5 py-0.5 bg-surface-container-highest rounded text-[10px] text-on-surface-variant"><span class="material-symbols-outlined text-[12px]">person</span>Vaelin</span></div></div>
+</div>
+</div>
+</div>
+<div class="p-gutter-md border-t border-outline-variant bg-surface-container-lowest/50"><div class="flex items-center gap-2 text-tertiary mb-3"><span class="material-symbols-outlined text-[18px]">checklist</span><span class="font-headline-md text-headline-md">Session Prep</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-[11px] text-on-surface"><input checked="" class="rounded border-outline-variant bg-transparent text-tertiary focus:ring-0" type="checkbox"/><span class="line-through text-on-surface-variant">Review previous session notes</span></div><div class="flex items-center gap-2 text-[11px] text-on-surface"><input class="rounded border-outline-variant bg-transparent text-tertiary focus:ring-0" type="checkbox"/><span>Define Vaelin's immediate goal</span></div><div class="flex items-center gap-2 text-[11px] text-on-surface"><input class="rounded border-outline-variant bg-transparent text-tertiary focus:ring-0" type="checkbox"/><span>Prepare 'Iron Gate' combat map</span></div></div></div><div class="mt-auto p-gutter-md bg-surface-container-lowest">
+<div class="flex flex-col gap-gutter-sm"><button class="text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-[18px]">dock_to_right</span></button>
+<div class="flex justify-between items-center text-[10px] text-on-surface-variant font-data-mono mb-1">
+<span>GM FOCUS LEVEL</span>
+<span>85%</span>
+</div>
+<div class="h-0.5 bg-surface-container w-full">
+<div class="h-full bg-tertiary w-[85%]"></div>
+</div>
+<button class="w-full py-2 border border-outline text-on-surface-variant font-label-caps text-label-caps hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">notes</span>
+                        QUICK SCRATCHPAD
+                    </button>
+<button class="ml-auto text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-[18px]">side_navigation</span></button></div><div class="flex justify-between gap-1 mt-gutter-md pb-gutter-sm border-b border-outline-variant/30"><button class="flex-1 flex flex-col items-center gap-1 p-1 hover:bg-surface-container-high rounded transition-colors" title="Add NPC"><span class="material-symbols-outlined text-tertiary">person_add</span><span class="text-[9px] font-label-caps">NPC</span></button><button class="flex-1 flex flex-col items-center gap-1 p-1 hover:bg-surface-container-high rounded transition-colors" title="Add Location"><span class="material-symbols-outlined text-primary">add_location_alt</span><span class="text-[9px] font-label-caps">LOC</span></button><button class="flex-1 flex flex-col items-center gap-1 p-1 hover:bg-surface-container-high rounded transition-colors" title="Add Item"><span class="material-symbols-outlined text-on-surface-variant">category</span><span class="text-[9px] font-label-caps">ITEM</span></button><button class="flex-1 flex flex-col items-center gap-1 p-1 hover:bg-surface-container-high rounded transition-colors" title="Add Plot Thread"><span class="material-symbols-outlined text-error">tactic</span><span class="text-[9px] font-label-caps">PLOT</span></button></div>
+</div>
+</aside>
+</div>
+<!-- Floating Quick-Note FAB -->
+<div class="fixed bottom-gutter-md right-gutter-md z-50 md:hidden">
+<button class="w-14 h-14 bg-tertiary text-on-tertiary-fixed rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[24px]">edit</span>
+</button>
+</div>
+<script>
+        // Micro-interactions for the editor
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                const savedIndicator = document.querySelector('.animate-pulse');
+                savedIndicator.classList.remove('bg-tertiary');
+                savedIndicator.classList.add('bg-primary');
+                setTimeout(() => {
+                    savedIndicator.classList.remove('bg-primary');
+                    savedIndicator.classList.add('bg-tertiary');
+                }, 1000);
+            }
+        });
+
+        // Subtle animation for progress bar
+        const riftProgress = document.getElementById('rift-progress');
+        let width = 70;
+        setInterval(() => {
+            width = width > 95 ? 60 : width + 0.1;
+            riftProgress.style.width = width + '%';
+        }, 500);
+    </script>
+</body></html>
