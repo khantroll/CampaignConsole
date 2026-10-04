@@ -13,6 +13,7 @@ from app.services.faction_classification import faction_type_label
 from app.services.item_classification import build_item_type_options, item_type_label
 from app.services.creature_classification import creature_type_label
 from app.models import (
+    Campaign,
     Creature,
     Faction,
     Item,
@@ -148,9 +149,7 @@ def render_entity_section(request: Request, campaign_id: int, db: Session, secti
     sessions = db.exec(
         select(SessionModel).where(SessionModel.campaign_id == campaign_id).order_by(SessionModel.id)
     ).all()
-    return templates.TemplateResponse(
-        "partials/campaign_entity_section.html",
-        {
+    context: Dict[str, Any] = {
             "request": request,
             "campaign_id": campaign_id,
             "section_key": section_key,
@@ -170,8 +169,21 @@ def render_entity_section(request: Request, campaign_id: int, db: Session, secti
             "entity_sort": "name",
             "entity_type_badges": ENTITY_TYPE_BADGES,
             "session_lookup": {s.id: s for s in sessions if s.id},
-        },
-    )
+        }
+    if is_htmx(request):
+        from app.services.gm_home import load_nav_counts
+
+        context.update(
+            {
+                "htmx_nav_oob": True,
+                "nav_oob": True,
+                "campaign": db.get(Campaign, campaign_id),
+                "nav_counts": load_nav_counts(db, campaign_id),
+                "active_nav": section_key,
+                "layout": "dashboard",
+            }
+        )
+    return templates.TemplateResponse("partials/campaign_entity_section.html", context)
 
 
 def entity_item_detail(item: Any) -> str:

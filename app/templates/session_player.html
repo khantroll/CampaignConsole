@@ -7,8 +7,10 @@
       <h1>{{ session.title }}</h1>
       <p class="text-muted mb-0">{{ session.date or 'Date not set' }}</p>
     </div>
-    <a href="{{ workspace_href }}" class="btn btn-primary">Workspace</a>
-    <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}" class="btn btn-outline-secondary">GM View</a>
+    <div class="mc-tool-row">
+      <a class="mc-quiet-link" href="{{ workspace_href }}">Workspace</a>
+      <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}">GM view</a>
+    </div>
   </div>
 </div>
 

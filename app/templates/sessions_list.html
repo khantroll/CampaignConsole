@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="mc-kicker">{{ campaign.name }}</p>
+<h1 class="mc-home-title">Sessions</h1>
+<p class="mc-lead">Notes, analysis, and prep live on a session. Ingest, review, and the briefing are the same step from here.</p>
+<p class="mc-tool-row">
+  {% if session %}
+  <a class="mc-quiet-link" href="{{ workspace_href }}">Workspace</a>
+  {% endif %}
+  <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/ingest">Ingest notes</a>
+  <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/ai/review">AI review</a>
+  <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/briefing">Brief Me</a>
+  <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/timeline">Timeline</a>
+</p>
+{% include "partials/campaign_sessions_section.html" %}
+{% include "partials/campaign_intelligence_widget.html" %}
+{% if completeness_overview and completeness_overview.total_entities %}
+{% include "partials/needs_attention_widget.html" %}
+{% endif %}
+{% endblock %}

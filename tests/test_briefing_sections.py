@@ -144,7 +144,7 @@ class BriefingSectionsIntegrationTests(CampaignConsoleSmokeTests):
 
     def test_lore_board_shows_brief_me_entry(self):
         campaign_id = self._create_campaign()
-        response = self.client.get(f"/campaigns/{campaign_id}")
+        response = self.client.get(f"/campaigns/{campaign_id}/sessions")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Brief Me", response.content)
 

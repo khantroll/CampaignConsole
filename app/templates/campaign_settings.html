@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="mc-kicker">{{ campaign.name }}</p>
+<h1 class="mc-home-title">Settings</h1>
+<p class="mc-lead">Export, backups, and the LLM connection. Lore lists stay in the sidebar.</p>
+
+<section class="card">
+  <div class="card-header">Campaign files</div>
+  <div class="card-body">
+    <ul class="mc-plain-list">
+      <li><a href="/campaigns/{{ campaign.id }}/export/markdown">Export Markdown</a></li>
+      <li><a href="/campaigns/{{ campaign.id }}/backup/json">Backup JSON</a></li>
+      <li><a href="/campaigns/{{ campaign.id }}/backup/db">Backup SQLite</a></li>
+      <li><a href="/campaigns/{{ campaign.id }}/backup/markdown">Export Zip</a></li>
+    </ul>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-header">Tools</div>
+  <div class="card-body">
+    <ul class="mc-plain-list">
+      <li><a href="/settings/llm">LLM settings</a></li>
+      <li><a href="/llm/test">Test LLM</a></li>
+      <li><a href="/campaigns/{{ campaign.id }}/locations/admin">Location admin</a></li>
+    </ul>
+  </div>
+</section>
+
+{% if completeness_overview %}
+{% include "partials/entity_completeness_widget.html" %}
+{% endif %}
+
+<p class="mc-danger-row">
+  <a class="mc-danger-link" href="/campaigns/{{ campaign.id }}/delete">Delete campaign</a>
+</p>
+{% endblock %}

@@ -25,9 +25,10 @@
             <div class="text-muted mt-1">No notes yet</div>
             {% endif %}
           </div>
-          <div class="btn-group btn-group-sm" role="group">
-            <a href="/campaigns/{{ campaign_id }}/sessions/{{ session.id }}/edit" class="btn btn-outline-primary">Edit</a>
-            <a href="/campaigns/{{ campaign_id }}/sessions/{{ session.id }}/delete" class="btn btn-outline-danger">Delete</a>
+          <div class="mc-row-actions">
+            {% set list_return = '/campaigns/' ~ campaign_id ~ '/sessions' %}
+            <a class="mc-quiet-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/sessions/' ~ session.id ~ '/edit', list_return) }}">Edit</a>
+            <a class="mc-danger-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/sessions/' ~ session.id ~ '/delete', list_return) }}">Delete</a>
           </div>
         </div>
       </li>
@@ -38,6 +39,7 @@
     {% endif %}
 
     <form
+      id="add-form"
       action="/campaigns/{{ campaign_id }}/sessions"
       method="post"
       data-draft-form="add-sessions"

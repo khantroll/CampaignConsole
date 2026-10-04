@@ -48,7 +48,14 @@ from app.services.analysis import (
     save_ai_run_metadata,
 )
 from app.services.entity_session_presence import refresh_session_link_metadata
-from app.services.mission_control_ui import confirm_delete_context, entity_form_context, redirect_after_session_edit, session_workflow_url, with_mc
+from app.services.mission_control_ui import (
+    confirm_delete_context,
+    entity_form_context,
+    redirect_after_session_edit,
+    safe_return_to,
+    session_workflow_url,
+    with_mc,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -371,12 +378,20 @@ def delete_session_confirm(request: Request, campaign_id: int, session_id: int, 
 
 
 @router.post("/campaigns/{campaign_id}/sessions/{session_id}/delete")
-def delete_session(campaign_id: int, session_id: int, db: Session = Depends(get_session)):
+def delete_session(
+    campaign_id: int,
+    session_id: int,
+    return_to: Optional[str] = Form(None),
+    db: Session = Depends(get_session),
+):
     session_model = get_entity_or_none(db, SessionModel, campaign_id, session_id)
     if session_model:
         delete_session_cascade(db, session_model)
         db.commit()
-    return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    return RedirectResponse(
+        url=safe_return_to(return_to) or f"/campaigns/{campaign_id}/sessions",
+        status_code=303,
+    )
 
 
 @router.post("/campaigns/{campaign_id}/sessions")
@@ -393,7 +408,7 @@ def create_session(
     session.commit()
     return htmx_or_redirect(
         request,
-        f"/campaigns/{campaign_id}",
+        f"/campaigns/{campaign_id}/sessions",
         render_sessions_section(request, campaign_id, session),
     )
 

@@ -7,8 +7,11 @@
   <div class="card-body">
     <p>{{ message }}</p>
     <form action="{{ action }}" method="post">
+      {% if return_to %}
+      <input type="hidden" name="return_to" value="{{ return_to }}" />
+      {% endif %}
       <button type="submit" class="btn btn-danger">Confirm Delete</button>
-      <a href="{{ cancel_url }}" class="btn btn-secondary ms-2">Cancel</a>
+      <a href="{{ cancel_url }}" class="mc-quiet-link">Cancel</a>
     </form>
   </div>
 </div>

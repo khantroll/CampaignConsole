@@ -16,11 +16,9 @@
 
   <div class="d-flex flex-wrap gap-2 align-items-center">
 
-    <a href="/campaigns/{{ campaign.id }}/briefing/print" class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener">Print / Export</a>
-
-    <a href="/campaigns/{{ campaign.id }}/briefing/export/markdown" class="btn btn-outline-success btn-sm">Download Markdown</a>
-
-    <a href="{{ lore_board_href }}" class="btn btn-outline-secondary btn-sm">Back to World</a>
+    <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/briefing/print" target="_blank" rel="noopener">Print / Export</a>
+    <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/briefing/export/markdown">Download Markdown</a>
+    <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}">Home</a>
 
   </div>
 
