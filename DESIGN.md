@@ -325,5 +325,12 @@ Session links are the source of truth for temporal intelligence. Relationship hi
 - Tailwind build pipeline
 - Material icon font (use text labels / Unicode fallbacks)
 - Full workspace mode logic (center panel varies by mode)
-- Authentication changes
 - htmx slide-over entity edit from ref panel
+
+## 13. Local authentication and campaign authorization
+
+Campaign Console now has application-local users, opaque database-backed sessions, and campaign memberships with `owner`, `gm`, and `player` roles. Authentication is independent of YunoHost/Unix accounts and does not use JWTs.
+
+The existing GM route surface is protected server-side. A user must hold an `owner` or `gm` membership for the campaign in the URL; `player` memberships are intentionally denied the GM console until dedicated Player Console routes are implemented. Global user/settings/debug administration is restricted to application administrators.
+
+Existing installations bootstrap their first administrator through `/bootstrap`; that account receives ownership of pre-existing campaigns. New campaigns assign their creator as owner. Campaign exports remain campaign-data exports and intentionally omit users, password hashes, campaign memberships, and live application sessions.

@@ -160,3 +160,14 @@ Supported modes: `local_fallback`, `openai`, or `ollama`. Legacy `auto` is treat
 ```bash
 python -m unittest tests.test_app -v
 ```
+
+## Local users and first-admin bootstrap
+
+Campaign Console uses **application-local users**. It does not use YunoHost, Unix accounts, reverse-proxy usernames, OAuth, or JWTs.
+
+On an upgraded or fresh database with no local users, browse to `/bootstrap`. The bootstrap form is available only while the user table is empty. The first account is created as an administrator and is assigned the `owner` role for every campaign already present in the database, preserving access to existing installations. Once any user exists, `/bootstrap` can no longer create another administrator.
+
+Administrators manage local users at `/admin/users`: create accounts, enable/disable them, reset temporary passwords, require a password change, and assign campaign memberships as `owner`, `gm`, or `player`. Player memberships may optionally link to an existing `PlayerCharacterNote`.
+
+Authentication uses Argon2id password hashes and opaque database-backed sessions. Authenticated browser mutations require a CSRF token. Password changes and administrator password resets invalidate prior sessions.
+

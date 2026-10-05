@@ -1,10 +1,11 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Form, Query, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from app.auth import user_can_manage_campaign
 from app.database import get_session
 from app.deps import get_campaign_or_none, get_entity_or_none, render_markdown, templates
 from app.models import (
@@ -59,6 +60,9 @@ def workspace_rules_lookup(
     text: str = Query(""),
     db: Session = Depends(get_session),
 ):
+    if not user_can_manage_campaign(db, request.state.current_user.id, campaign_id):
+        raise HTTPException(status_code=403, detail="Campaign GM access denied.")
+
     campaign = get_campaign_or_none(db, campaign_id)
     if not campaign:
         return []

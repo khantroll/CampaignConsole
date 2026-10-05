@@ -36,9 +36,10 @@
       {% endfor %}
     </div>
     {% else %}
-    <p class="text-muted">No campaigns yet. Create one to start your campaign console.</p>
+    <p class="text-muted">{% if can_create_campaign %}No campaigns yet. Create one to start your campaign console.{% else %}No GM campaigns are available to this account.{% endif %}</p>
     {% endif %}
   </div>
+  {% if can_create_campaign %}
   <div class="col-md-4">
     <div class="card mb-3">
       <div class="card-body">
@@ -61,5 +62,6 @@
       </div>
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

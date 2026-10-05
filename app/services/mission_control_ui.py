@@ -6,14 +6,28 @@ from urllib.parse import parse_qs, quote, urlencode
 from fastapi import Request
 from sqlmodel import Session, select
 
-from app.models import Campaign, SessionModel
+from app.auth import GM_CAMPAIGN_ROLES
+from app.models import Campaign, CampaignMembership, SessionModel
 from app.services.entity_health import CampaignEntityHealth, health_tooltip
 
 WORKSPACE_MODES = ("prep", "run", "review")
 
 
-def load_all_campaigns(db: Session) -> List[Campaign]:
-    return db.exec(select(Campaign).order_by(Campaign.name)).all()
+def load_all_campaigns(db: Session, request: Optional[Request] = None) -> List[Campaign]:
+    user = getattr(getattr(request, "state", None), "current_user", None) if request else None
+    if not user:
+        return []
+    campaign_ids = db.exec(
+        select(CampaignMembership.campaign_id).where(
+            CampaignMembership.user_id == user.id,
+            CampaignMembership.role.in_(GM_CAMPAIGN_ROLES),
+        )
+    ).all()
+    if not campaign_ids:
+        return []
+    return db.exec(
+        select(Campaign).where(Campaign.id.in_(campaign_ids)).order_by(Campaign.name)
+    ).all()
 
 
 def load_campaign_sessions(db: Session, campaign_id: int) -> List[SessionModel]:
@@ -237,7 +251,7 @@ def mc_context(
         "workspace_mode": workspace_mode,
     }
     if include_campaigns:
-        ctx["campaigns"] = load_all_campaigns(db)
+        ctx["campaigns"] = load_all_campaigns(db, request)
     if campaign:
         ctx["sessions"] = load_campaign_sessions(db, campaign.id)
         ctx["workspace_href"] = workspace_url(

@@ -72,6 +72,33 @@ class CampaignConsoleSmokeTests(unittest.TestCase):
             raise_server_exceptions=True,
             follow_redirects=False,
         )
+        bootstrap = self.client.post(
+            "/bootstrap",
+            data={"username": "testadmin", "display_name": "Test Admin", "password": "test-password-123"},
+        )
+        self.assertEqual(bootstrap.status_code, 303)
+        page = self.client.get("/")
+        import re
+        csrf_match = re.search(r'<meta name="csrf-token" content="([^"]+)"', page.text)
+        self.assertIsNotNone(csrf_match)
+        self._csrf = csrf_match.group(1)
+        original_post = self.client.post
+
+        def post_with_csrf(url, *args, **kwargs):
+            if url not in {"/login", "/bootstrap"}:
+                data = kwargs.get("data")
+                if data is None:
+                    kwargs["data"] = {"_csrf": self._csrf}
+                elif isinstance(data, dict):
+                    data = dict(data)
+                    data.setdefault("_csrf", self._csrf)
+                    kwargs["data"] = data
+                headers = dict(kwargs.get("headers") or {})
+                headers.setdefault("X-CSRF-Token", self._csrf)
+                kwargs["headers"] = headers
+            return original_post(url, *args, **kwargs)
+
+        self.client.post = post_with_csrf
 
     def tearDown(self):
         self.client.close()

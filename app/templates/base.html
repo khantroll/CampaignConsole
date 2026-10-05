@@ -12,6 +12,8 @@
 
     <link rel="stylesheet" href="/static/css/mission_control.css" />
 
+    {% if request and request.state.csrf_token %}<meta name="csrf-token" content="{{ request.state.csrf_token }}">{% endif %}
+
     {% block extra_head %}{% endblock %}
 
   </head>
@@ -106,7 +108,11 @@
 
           {% endif %}
 
-          <a class="mc-btn mc-btn-ghost" href="/settings/llm">LLM Settings</a>
+          {% if request and request.state.current_user %}
+          {% if request.state.current_user.is_admin %}<a class="mc-btn mc-btn-ghost" href="/admin/users">Users</a><a class="mc-btn mc-btn-ghost" href="/settings/llm">LLM Settings</a>{% endif %}
+          <a class="mc-btn mc-btn-ghost" href="/account/password">Password</a>
+          <form method="post" action="/logout" style="display:inline"><button class="mc-btn mc-btn-ghost" type="submit">Logout</button></form>
+          {% endif %}
 
         </div>
 
@@ -144,6 +150,25 @@
 
     </div>
 
+    <script>
+      (function () {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (!meta) return;
+        const token = meta.content;
+        document.querySelectorAll('form').forEach(function (form) {
+          const method = (form.getAttribute('method') || 'get').toLowerCase();
+          if (method === 'get' || form.querySelector('input[name="_csrf"]')) return;
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = '_csrf';
+          input.value = token;
+          form.appendChild(input);
+        });
+        document.body.addEventListener('htmx:configRequest', function (event) {
+          event.detail.headers['X-CSRF-Token'] = token;
+        });
+      })();
+    </script>
     <script src="/static/js/htmx.min.js"></script>
 
     <script src="/static/js/mc.js"></script>

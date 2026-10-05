@@ -1,12 +1,13 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlmodel import Session, select
 
+from app.auth import user_can_create_campaign
 from app.database import get_session
 from app.deps import get_campaign_or_none, sort_sessions_chronologically, templates
-from app.models import Campaign, SessionModel
+from app.models import Campaign, CampaignMembership, SessionModel
 from app.services.campaign_deletion import delete_campaign_cascade
 from app.services.campaign_dashboard import build_campaign_dashboard_summary
 from app.services.campaign_intelligence import load_campaign_briefing_data
@@ -22,8 +23,9 @@ router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, session: Session = Depends(get_session)):
-    ctx = mc_context(session, layout="minimal", include_campaigns=True)
+    ctx = mc_context(session, layout="minimal", include_campaigns=True, request=request)
     ctx["request"] = request
+    ctx["can_create_campaign"] = user_can_create_campaign(session, request.state.current_user)
     return templates.TemplateResponse("campaigns.html", ctx)
 
 
@@ -35,10 +37,18 @@ def create_campaign(
     description: str = Form(""),
     session: Session = Depends(get_session),
 ):
+    if not user_can_create_campaign(session, request.state.current_user):
+        return PlainTextResponse(
+            "Campaign creation requires administrator, owner, or GM access.",
+            status_code=403,
+        )
+
     campaign = Campaign(name=name, system=system, description=description)
     session.add(campaign)
     session.commit()
     session.refresh(campaign)
+    session.add(CampaignMembership(campaign_id=campaign.id, user_id=request.state.current_user.id, role="owner"))
+    session.commit()
     return RedirectResponse(url=workspace_url(campaign.id), status_code=303)
 
 
@@ -257,6 +267,11 @@ def delete_campaign_confirm(request: Request, campaign_id: int, session: Session
 
 @router.post("/campaigns/{campaign_id}/delete")
 def delete_campaign(campaign_id: int, session: Session = Depends(get_session)):
+    for membership in session.exec(
+        select(CampaignMembership).where(CampaignMembership.campaign_id == campaign_id)
+    ).all():
+        session.delete(membership)
+    session.commit()
     try:
         delete_campaign_cascade(session, campaign_id)
     except ValueError:
