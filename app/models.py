@@ -681,6 +681,7 @@ class PlayerReveal(SQLModel, table=True):
     entity_id: int = Field(index=True)
     title: Optional[str] = None
     public_summary: str
+    audience_mode: str = Field(default="campaign", index=True)
     revealed_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
     revealed_session_id: Optional[int] = Field(default=None, foreign_key="sessionmodel.id", index=True)
     created_by_user_id: Optional[int] = Field(default=None, foreign_key="appuser.id")
