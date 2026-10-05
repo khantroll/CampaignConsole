@@ -118,7 +118,7 @@ def get_campaign_membership(db: Session, user_id: int, campaign_id: int) -> Opti
     )).first()
 
 
-GM_CAMPAIGN_ROLES = {"owner", "gm"}
+GM_CAMPAIGN_ROLES = ("owner", "gm")
 
 
 def user_can_manage_campaign(db: Session, user_id: int, campaign_id: int) -> bool:
