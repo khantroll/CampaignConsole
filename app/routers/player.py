@@ -222,6 +222,7 @@ def create_reveal(
         entity_id=entity_id,
         title=title.strip() or None,
         public_summary=public_summary.strip(),
+        audience_mode="selected" if selected_ids else "campaign",
         revealed_session_id=session_id,
         created_by_user_id=request.state.current_user.id,
     )
