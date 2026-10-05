@@ -369,6 +369,7 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
         try:
             page = client.get(f"/player/campaigns/{self.c1}/character/select")
             self.assertNotIn("Other Player Character", page.text)
+            self.assertNotIn("Foreign Hero", page.text)
             for bad_id in (foreign_id, claimed_id):
                 response = self.post_player_form(
                     client,
