@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from app.database import get_session
 from app.deps import templates
-from app.models import CampaignMembership, PlayerReveal, RevealAudience, SessionModel
+from app.models import Campaign, CampaignMembership, PlayerReveal, RevealAudience, SessionModel
 from app.services.player_console import (
     ENTITY_LABELS,
     ENTITY_MODELS,
@@ -20,6 +20,7 @@ from app.services.player_console import (
     load_player_session,
     load_player_sessions,
 )
+from app.services.mission_control_ui import mc_context
 from app.utils.time import utc_now
 
 router = APIRouter()
@@ -161,16 +162,17 @@ def reveal_admin(request: Request, campaign_id: int, db: Session = Depends(get_s
         .where(PlayerReveal.campaign_id == campaign_id)
         .order_by(PlayerReveal.revealed_at.desc())
     ).all()
-    return templates.TemplateResponse(
-        "player_reveal_admin.html",
-        {
-            "request": request,
-            "campaign_id": campaign_id,
-            "memberships": memberships,
-            "reveals": reveals,
-            "entity_kinds": ENTITY_LABELS,
-        },
-    )
+    campaign = db.get(Campaign, campaign_id)
+    ctx = mc_context(db, campaign=campaign, request=request, layout="dashboard", include_campaigns=True)
+    ctx.update({
+        "request": request,
+        "campaign_id": campaign_id,
+        "memberships": memberships,
+        "reveals": reveals,
+        "entity_kinds": ENTITY_LABELS,
+        "active_nav": "dashboard",
+    })
+    return templates.TemplateResponse("player_reveal_admin.html", ctx)
 
 
 @router.post("/campaigns/{campaign_id}/player-reveals")
