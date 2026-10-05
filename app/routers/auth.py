@@ -33,6 +33,19 @@ def _safe_next(value: Optional[str]) -> str:
     return value
 
 
+def _default_landing_path(db: Session, user: User) -> str:
+    if user.is_admin:
+        return "/"
+    roles = set(
+        db.exec(
+            select(CampaignMembership.role).where(CampaignMembership.user_id == user.id)
+        ).all()
+    )
+    if roles and roles.issubset({"player"}):
+        return "/player"
+    return "/"
+
+
 def _user_by_name(db: Session, username: str):
     return db.exec(select(User).where(User.username == normalize_username(username))).first()
 
@@ -83,7 +96,7 @@ def bootstrap(
     db.commit()
 
     _, raw_token = create_app_session(db, user.id)
-    response = RedirectResponse("/", status_code=303)
+    response = RedirectResponse(_default_landing_path(db, user), status_code=303)
     set_session_cookie(response, request, raw_token)
     return response
 
@@ -135,7 +148,12 @@ def login(
     db.add(user)
     db.commit()
     _, raw_token = create_app_session(db, user.id)
-    target = "/account/password" if user.must_change_password else _safe_next(next)
+    safe_next = _safe_next(next)
+    target = (
+        "/account/password"
+        if user.must_change_password
+        else (_default_landing_path(db, user) if safe_next == "/" else safe_next)
+    )
     response = RedirectResponse(target, status_code=303)
     set_session_cookie(response, request, raw_token)
     return response
