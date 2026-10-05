@@ -331,7 +331,7 @@ async function selectProvider(providerId) {
   try {
     const body = new FormData();
     body.append("provider", providerId);
-    const response = await fetch("/settings/llm/provider", {
+    const response = await window.mcCsrfFetch("/settings/llm/provider", {
       method: "POST",
       headers: { Accept: "application/json" },
       body,
