@@ -107,3 +107,14 @@ Manual smoke test before releases or after stabilization changes. Run against a 
 - [ ] Campaign backup includes reveal/audience data while excluding users, password hashes, and app-session credentials
 - [ ] Minimal GM reveal authoring can create campaign-wide or selected reveals and revoke them
 - [ ] Existing owner/GM Mission Control workflows still function
+
+## Phase 1/2 smoke-test stabilization
+
+- [ ] Mistral endpoint override blank / hostname-only / `/v1` resolves to `https://api.mistral.ai/v1/chat/completions`
+- [ ] A complete Mistral endpoint remains unchanged; custom non-Mistral hosts are treated as complete endpoint URLs
+- [ ] Provider switch button succeeds under CSRF enforcement; failures show a visible alert instead of appearing inert
+- [ ] Workspace rule-render POST succeeds under CSRF enforcement
+- [ ] Party Member quick-add requires only Character Name; Archetype and other metadata remain optional
+- [ ] Party Member name-only HTMX add creates the PC and refreshes the Party Members section
+- [ ] Admin-created player logs in with temporary password, is forced to change it, receives a fresh session, and lands on `/player`
+- [ ] Player can logout and re-login with the new password; old temporary password fails; disabled player is rejected
