@@ -10,7 +10,7 @@ from sqlmodel import Session, SQLModel, create_engine, select
 import app.database as database
 import app.main as main
 from app.auth import clear_login_throttle_for_tests, hash_password
-from app.models import AppSession, Campaign, CampaignMembership, NPC, User
+from app.models import AppSession, Campaign, CampaignMembership, NPC, PlayerCharacterNote, PlayerReveal, RevealAudience, User
 
 
 class AuthAuthorizationTests(unittest.TestCase):
@@ -527,6 +527,93 @@ class AuthAuthorizationTests(unittest.TestCase):
             self.assertEqual(client.get(path).status_code, 403, path)
         client.close()
 
+
+    def test_admin_delete_user_cleans_auth_state_and_preserves_campaign_content(self):
+        self.bootstrap()
+        campaign_response = self.post_auth("/campaigns", {"name": "Delete Test"})
+        campaign_id = int(re.search(r"/campaigns/(\d+)", campaign_response.headers["location"]).group(1))
+        with Session(database.engine) as db:
+            owner = db.exec(select(User).where(User.username == "admin")).one()
+            replacement = User(
+                username="replacementowner",
+                display_name="Replacement Owner",
+                password_hash=hash_password("replacement-password"),
+            )
+            target = User(
+                username="delete-me",
+                display_name="Delete Me",
+                password_hash=hash_password("delete-password"),
+            )
+            db.add(replacement); db.add(target); db.commit()
+            db.refresh(replacement); db.refresh(target)
+            db.add(CampaignMembership(campaign_id=campaign_id, user_id=replacement.id, role="owner"))
+            pc = PlayerCharacterNote(campaign_id=campaign_id, character_name="Retained Hero")
+            db.add(pc); db.commit(); db.refresh(pc)
+            membership = CampaignMembership(
+                campaign_id=campaign_id,
+                user_id=target.id,
+                role="player",
+                player_character_id=pc.id,
+            )
+            db.add(membership); db.commit(); db.refresh(membership)
+            reveal = PlayerReveal(
+                campaign_id=campaign_id,
+                entity_kind="npc",
+                entity_id=999999,
+                public_summary="Retained reveal",
+                audience_mode="selected",
+                created_by_user_id=target.id,
+            )
+            db.add(reveal); db.commit(); db.refresh(reveal)
+            db.add(RevealAudience(reveal_id=reveal.id, membership_id=membership.id))
+            db.add(AppSession(
+                token_hash="delete-session-token-hash",
+                user_id=target.id,
+                created_at=owner.created_at,
+                last_seen_at=owner.created_at,
+                expires_at=owner.created_at,
+            ))
+            db.commit()
+            target_id = target.id
+            pc_id = pc.id
+            reveal_id = reveal.id
+            membership_id = membership.id
+
+        response = self.post_auth(f"/admin/users/{target_id}/delete")
+        self.assertEqual(response.status_code, 303)
+        with Session(database.engine) as db:
+            self.assertIsNone(db.get(User, target_id))
+            self.assertIsNone(db.get(CampaignMembership, membership_id))
+            self.assertIsNotNone(db.get(PlayerCharacterNote, pc_id))
+            self.assertFalse(db.exec(select(AppSession).where(AppSession.user_id == target_id)).all())
+            self.assertFalse(db.exec(select(RevealAudience).where(RevealAudience.membership_id == membership_id)).all())
+            reveal = db.get(PlayerReveal, reveal_id)
+            self.assertIsNotNone(reveal)
+            self.assertIsNone(reveal.created_by_user_id)
+            self.assertEqual(reveal.audience_mode, "selected")
+
+    def test_admin_delete_user_blocks_self_last_admin_and_sole_owner(self):
+        self.bootstrap()
+        self.assertEqual(self.post_auth("/admin/users/1/delete").status_code, 303)
+
+        with Session(database.engine) as db:
+            owner = db.exec(select(User).where(User.username == "admin")).one()
+            campaign = Campaign(name="Owned Only", system="Test")
+            target = User(
+                username="soleowner",
+                display_name="Sole Owner",
+                password_hash=hash_password("sole-owner-password"),
+            )
+            db.add(campaign); db.add(target); db.commit()
+            db.refresh(campaign); db.refresh(target)
+            db.add(CampaignMembership(campaign_id=campaign.id, user_id=target.id, role="owner"))
+            db.commit()
+            target_id = target.id
+
+        blocked = self.post_auth(f"/admin/users/{target_id}/delete")
+        self.assertEqual(blocked.status_code, 303)
+        with Session(database.engine) as db:
+            self.assertIsNotNone(db.get(User, target_id))
 
     def test_export_omits_auth_secrets(self):
         self.bootstrap()
