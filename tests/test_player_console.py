@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -189,6 +190,31 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
         self.assertEqual(response.status_code, 303)
         return client
 
+    def post_player_form(self, client, form_url, post_url, data):
+        form = client.get(form_url)
+        self.assertEqual(form.status_code, 200)
+        match = re.search(r'name="_csrf" value="([^"]+)"', form.text)
+        self.assertIsNotNone(match)
+        payload = dict(data)
+        payload["_csrf"] = match.group(1)
+        return client.post(post_url, data=payload)
+
+    def make_unlinked_player(self, username="unlinked", password="unlinked-password"):
+        with Session(database.engine) as db:
+            user = User(
+                username=username,
+                display_name=username.title(),
+                password_hash=hash_password(password),
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            membership = CampaignMembership(campaign_id=self.c1, user_id=user.id, role="player")
+            db.add(membership)
+            db.commit()
+            db.refresh(membership)
+            return user.id, membership.id
+
     def test_player_owner_and_gm_access_player_console_unrelated_denied(self):
         player = self.login("player1", "player-one-password")
         gm = self.login("gm2", "gm-two-password")
@@ -278,6 +304,219 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
             self.assertEqual(cross.status_code, 404)
         finally:
             player.close()
+
+    def test_unlinked_player_sees_choose_and_create_character_actions(self):
+        self.make_unlinked_player()
+        client = self.login("unlinked", "unlinked-password")
+        try:
+            page = client.get(f"/player/campaigns/{self.c1}/character")
+            self.assertEqual(page.status_code, 200)
+            self.assertIn("Choose Existing Character", page.text)
+            self.assertIn("Create New Character", page.text)
+        finally:
+            client.close()
+
+    def test_player_can_select_unclaimed_same_campaign_character(self):
+        _, membership_id = self.make_unlinked_player("selector", "selector-password")
+        with Session(database.engine) as db:
+            pc = PlayerCharacterNote(
+                campaign_id=self.c1,
+                character_name="Unclaimed Hero",
+                character_archetype="Scout",
+                description="Available character",
+            )
+            db.add(pc)
+            db.commit()
+            db.refresh(pc)
+            pc_id = pc.id
+
+        client = self.login("selector", "selector-password")
+        try:
+            select_page = client.get(f"/player/campaigns/{self.c1}/character/select")
+            self.assertEqual(select_page.status_code, 200)
+            self.assertIn("Unclaimed Hero", select_page.text)
+            self.assertNotIn("Other Player Character", select_page.text)
+            response = self.post_player_form(
+                client,
+                f"/player/campaigns/{self.c1}/character/select",
+                f"/player/campaigns/{self.c1}/character/select",
+                {"player_character_id": str(pc_id)},
+            )
+            self.assertEqual(response.status_code, 303)
+        finally:
+            client.close()
+
+        with Session(database.engine) as db:
+            membership = db.get(CampaignMembership, membership_id)
+            self.assertEqual(membership.player_character_id, pc_id)
+
+    def test_player_cannot_select_cross_campaign_or_claimed_character(self):
+        _, membership_id = self.make_unlinked_player("blockedselector", "blocked-password")
+        with Session(database.engine) as db:
+            foreign_pc = PlayerCharacterNote(campaign_id=self.c2, character_name="Foreign Hero")
+            db.add(foreign_pc)
+            db.commit()
+            db.refresh(foreign_pc)
+            foreign_id = foreign_pc.id
+
+            claimed_id = db.exec(
+                select(CampaignMembership.player_character_id).where(
+                    CampaignMembership.id == self.m2
+                )
+            ).one()
+
+        client = self.login("blockedselector", "blocked-password")
+        try:
+            page = client.get(f"/player/campaigns/{self.c1}/character/select")
+            self.assertNotIn("Other Player Character", page.text)
+            for bad_id in (foreign_id, claimed_id):
+                response = self.post_player_form(
+                    client,
+                    f"/player/campaigns/{self.c1}/character/select",
+                    f"/player/campaigns/{self.c1}/character/select",
+                    {"player_character_id": str(bad_id)},
+                )
+                self.assertEqual(response.status_code, 400)
+        finally:
+            client.close()
+
+        with Session(database.engine) as db:
+            membership = db.get(CampaignMembership, membership_id)
+            self.assertIsNone(membership.player_character_id)
+
+    def test_player_can_create_and_link_safe_character_without_gm_fields(self):
+        _, membership_id = self.make_unlinked_player("creator", "creator-password")
+        client = self.login("creator", "creator-password")
+        try:
+            response = self.post_player_form(
+                client,
+                f"/player/campaigns/{self.c1}/character/new",
+                f"/player/campaigns/{self.c1}/character/new",
+                {
+                    "character_name": "Created Hero",
+                    "character_archetype": "Seeker",
+                    "description": "Player description",
+                    "signature_gear": "Silver compass",
+                    "key_ties_history": "Old academy friend",
+                    "campaign_role_plot_notes": "CRAFTED_GM_ROLE_SENTINEL",
+                    "notes": "CRAFTED_GM_NOTES_SENTINEL",
+                },
+            )
+            self.assertEqual(response.status_code, 303)
+        finally:
+            client.close()
+
+        with Session(database.engine) as db:
+            membership = db.get(CampaignMembership, membership_id)
+            self.assertIsNotNone(membership.player_character_id)
+            pc = db.get(PlayerCharacterNote, membership.player_character_id)
+            self.assertEqual(pc.campaign_id, self.c1)
+            self.assertEqual(pc.character_name, "Created Hero")
+            self.assertEqual(pc.character_archetype, "Seeker")
+            self.assertEqual(pc.description, "Player description")
+            self.assertEqual(pc.signature_gear, "Silver compass")
+            self.assertEqual(pc.key_ties_history, "Old academy friend")
+            self.assertIsNone(pc.campaign_role_plot_notes)
+            self.assertIsNone(pc.notes)
+
+    def test_another_player_cannot_hijack_existing_linked_character(self):
+        _, membership_id = self.make_unlinked_player("hijacker", "hijacker-password")
+        with Session(database.engine) as db:
+            claimed_id = db.exec(
+                select(CampaignMembership.player_character_id).where(
+                    CampaignMembership.id == self.m1
+                )
+            ).one()
+
+        client = self.login("hijacker", "hijacker-password")
+        try:
+            response = self.post_player_form(
+                client,
+                f"/player/campaigns/{self.c1}/character/select",
+                f"/player/campaigns/{self.c1}/character/select",
+                {"player_character_id": str(claimed_id)},
+            )
+            self.assertEqual(response.status_code, 400)
+        finally:
+            client.close()
+
+        with Session(database.engine) as db:
+            membership = db.get(CampaignMembership, membership_id)
+            self.assertIsNone(membership.player_character_id)
+
+    def test_owner_or_gm_test_link_does_not_reserve_character_from_player(self):
+        _, membership_id = self.make_unlinked_player("aftergm", "aftergm-password")
+        with Session(database.engine) as db:
+            pc = PlayerCharacterNote(campaign_id=self.c1, character_name="GM Test Character")
+            db.add(pc)
+            db.commit()
+            db.refresh(pc)
+            pc_id = pc.id
+            gm_membership = db.exec(
+                select(CampaignMembership).where(
+                    CampaignMembership.campaign_id == self.c1,
+                    CampaignMembership.role == "gm",
+                )
+            ).one()
+            gm_membership.player_character_id = pc_id
+            db.add(gm_membership)
+            db.commit()
+
+        client = self.login("aftergm", "aftergm-password")
+        try:
+            page = client.get(f"/player/campaigns/{self.c1}/character/select")
+            self.assertIn("GM Test Character", page.text)
+            response = self.post_player_form(
+                client,
+                f"/player/campaigns/{self.c1}/character/select",
+                f"/player/campaigns/{self.c1}/character/select",
+                {"player_character_id": str(pc_id)},
+            )
+            self.assertEqual(response.status_code, 303)
+        finally:
+            client.close()
+
+        with Session(database.engine) as db:
+            membership = db.get(CampaignMembership, membership_id)
+            self.assertEqual(membership.player_character_id, pc_id)
+
+    def test_existing_admin_membership_assignment_still_links_player_character(self):
+        with Session(database.engine) as db:
+            user = User(
+                username="adminassigned",
+                display_name="Admin Assigned",
+                password_hash=hash_password("admin-assigned-password"),
+            )
+            pc = PlayerCharacterNote(campaign_id=self.c1, character_name="Admin Assigned Hero")
+            db.add(user)
+            db.add(pc)
+            db.commit()
+            db.refresh(user)
+            db.refresh(pc)
+            user_id = user.id
+            pc_id = pc.id
+
+        page = self.client.get("/")
+        match = re.search(r'<meta name="csrf-token" content="([^"]+)"', page.text)
+        self.assertIsNotNone(match)
+        response = self.client.post(
+            f"/admin/users/{user_id}/memberships",
+            data={
+                "_csrf": match.group(1),
+                "campaign_id": str(self.c1),
+                "role": "player",
+                "player_character_id": str(pc_id),
+            },
+        )
+        self.assertEqual(response.status_code, 303)
+        with Session(database.engine) as db:
+            membership = db.exec(
+                select(CampaignMembership).where(
+                    CampaignMembership.user_id == user_id,
+                    CampaignMembership.campaign_id == self.c1,
+                )
+            ).one()
+            self.assertEqual(membership.player_character_id, pc_id)
 
     def test_campaign_backup_includes_reveals_without_auth_credentials(self):
         with Session(database.engine) as db:
