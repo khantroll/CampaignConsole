@@ -132,6 +132,49 @@ class CampaignConsoleSmokeTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 303)
 
+    def test_party_member_quick_add_requiredness_matches_backend(self):
+        import re
+
+        campaign = self._create_campaign()
+        page = self.client.get(f"/campaigns/{campaign}")
+        self.assertEqual(page.status_code, 200)
+        self.assertRegex(page.text, r'<input[^>]+name="character_name"[^>]+required')
+        archetype = re.search(r'<input[^>]+name="character_archetype"[^>]*>', page.text)
+        self.assertIsNotNone(archetype)
+        self.assertNotIn("required", archetype.group(0))
+
+    def test_party_member_name_only_htmx_create_refreshes_section(self):
+        campaign = self._create_campaign()
+        response = self.client.post(
+            f"/campaigns/{campaign}/pcs",
+            data={"character_name": "HTMX Party Member"},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("HTMX Party Member", response.text)
+        self.assertIn('id="pcs-section"', response.text)
+        self.assertNotIn("CSRF validation failed", response.text)
+        with Session(database.engine) as db:
+            pc = db.exec(
+                select(PlayerCharacterNote).where(
+                    PlayerCharacterNote.campaign_id == int(campaign),
+                    PlayerCharacterNote.character_name == "HTMX Party Member",
+                )
+            ).first()
+            self.assertIsNotNone(pc)
+            self.assertIsNone(pc.character_archetype)
+
+    def test_programmatic_mutations_use_shared_csrf_fetch(self):
+        settings = self.client.get("/settings/llm")
+        self.assertEqual(settings.status_code, 200)
+        self.assertIn("window.mcCsrfFetch", settings.text)
+        self.assertIn('window.mcCsrfFetch("/settings/llm/provider"', settings.text)
+        self.assertIn("htmx:responseError", settings.text)
+
+        script = self.client.get("/static/js/mc.js")
+        self.assertEqual(script.status_code, 200)
+        self.assertIn('window.mcCsrfFetch("/api/workspace/render-markdown"', script.text)
+
     def test_npc_edit_route(self):
         campaign = self._create_campaign()
         create_response = self.client.post(
