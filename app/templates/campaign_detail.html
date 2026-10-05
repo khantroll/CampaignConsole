@@ -112,7 +112,7 @@
 
 
 
-    {% with section_key='pcs', required_fields=['character_name'], section_title='Party Members', items=pc_notes, action='pcs', fields=[('character_name','Character'), ('character_archetype','Archetype'), ('description','Description'), ('signature_gear','Signature Gear'), ('key_ties_history','Key Ties & History'), ('campaign_role_plot_notes','Campaign Role & Plot Notes'), ('notes','Additional Notes')], add_label='Add Party Member', form_name='add-pcs', health_map=health_maps['pcs'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+    {% with section_key='pcs', required_fields=['character_name'], section_title='Party Members', items=pc_notes, action='pcs', fields=[('character_name','Character Name'), ('character_archetype','Archetype'), ('description','Description'), ('signature_gear','Signature Gear'), ('key_ties_history','Key Ties & History'), ('campaign_role_plot_notes','Campaign Role & Plot Notes'), ('notes','Additional Notes')], add_label='Add Party Member', form_name='add-pcs', health_map=health_maps['pcs'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
 
     {% include "partials/campaign_entity_section.html" %}
 
