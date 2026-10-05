@@ -12,8 +12,18 @@ from app.services.entity_health import CampaignEntityHealth, health_tooltip
 WORKSPACE_MODES = ("prep", "run", "review")
 
 
-def load_all_campaigns(db: Session) -> List[Campaign]:
-    return db.exec(select(Campaign).order_by(Campaign.name)).all()
+def load_all_campaigns(db: Session, request: Optional[Request] = None) -> List[Campaign]:
+    user = getattr(getattr(request, "state", None), "current_user", None) if request else None
+    if not user:
+        return []
+    campaign_ids = db.exec(
+        select(CampaignMembership.campaign_id).where(CampaignMembership.user_id == user.id)
+    ).all()
+    if not campaign_ids:
+        return []
+    return db.exec(
+        select(Campaign).where(Campaign.id.in_(campaign_ids)).order_by(Campaign.name)
+    ).all()
 
 
 def load_campaign_sessions(db: Session, campaign_id: int) -> List[SessionModel]:
