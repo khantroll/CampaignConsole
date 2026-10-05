@@ -153,6 +153,55 @@ class AuthAuthorizationTests(unittest.TestCase):
         cross = self.client.get(f"/campaigns/{one_id}/npcs/{npc_id}/edit")
         self.assertEqual(cross.status_code, 303)
 
+    def test_failed_login_is_throttled_at_boundary(self):
+        self.bootstrap()
+        self.post_auth("/logout")
+        for _ in range(5):
+            response = self.client.post(
+                "/login",
+                data={"username": "admin", "password": "wrong-password", "next": "/"},
+            )
+            self.assertEqual(response.status_code, 401)
+        throttled = self.client.post(
+            "/login",
+            data={"username": "admin", "password": "wrong-password", "next": "/"},
+        )
+        self.assertEqual(throttled.status_code, 429)
+
+    def test_player_denied_search_export_ingest_and_ai_routes(self):
+        self.bootstrap()
+        created = self.post_auth("/campaigns", {"name": "Protected"})
+        campaign_id = int(re.search(r"/campaigns/(\d+)", created.headers["location"]).group(1))
+        with Session(database.engine) as db:
+            player = User(
+                username="player2",
+                display_name="Player Two",
+                password_hash=hash_password("player-password-456"),
+            )
+            db.add(player)
+            db.commit()
+            db.refresh(player)
+            db.add(CampaignMembership(campaign_id=campaign_id, user_id=player.id, role="player"))
+            db.commit()
+
+        client = TestClient(main.app, follow_redirects=False)
+        self.assertEqual(
+            client.post(
+                "/login",
+                data={"username": "player2", "password": "player-password-456", "next": "/"},
+            ).status_code,
+            303,
+        )
+        for path in (
+            f"/campaigns/{campaign_id}/search",
+            f"/campaigns/{campaign_id}/ingest",
+            f"/campaigns/{campaign_id}/backup/json",
+            f"/campaigns/{campaign_id}/ai/review",
+        ):
+            self.assertEqual(client.get(path).status_code, 403, path)
+        client.close()
+
+
     def test_export_omits_auth_secrets(self):
         self.bootstrap()
         created = self.post_auth("/campaigns", {"name": "Export Safe"})
