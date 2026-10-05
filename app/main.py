@@ -7,7 +7,7 @@ from app.database import create_db_and_tables
 from app.services.provider_router import log_active_llm_config
 from app.services import rule_indexer as rule_indexer_module
 from app.services.rule_indexer import RuleIndexerService
-from app.routers import campaigns, debug, entities, export, ingestion, llm, locations, search, sessions, workspace, workspace_narrative
+from app.routers import auth, campaigns, debug, entities, export, ingestion, llm, locations, search, sessions, workspace, workspace_narrative
 
 rule_indexer: RuleIndexerService | None = None
 
