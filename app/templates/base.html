@@ -12,7 +12,9 @@
 
     <link rel="stylesheet" href="/static/css/mission_control.css" />
 
-    {% if request and request.state.csrf_token %}<meta name="csrf-token" content="{{ request.state.csrf_token }}">{% endif %}\n\n    {% block extra_head %}{% endblock %}
+    {% if request and request.state.csrf_token %}<meta name="csrf-token" content="{{ request.state.csrf_token }}">{% endif %}
+
+    {% block extra_head %}{% endblock %}
 
   </head>
 
@@ -106,7 +108,11 @@
 
           {% endif %}
 
-          {% if request and request.state.current_user %}\n          {% if request.state.current_user.is_admin %}<a class="mc-btn mc-btn-ghost" href="/admin/users">Users</a><a class="mc-btn mc-btn-ghost" href="/settings/llm">LLM Settings</a>{% endif %}\n          <a class="mc-btn mc-btn-ghost" href="/account/password">Password</a>\n          <form method="post" action="/logout" style="display:inline"><button class="mc-btn mc-btn-ghost" type="submit">Logout</button></form>\n          {% endif %}
+          {% if request and request.state.current_user %}
+          {% if request.state.current_user.is_admin %}<a class="mc-btn mc-btn-ghost" href="/admin/users">Users</a><a class="mc-btn mc-btn-ghost" href="/settings/llm">LLM Settings</a>{% endif %}
+          <a class="mc-btn mc-btn-ghost" href="/account/password">Password</a>
+          <form method="post" action="/logout" style="display:inline"><button class="mc-btn mc-btn-ghost" type="submit">Logout</button></form>
+          {% endif %}
 
         </div>
 
