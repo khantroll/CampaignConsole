@@ -39,6 +39,8 @@ def create_campaign(
     session.add(campaign)
     session.commit()
     session.refresh(campaign)
+    session.add(CampaignMembership(campaign_id=campaign.id, user_id=request.state.current_user.id, role="owner"))
+    session.commit()
     return RedirectResponse(url=workspace_url(campaign.id), status_code=303)
 
 
