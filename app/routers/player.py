@@ -6,14 +6,16 @@ from sqlmodel import Session, select
 
 from app.database import get_session
 from app.deps import templates
-from app.models import Campaign, CampaignMembership, PlayerReveal, RevealAudience, SessionModel
+from app.models import Campaign, CampaignMembership, PlayerCharacterNote, PlayerReveal, RevealAudience, SessionModel
 from app.services.player_console import (
     ENTITY_LABELS,
     ENTITY_MODELS,
     load_membership,
     load_player_campaign,
     load_player_campaigns,
+    load_eligible_player_characters,
     load_player_character,
+    player_character_is_eligible,
     load_player_home,
     load_player_lore_entry,
     load_player_reveals,
@@ -149,6 +151,91 @@ def player_character(request: Request, campaign_id: int, db: Session = Depends(g
             "active_player_nav": "character",
         },
     )
+
+
+@router.get("/player/campaigns/{campaign_id}/character/select", response_class=HTMLResponse)
+def player_character_select_form(
+    request: Request,
+    campaign_id: int,
+    db: Session = Depends(get_session),
+):
+    membership = _membership_or_404(db, request, campaign_id)
+    return templates.TemplateResponse(
+        "player_character_select.html",
+        {
+            "request": request,
+            "campaign": load_player_campaign(db, membership),
+            "characters": load_eligible_player_characters(db, membership),
+            "active_player_nav": "character",
+        },
+    )
+
+
+@router.post("/player/campaigns/{campaign_id}/character/select")
+def player_character_select(
+    request: Request,
+    campaign_id: int,
+    player_character_id: int = Form(...),
+    db: Session = Depends(get_session),
+):
+    membership = _membership_or_404(db, request, campaign_id)
+    if not player_character_is_eligible(db, membership, player_character_id):
+        raise HTTPException(status_code=400, detail="Character is not available.")
+    membership.player_character_id = player_character_id
+    membership.updated_at = utc_now()
+    db.add(membership)
+    db.commit()
+    return RedirectResponse(f"/player/campaigns/{campaign_id}/character", status_code=303)
+
+
+@router.get("/player/campaigns/{campaign_id}/character/new", response_class=HTMLResponse)
+def player_character_new_form(
+    request: Request,
+    campaign_id: int,
+    db: Session = Depends(get_session),
+):
+    membership = _membership_or_404(db, request, campaign_id)
+    return templates.TemplateResponse(
+        "player_character_new.html",
+        {
+            "request": request,
+            "campaign": load_player_campaign(db, membership),
+            "active_player_nav": "character",
+        },
+    )
+
+
+@router.post("/player/campaigns/{campaign_id}/character/new")
+def player_character_new(
+    request: Request,
+    campaign_id: int,
+    character_name: str = Form(...),
+    character_archetype: str = Form(""),
+    description: str = Form(""),
+    signature_gear: str = Form(""),
+    key_ties_history: str = Form(""),
+    db: Session = Depends(get_session),
+):
+    membership = _membership_or_404(db, request, campaign_id)
+    name = character_name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Character name is required.")
+
+    pc = PlayerCharacterNote(
+        campaign_id=campaign_id,
+        character_name=name,
+        character_archetype=character_archetype.strip() or None,
+        description=description.strip() or None,
+        signature_gear=signature_gear.strip() or None,
+        key_ties_history=key_ties_history.strip() or None,
+    )
+    db.add(pc)
+    db.flush()
+    membership.player_character_id = pc.id
+    membership.updated_at = utc_now()
+    db.add(membership)
+    db.commit()
+    return RedirectResponse(f"/player/campaigns/{campaign_id}/character", status_code=303)
 
 
 # Minimal Phase 2 GM authoring surface. Full reveal-management UX remains deferred.
