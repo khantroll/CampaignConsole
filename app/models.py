@@ -637,3 +637,38 @@ class CampaignLoreIndex(SQLModel, table=True):
         default_factory=utc_now,
         sa_column=Column(DateTime, default=utc_now, nullable=False),
     )
+
+# Local application identity and authorization (Player Console Phase 1)
+class User(SQLModel, table=True):
+    __tablename__ = "appuser"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(index=True, unique=True)
+    display_name: str
+    email: Optional[str] = None
+    password_hash: str
+    is_admin: bool = Field(default=False)
+    is_active: bool = Field(default=True)
+    must_change_password: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
+    updated_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False))
+    last_login_at: Optional[datetime] = Field(default=None)
+
+
+class CampaignMembership(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    campaign_id: int = Field(foreign_key="campaign.id", index=True)
+    user_id: int = Field(foreign_key="appuser.id", index=True)
+    role: str = Field(default="player", index=True)
+    player_character_id: Optional[int] = Field(default=None, foreign_key="playercharacternote.id")
+    created_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
+    updated_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False))
+
+
+class AppSession(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    token_hash: str = Field(index=True, unique=True)
+    user_id: int = Field(foreign_key="appuser.id", index=True)
+    created_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
+    last_seen_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
+    expires_at: datetime
+
