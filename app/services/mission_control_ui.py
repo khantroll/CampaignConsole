@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, quote, urlencode
 from fastapi import Request
 from sqlmodel import Session, select
 
+from app.auth import GM_CAMPAIGN_ROLES
 from app.models import Campaign, CampaignMembership, SessionModel
 from app.services.entity_health import CampaignEntityHealth, health_tooltip
 
