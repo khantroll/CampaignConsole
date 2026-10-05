@@ -334,10 +334,12 @@ class AuthAuthorizationTests(unittest.TestCase):
             for client in clients.values():
                 client.close()
 
-    def test_gm_campaign_list_excludes_player_only_memberships(self):
+    def test_gm_campaign_list_includes_owner_and_gm_but_excludes_player_only(self):
         self.bootstrap()
+        owner_campaign_response = self.post_auth("/campaigns", {"name": "Owner Visible"})
         gm_campaign_response = self.post_auth("/campaigns", {"name": "GM Visible"})
         player_campaign_response = self.post_auth("/campaigns", {"name": "Player Hidden"})
+        owner_campaign_id = int(re.search(r"/campaigns/(\d+)", owner_campaign_response.headers["location"]).group(1))
         gm_campaign_id = int(re.search(r"/campaigns/(\d+)", gm_campaign_response.headers["location"]).group(1))
         player_campaign_id = int(re.search(r"/campaigns/(\d+)", player_campaign_response.headers["location"]).group(1))
 
@@ -350,6 +352,7 @@ class AuthAuthorizationTests(unittest.TestCase):
             db.add(mixed)
             db.commit()
             db.refresh(mixed)
+            db.add(CampaignMembership(campaign_id=owner_campaign_id, user_id=mixed.id, role="owner"))
             db.add(CampaignMembership(campaign_id=gm_campaign_id, user_id=mixed.id, role="gm"))
             db.add(CampaignMembership(campaign_id=player_campaign_id, user_id=mixed.id, role="player"))
             db.commit()
@@ -357,8 +360,10 @@ class AuthAuthorizationTests(unittest.TestCase):
         client = self.login_client("mixedroles", "mixed-roles-password")
         home = client.get("/")
         self.assertEqual(home.status_code, 200)
+        self.assertIn("Owner Visible", home.text)
         self.assertIn("GM Visible", home.text)
         self.assertNotIn("Player Hidden", home.text)
+        self.assertIn(f'value="{owner_campaign_id}"', home.text)
         self.assertIn(f'value="{gm_campaign_id}"', home.text)
         self.assertNotIn(f'value="{player_campaign_id}"', home.text)
         client.close()
