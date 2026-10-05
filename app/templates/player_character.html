@@ -1,0 +1,18 @@
+{% extends "player_base.html" %}
+{% block content %}
+<h1>Character</h1>
+{% if character %}
+<div class="card mb-3"><div class="card-body">
+<h2>{{ character.character_name }}</h2>
+{% if character.character_archetype %}<p><strong>Archetype:</strong> {{ character.character_archetype }}</p>{% endif %}
+{% if character.description %}<p>{{ character.description }}</p>{% endif %}
+{% if character.signature_gear %}<p><strong>Signature gear:</strong> {{ character.signature_gear }}</p>{% endif %}
+{% if character.key_ties_history %}<p><strong>History & ties:</strong> {{ character.key_ties_history }}</p>{% endif %}
+</div></div>
+{% for label, entries in [('Locations', character.locations), ('Factions', character.factions), ('Plot Threads / Quests', character.plot_threads)] %}
+<h3>{{ label }}</h3>{% if entries %}<ul>{% for entry in entries %}<li><a href="/player/campaigns/{{ campaign.id }}/lore/{{ entry.entity_kind }}/{{ entry.entity_id }}">{{ entry.title }}</a></li>{% endfor %}</ul>{% else %}<p class="text-muted">No revealed connections.</p>{% endif %}
+{% endfor %}
+{% else %}
+<p class="text-muted">No player character is linked to this campaign membership.</p>
+{% endif %}
+{% endblock %}
