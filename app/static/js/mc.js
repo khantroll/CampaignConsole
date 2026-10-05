@@ -491,7 +491,7 @@
         return;
       }
 
-      fetch("/api/workspace/render-markdown", {
+      window.mcCsrfFetch("/api/workspace/render-markdown", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ snippets: snippets }),
