@@ -1,9 +1,10 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlmodel import Session, select
 
+from app.auth import user_can_create_campaign
 from app.database import get_session
 from app.deps import get_campaign_or_none, sort_sessions_chronologically, templates
 from app.models import Campaign, CampaignMembership, SessionModel
