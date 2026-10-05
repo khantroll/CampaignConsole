@@ -217,8 +217,15 @@ class AuthAuthorizationTests(unittest.TestCase):
                 display_name="Creator GM",
                 password_hash=hash_password("gm-create-password"),
             )
+            admin_only = User(
+                username="creatoradmin",
+                display_name="Creator Admin",
+                password_hash=hash_password("admin-create-password"),
+                is_admin=True,
+            )
             db.add(owner)
             db.add(gm)
+            db.add(admin_only)
             db.commit()
             db.refresh(owner)
             db.refresh(gm)
@@ -228,8 +235,10 @@ class AuthAuthorizationTests(unittest.TestCase):
             owner_id = owner.id
             gm_id = gm.id
 
-        admin_create = self.post_auth("/campaigns", {"name": "Admin Created"})
+        admin_client = self.login_client("creatoradmin", "admin-create-password")
+        admin_create = self.post_with_csrf(admin_client, "/campaigns", {"name": "Admin Created"})
         self.assertEqual(admin_create.status_code, 303)
+        admin_client.close()
 
         owner_client = self.login_client("creatorowner", "owner-create-password")
         owner_create = self.post_with_csrf(owner_client, "/campaigns", {"name": "Owner Created"})
