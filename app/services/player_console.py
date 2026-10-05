@@ -310,6 +310,7 @@ def load_player_character(db: Session, membership: CampaignMembership) -> Option
         "description": pc.description,
         "signature_gear": pc.signature_gear,
         "key_ties_history": pc.key_ties_history,
+        "portrait_path": pc.portrait_path,
         "locations": _visible_related(db, membership, "location", location_ids),
         "factions": _visible_related(db, membership, "faction", faction_ids),
         "plot_threads": _visible_related(db, membership, "plot_thread", thread_ids),
