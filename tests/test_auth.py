@@ -140,6 +140,117 @@ class AuthAuthorizationTests(unittest.TestCase):
         self.assertEqual(other.get("/").status_code, 303)
         other.close()
 
+    def test_admin_created_player_browser_login_password_change_logout_and_relogin(self):
+        self.bootstrap()
+        campaign_response = self.post_auth("/campaigns", {"name": "Player Login Campaign"})
+        campaign_id = int(re.search(r"/campaigns/(\d+)", campaign_response.headers["location"]).group(1))
+
+        created = self.post_auth(
+            "/admin/users",
+            {
+                "username": "browserplayer",
+                "display_name": "Browser Player",
+                "temporary_password": "temporary-player-password",
+            },
+        )
+        self.assertEqual(created.status_code, 303)
+        with Session(database.engine) as db:
+            player = db.exec(select(User).where(User.username == "browserplayer")).one()
+            player_id = player.id
+            self.assertTrue(player.must_change_password)
+
+        membership = self.post_auth(
+            f"/admin/users/{player_id}/memberships",
+            {
+                "campaign_id": str(campaign_id),
+                "role": "player",
+                "player_character_id": "",
+            },
+        )
+        self.assertEqual(membership.status_code, 303)
+        self.assertEqual(self.post_auth("/logout").status_code, 303)
+
+        wrong = self.client.post(
+            "/login",
+            data={"username": "browserplayer", "password": "wrong-password", "next": "/"},
+        )
+        self.assertEqual(wrong.status_code, 401)
+
+        login = self.client.post(
+            "/login",
+            data={
+                "username": "browserplayer",
+                "password": "temporary-player-password",
+                "next": "/",
+            },
+        )
+        self.assertEqual(login.status_code, 303)
+        self.assertEqual(login.headers["location"], "/account/password")
+        temporary_session = self.client.cookies.get("campaign_console_session")
+        self.assertTrue(temporary_session)
+
+        change_page = self.client.get("/account/password")
+        self.assertEqual(change_page.status_code, 200)
+        self.assertIn("temporary password", change_page.text.lower())
+        self.assertIn("Current password", change_page.text)
+        csrf_match = re.search(r'<meta name="csrf-token" content="([^"]+)"', change_page.text)
+        self.assertIsNotNone(csrf_match)
+
+        changed = self.client.post(
+            "/account/password",
+            data={
+                "_csrf": csrf_match.group(1),
+                "current_password": "temporary-player-password",
+                "new_password": "player-new-password-456",
+            },
+        )
+        self.assertEqual(changed.status_code, 303)
+        self.assertEqual(changed.headers["location"], "/player")
+        fresh_session = self.client.cookies.get("campaign_console_session")
+        self.assertTrue(fresh_session)
+        self.assertNotEqual(temporary_session, fresh_session)
+        self.assertEqual(self.client.get("/player").status_code, 200)
+
+        stale = TestClient(main.app, follow_redirects=False)
+        stale.cookies.set("campaign_console_session", temporary_session)
+        self.assertEqual(stale.get("/player").status_code, 303)
+        stale.close()
+
+        player_page = self.client.get("/player")
+        logout_csrf = re.search(r'name="_csrf" value="([^"]+)"', player_page.text)
+        self.assertIsNotNone(logout_csrf)
+        logout = self.client.post("/logout", data={"_csrf": logout_csrf.group(1)})
+        self.assertEqual(logout.status_code, 303)
+        self.assertEqual(self.client.get("/player").status_code, 303)
+
+        old_password = self.client.post(
+            "/login",
+            data={
+                "username": "browserplayer",
+                "password": "temporary-player-password",
+                "next": "/",
+            },
+        )
+        self.assertEqual(old_password.status_code, 401)
+
+        relogin = self.client.post(
+            "/login",
+            data={
+                "username": "browserplayer",
+                "password": "player-new-password-456",
+                "next": "/",
+            },
+        )
+        self.assertEqual(relogin.status_code, 303)
+        self.assertEqual(relogin.headers["location"], "/player")
+
+        with Session(database.engine) as db:
+            player = db.get(User, player_id)
+            player.is_active = False
+            db.add(player)
+            db.commit()
+        self.assertEqual(self.client.get("/player").status_code, 303)
+
     def test_gm_allowed_player_and_unrelated_denied_and_cross_campaign_id_safe(self):
         self.bootstrap()
         one = self.post_auth("/campaigns", {"name": "One"})
