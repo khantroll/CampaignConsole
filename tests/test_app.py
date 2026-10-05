@@ -170,6 +170,8 @@ class CampaignConsoleSmokeTests(unittest.TestCase):
         self.assertIn("window.mcCsrfFetch", settings.text)
         self.assertIn('window.mcCsrfFetch("/settings/llm/provider"', settings.text)
         self.assertIn("htmx:responseError", settings.text)
+        self.assertIn("API endpoint override (optional)", settings.text)
+        self.assertIn("https://api.mistral.ai/v1/chat/completions", settings.text)
 
         script = self.client.get("/static/js/mc.js")
         self.assertEqual(script.status_code, 200)
