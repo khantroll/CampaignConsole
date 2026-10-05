@@ -100,6 +100,10 @@ Manual smoke test before releases or after stabilization changes. Run against a 
 - [ ] Sessions list only published `player_recap` sessions; session detail exposes title/date/recap plus visible reveals only
 - [ ] Character view uses the membership-linked existing PC record; GM PC notes stay hidden
 - [ ] Character relationships appear only when the related entity has a visible reveal
+- [ ] Unlinked player Character page offers Choose Existing Character and Create New Character
+- [ ] Existing-character selection lists only same-campaign PCs not claimed by another player membership
+- [ ] Player-created character persists only player-safe fields and immediately links to the current membership
+- [ ] Changing a linked character updates only the membership link and never deletes the prior PC
 - [ ] Campaign backup includes reveal/audience data while excluding users, password hashes, and app-session credentials
 - [ ] Minimal GM reveal authoring can create campaign-wide or selected reveals and revoke them
 - [ ] Existing owner/GM Mission Control workflows still function
