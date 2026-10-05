@@ -154,9 +154,15 @@ def backfill_world_status_defaults() -> None:
         db.commit()
 
 
+def ensure_auth_indexes() -> None:
+    with engine.begin() as conn:
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_campaignmembership_campaign_user ON campaignmembership (campaign_id, user_id)"))
+
+
 def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
     ensure_missing_columns()
+    ensure_auth_indexes()
     backfill_world_status_defaults()
 
 def get_session():
