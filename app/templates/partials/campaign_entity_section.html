@@ -209,7 +209,7 @@
           <input name="creature_type_custom" class="form-control" placeholder="e.g. Aberration" />
         </div>
         {% else %}
-        <input name="{{ field_name }}" class="form-control" required />
+        <input name="{{ field_name }}" class="form-control"{% if field_name in (required_fields | default([])) %} required{% endif %} />
         {% endif %}
       </div>
       {% endfor %}
