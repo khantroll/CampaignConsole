@@ -117,7 +117,11 @@ def _visible_reveal_rows(
     return [
         reveal
         for reveal in reveals
-        if not audiences.get(reveal.id) or membership.id in audiences.get(reveal.id, set())
+        if reveal.audience_mode == "campaign"
+        or (
+            reveal.audience_mode == "selected"
+            and membership.id in audiences.get(reveal.id, set())
+        )
     ]
 
 
