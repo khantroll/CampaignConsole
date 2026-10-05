@@ -18,7 +18,10 @@ def load_all_campaigns(db: Session, request: Optional[Request] = None) -> List[C
     if not user:
         return []
     campaign_ids = db.exec(
-        select(CampaignMembership.campaign_id).where(CampaignMembership.user_id == user.id)
+        select(CampaignMembership.campaign_id).where(
+            CampaignMembership.user_id == user.id,
+            CampaignMembership.role.in_(GM_CAMPAIGN_ROLES),
+        )
     ).all()
     if not campaign_ids:
         return []
