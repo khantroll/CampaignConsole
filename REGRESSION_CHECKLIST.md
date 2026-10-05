@@ -73,3 +73,17 @@ Manual smoke test before releases or after stabilization changes. Run against a 
 - [ ] **Types** — Major Location, Sub-Location, Scene Feature on create/edit
 - [ ] **Ingest defaults** — vague places (chest, side passage) → Scene Feature or skipped in link options
 - [ ] **Bulk delete / reclassify / merge** — Location Admin tools work without orphan links
+
+## Local authentication / authorization
+
+- [ ] Fresh or upgraded DB with zero users redirects to `/bootstrap`
+- [ ] First admin bootstrap succeeds once and cannot be repeated
+- [ ] Existing campaigns are assigned to the bootstrap admin as owner
+- [ ] Login/logout works; disabled accounts cannot continue using stale sessions
+- [ ] Password change/reset invalidates prior sessions
+- [ ] Authenticated POST without CSRF token is rejected
+- [ ] Owner/GM can open assigned campaigns; player and unrelated users receive 403 on GM routes
+- [ ] Direct IDs from another campaign do not cross campaign boundaries
+- [ ] Admin can create users, reset temporary passwords, toggle active state, and manage memberships
+- [ ] Campaign exports contain no password hash or live session token
+
