@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, quote, urlencode
 from fastapi import Request
 from sqlmodel import Session, select
 
-from app.models import Campaign, SessionModel
+from app.models import Campaign, CampaignMembership, SessionModel
 from app.services.entity_health import CampaignEntityHealth, health_tooltip
 
 WORKSPACE_MODES = ("prep", "run", "review")
@@ -237,7 +237,7 @@ def mc_context(
         "workspace_mode": workspace_mode,
     }
     if include_campaigns:
-        ctx["campaigns"] = load_all_campaigns(db)
+        ctx["campaigns"] = load_all_campaigns(db, request)
     if campaign:
         ctx["sessions"] = load_campaign_sessions(db, campaign.id)
         ctx["workspace_href"] = workspace_url(
