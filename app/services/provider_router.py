@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -154,6 +155,32 @@ def _api_key_for(provider: str) -> str:
     return ""
 
 
+def _normalize_mistral_api_url(value: str) -> str:
+    """Normalize only Mistral's public API host; preserve custom endpoints verbatim."""
+    cleaned = (value or "").strip()
+    if not cleaned:
+        return CHAT_ENDPOINT_URLS["mistral"]
+
+    try:
+        parsed = urlsplit(cleaned)
+    except ValueError:
+        return cleaned
+
+    if (parsed.hostname or "").lower() != "api.mistral.ai":
+        return cleaned
+
+    path = (parsed.path or "").rstrip("/")
+    if path in {"", "/v1"}:
+        path = "/v1/chat/completions"
+    elif path == "/v1/chat/completions":
+        path = "/v1/chat/completions"
+    else:
+        return cleaned
+
+    scheme = parsed.scheme or "https"
+    return urlunsplit((scheme, parsed.netloc, path, parsed.query, parsed.fragment))
+
+
 def get_endpoint_url(provider: str, model: Optional[str] = None) -> str:
     provider = provider.lower()
     model_name = get_configured_model(provider, model)
@@ -166,6 +193,8 @@ def get_endpoint_url(provider: str, model: Optional[str] = None) -> str:
             }[provider],
             "",
         ).strip()
+        if provider == "mistral":
+            return _normalize_mistral_api_url(override)
         return override or CHAT_ENDPOINT_URLS[provider]
     if provider == "openai":
         return "https://api.openai.com/v1/chat/completions"
