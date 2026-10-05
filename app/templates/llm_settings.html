@@ -237,8 +237,14 @@
         <h6 class="mb-3 text-capitalize">{{ provider_name }}</h6>
         <div class="row g-3">
           <div class="col-md-6">
+            {% if provider_name == 'mistral' %}
+            <label class="form-label" for="{{ url_key | lower }}">API endpoint override (optional)</label>
+            <input class="form-control" id="{{ url_key | lower }}" name="{{ url_key }}" value="{{ settings[url_key] or '' }}" placeholder="https://api.mistral.ai/v1/chat/completions" />
+            <div class="form-text">Leave blank to use Mistral's built-in chat-completions endpoint. Custom hosts must be complete endpoint URLs.</div>
+            {% else %}
             <label class="form-label" for="{{ url_key | lower }}">API URL</label>
             <input class="form-control" id="{{ url_key | lower }}" name="{{ url_key }}" value="{{ settings[url_key] or '' }}" />
+            {% endif %}
           </div>
           <div class="col-md-6">
             <label class="form-label" for="{{ key_key | lower }}">API key</label>
