@@ -15,6 +15,7 @@ from app.models import (
     Faction,
     Location,
     NPC,
+    PCFactionLink,
     PCLocationLink,
     PlayerCharacterNote,
     PlayerReveal,
@@ -116,6 +117,7 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
             self.thread = thread.id
 
             db.add(PCLocationLink(pc_note_id=pc1.id, location_id=hidden_location.id))
+            db.add(PCFactionLink(pc_note_id=pc1.id, faction_id=visible_faction.id))
 
             session = SessionModel(
                 campaign_id=self.c1,
