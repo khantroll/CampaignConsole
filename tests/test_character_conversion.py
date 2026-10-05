@@ -149,7 +149,7 @@ class PartyMemberDiscoverabilityTests(CampaignConsoleSmokeTests):
         with Session(database.engine) as db:
             pc = db.exec(select(PlayerCharacterNote).where(PlayerCharacterNote.character_name == "Thalia")).first()
 
-        response = self.client.get(f"/campaigns/{campaign_id}")
+        response = self.client.get(f"/campaigns/{campaign_id}/sessions")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Needs Attention", response.content)
         self.assertIn(b"Thalia", response.content)
@@ -159,8 +159,8 @@ class PartyMemberDiscoverabilityTests(CampaignConsoleSmokeTests):
         campaign_id = self._create_campaign()
         response = self.client.get(f"/campaigns/{campaign_id}")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"#pcs-section", response.content)
-        self.assertIn(b"Party Members", response.content)
+        self.assertIn(f"/campaigns/{campaign_id}/pcs".encode(), response.content)
+        self.assertIn(b">Party<", response.content)
 
 
 class PartyMemberProfileTests(CampaignConsoleSmokeTests):
@@ -207,7 +207,7 @@ class PartyMemberProfileTests(CampaignConsoleSmokeTests):
             self.assertIn("northern wilderness", pc.description)
             self.assertIn("Red Elk Symbol", pc.signature_gear)
 
-        board = self.client.get(f"/campaigns/{campaign_id}")
+        board = self.client.get(f"/campaigns/{campaign_id}/pcs")
         self.assertIn(b"Frontline Juggernaut / Tribal Barbarian", board.content)
         self.assertIn(b"Signature Gear:", board.content)
         self.assertIn(b"Red Elk Tribe", board.content)

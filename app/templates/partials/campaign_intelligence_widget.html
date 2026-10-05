@@ -3,7 +3,7 @@
 <div class="card mb-3 mc-intelligence-strip">
   <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <span>Campaign Intelligence</span>
-    <a href="/campaigns/{{ campaign.id }}/briefing" class="btn btn-outline-info btn-sm">Brief Me</a>
+    <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/briefing">Brief Me</a>
   </div>
   <div class="card-body">
     {% if intel.dormant_count or intel.stale_count %}

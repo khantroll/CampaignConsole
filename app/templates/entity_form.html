@@ -47,7 +47,7 @@
       {% if return_to %}
       <input type="hidden" name="return_to" value="{{ return_to }}" />
       {% endif %}
-      <button type="submit" class="btn btn-outline-warning btn-sm">{{ convert_action.label }}</button>
+      <button type="submit" class="mc-text-action">{{ convert_action.label }}</button>
     </form>
     {% endif %}
   </div>
@@ -106,7 +106,7 @@
       {% endif %}
 
       <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
-      <a href="{{ cancel_url }}" class="btn btn-secondary ms-2">Cancel</a>
+      <a href="{{ cancel_url }}" class="mc-quiet-link">Cancel</a>
     </form>
   </div>
 </div>

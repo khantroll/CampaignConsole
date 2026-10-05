@@ -15,17 +15,22 @@
 
 {% if not session %}
 <div class="mc-empty">
-  <p>No session selected. Create a session from the <a href="{{ lore_board_href }}">Lore Board</a> first.</p>
+  <p>No session selected. <a href="/campaigns/{{ campaign.id }}/sessions#add-form">Add a session</a> first.</p>
 </div>
 {% else %}
 <div class="mc-workspace-toolbar">
-  <div>
+  <div class="mc-workspace-toolbar-start">
     <span class="mc-status-dot"></span>
-    <span style="font-size: 11px; color: var(--muted); margin-left: 6px;">WORKSPACE · {{ mode | upper }} MODE</span>
+    <span class="mc-kicker">Workspace · {{ mode }}</span>
+    <div class="mc-mode-tabs">
+      <a href="{{ workspace_url(campaign.id, session_id=session.id, mode='prep') }}" class="{% if mode == 'prep' %}is-active{% endif %}">Prep</a>
+      <a href="{{ workspace_url(campaign.id, session_id=session.id, mode='run') }}" class="{% if mode == 'run' %}is-active{% endif %}">Run</a>
+      <a href="{{ workspace_url(campaign.id, session_id=session.id, mode='review') }}" class="{% if mode == 'review' %}is-active{% endif %}">Review</a>
+    </div>
   </div>
-  <div class="d-flex flex-wrap gap-2">
-    <a class="mc-btn mc-btn-primary" href="{{ session_workflow_href }}">Session Workflow</a>
-    <a class="mc-btn mc-btn-ghost" href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player">Player View</a>
+  <div class="mc-tool-row">
+    <a class="mc-quiet-link" href="{{ session_workflow_href }}">Session workflow</a>
+    <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player">Player view</a>
   </div>
 </div>
 
@@ -66,7 +71,7 @@
   <form action="/campaigns/{{ campaign.id }}/workspace/copy-prep" method="post" style="margin-top: 8px;">
     <input type="hidden" name="session_id" value="{{ session.id }}" />
     <input type="hidden" name="mode" value="{{ mode }}" />
-    <button type="submit" class="mc-btn mc-btn-accent">Copy AI Prep to Workspace</button>
+    <button type="submit" class="mc-text-action">Copy AI Prep to Workspace</button>
   </form>
 </div>
 {% endif %}
@@ -125,12 +130,12 @@
   {% endif %}
 
   <div class="mc-quick-capture mc-panel-run-focus {% if mode == 'run' %}d-block{% elif mode == 'review' %}d-none{% endif %}">
-    <a class="mc-quick-btn" href="{{ lore_board_href }}#npcs-section" title="Add NPC on Lore Board">+ NPC</a>
-    <a class="mc-quick-btn" href="{{ lore_board_href }}#pcs-section" title="Add Party Member on Lore Board">+ PC</a>
-    <a class="mc-quick-btn" href="{{ lore_board_href }}#locations-section" title="Add Location on Lore Board">+ Loc</a>
-    <a class="mc-quick-btn" href="{{ lore_board_href }}#factions-section" title="Add Faction on Lore Board">+ Faction</a>
-    <a class="mc-quick-btn" href="{{ lore_board_href }}#items-section" title="Add Item on Lore Board">+ Item</a>
-    <a class="mc-quick-btn" href="{{ lore_board_href }}#threads-section" title="Add Thread on Lore Board">+ Thread</a>
+    <a class="mc-quick-btn" href="/campaigns/{{ campaign.id }}/npcs#add-form" title="Add NPC">+ NPC</a>
+    <a class="mc-quick-btn" href="/campaigns/{{ campaign.id }}/pcs#add-form" title="Add party member">+ PC</a>
+    <a class="mc-quick-btn" href="/campaigns/{{ campaign.id }}/locations#add-form" title="Add location">+ Loc</a>
+    <a class="mc-quick-btn" href="/campaigns/{{ campaign.id }}/factions#add-form" title="Add faction">+ Faction</a>
+    <a class="mc-quick-btn" href="/campaigns/{{ campaign.id }}/items#add-form" title="Add item">+ Item</a>
+    <a class="mc-quick-btn" href="/campaigns/{{ campaign.id }}/threads#add-form" title="Add thread">+ Thread</a>
   </div>
 
   <div class="mc-ref-section {% if mode == 'prep' %}mc-panel-prep{% elif mode == 'run' %}mc-panel-run{% else %}d-none{% endif %}">

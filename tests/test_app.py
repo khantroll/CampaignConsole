@@ -81,6 +81,89 @@ class CampaignConsoleSmokeTests(unittest.TestCase):
         except OSError:
             pass
 
+    def test_get_campaigns_redirects_to_list(self):
+        response = self.client.get("/campaigns", follow_redirects=False)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.headers["location"], "/")
+        trailed = self.client.get("/campaigns/", follow_redirects=False)
+        self.assertIn(trailed.status_code, (303, 307))
+
+    def test_gm_home_empty_lore_asks_for_first_npc(self):
+        campaign = self._create_campaign()
+        page = self.client.get(f"/campaigns/{campaign}")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("Next: name the first NPC", page.text)
+        self.assertIn("Add NPC", page.text)
+        self.assertIn("No threads yet", page.text)
+        self.assertIn("Nothing else recorded yet.", page.text)
+        self.assertNotIn("Add Location", page.text)
+        self.assertNotIn("Lore Board", page.text)
+        self.assertIn(">NPCs<", page.text)
+
+    def test_campaign_list_uses_open_and_hides_switcher(self):
+        campaign = self._create_campaign()
+        page = self.client.get("/")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("Open", page.text)
+        self.assertIn("Smoke Test Campaign", page.text)
+        self.assertIn("Test System", page.text)
+        self.assertNotIn("mc-campaign-select", page.text)
+        self.assertNotIn("LLM Settings", page.text)
+        self.assertNotIn("Open Workspace", page.text)
+        detail = self.client.get(f"/campaigns/{campaign}")
+        self.assertIn("mc-campaign-select", detail.text)
+
+    def test_sessions_and_settings_keep_existing_tools(self):
+        campaign = self._create_campaign()
+        sessions = self.client.get(f"/campaigns/{campaign}/sessions")
+        self.assertEqual(sessions.status_code, 200)
+        self.assertIn("Add Session", sessions.text)
+        self.assertIn("Ingest notes", sessions.text)
+        self.assertIn("AI review", sessions.text)
+        self.assertIn("Brief Me", sessions.text)
+        settings = self.client.get(f"/campaigns/{campaign}/settings")
+        self.assertEqual(settings.status_code, 200)
+        self.assertIn("LLM settings", settings.text)
+        self.assertIn("Delete campaign", settings.text)
+        self.assertIn("Export Markdown", settings.text)
+
+    def test_npc_list_is_its_own_page(self):
+        campaign = self._create_campaign()
+        page = self.client.get(f"/campaigns/{campaign}/npcs")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("Add NPC", page.text)
+        self.assertNotIn("Add Location", page.text)
+        self.assertNotIn("Add Faction", page.text)
+
+    def test_htmx_npc_create_refreshes_sidebar_count(self):
+        campaign = self._create_campaign()
+        response = self.client.post(
+            f"/campaigns/{campaign}/npcs",
+            data={"name": "Mara", "role": "Scout", "description": ""},
+            headers={"HX-Request": "true"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Mara", response.content)
+        self.assertIn(b'id="mc-campaign-nav"', response.content)
+        self.assertIn(b'hx-swap-oob="outerHTML"', response.content)
+        self.assertIn(b'<span class="mc-nav-count">1</span>', response.content)
+
+    def test_home_next_action_follows_session_prep_gap(self):
+        campaign = self._create_campaign()
+        self.client.post(
+            f"/campaigns/{campaign}/npcs",
+            data={"name": "Mara", "role": "Guide", "description": "Knows the road."},
+        )
+        self.client.post(
+            f"/campaigns/{campaign}/sessions",
+            data={"title": "Session 1", "date": "2026-06-05", "notes": "The party met Mara."},
+        )
+        page = self.client.get(f"/campaigns/{campaign}")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("Next: analyze Session 1", page.text)
+        self.assertNotIn("name the first NPC", page.text)
+        self.assertIn("Session · Session 1", page.text)
+
     def test_campaign_creation(self):
         response = self.client.post(
             "/campaigns",
@@ -1801,7 +1884,10 @@ Cold open at the tavern.
 
     @patch("app.services.ingestion.generate")
     @patch("app.services.ingestion.llm_available", return_value=True)
-    def test_ingest_review_shows_partial_candidates_on_truncated_json(self, _mock_available, mock_generate):
+    @patch("app.routers.ingestion.llm_available", return_value=True)
+    def test_ingest_review_shows_partial_candidates_on_truncated_json(
+        self, _mock_router_available, _mock_service_available, mock_generate
+    ):
         campaign = self._create_campaign()
         mock_generate.return_value = (
             '{"Characters": ["Tee", "Agnarr"], "Locations": ["The Ridge"], '
@@ -2597,7 +2683,7 @@ Cold open at the tavern.
                 "selected_locations": [str(location.id)],
             },
         )
-        response = self.client.get(f"/campaigns/{campaign}")
+        response = self.client.get(f"/campaigns/{campaign}/locations")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Last seen:", response.content)
         self.assertIn(b"The Heist", response.content)
@@ -2608,10 +2694,11 @@ Cold open at the tavern.
             f"/campaigns/{campaign}/npcs",
             data={"name": "Sparse NPC", "role": "", "description": ""},
         )
-        response = self.client.get(f"/campaigns/{campaign}")
+        response = self.client.get(f"/campaigns/{campaign}/sessions")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Needs Attention", response.content)
-        self.assertIn(b"Quick Resume", response.content)
+        home = self.client.get(f"/campaigns/{campaign}")
+        self.assertIn(b"Next: add a session", home.content)
 
     def test_entity_edit_shows_session_appearances(self):
         campaign = self._create_campaign()
@@ -2680,7 +2767,7 @@ Cold open at the tavern.
             f"/campaigns/{campaign}/sessions",
             data={"title": "Only Session", "date": "2026-01-01", "notes": "n"},
         )
-        response = self.client.get(f"/campaigns/{campaign}")
+        response = self.client.get(f"/campaigns/{campaign}/sessions")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Campaign Intelligence", response.content)
         self.assertIn(b"All clear", response.content)
@@ -2735,7 +2822,7 @@ Cold open at the tavern.
             },
         )
 
-        response = self.client.get(f"/campaigns/{campaign}")
+        response = self.client.get(f"/campaigns/{campaign}/sessions")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Campaign Intelligence", response.content)
         self.assertIn(b"Dormant Threads", response.content)
@@ -2769,7 +2856,7 @@ Cold open at the tavern.
             },
         )
 
-        response = self.client.get(f"/campaigns/{campaign}")
+        response = self.client.get(f"/campaigns/{campaign}/sessions")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Stale Locations", response.content)
         self.assertIn(b"Forgotten Hall", response.content)

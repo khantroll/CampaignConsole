@@ -69,7 +69,13 @@ from app.services.item_classification import (
     parse_item_owner,
     resolve_item_type,
 )
-from app.services.mission_control_ui import confirm_delete_context, entity_form_context, redirect_after_entity_save, resolve_entity_edit_session_id
+from app.services.mission_control_ui import (
+    confirm_delete_context,
+    entity_form_context,
+    redirect_after_entity_save,
+    resolve_entity_edit_session_id,
+    safe_return_to,
+)
 from app.services.entity_form_fields import (
     creature_profile_fields,
     faction_profile_fields,
@@ -96,6 +102,13 @@ router = APIRouter()
 
 def _entity_save_redirect(campaign_id: int, return_to: Optional[str] = None) -> RedirectResponse:
     return RedirectResponse(url=redirect_after_entity_save(campaign_id, return_to), status_code=303)
+
+
+def _after_delete(campaign_id: int, section: str, return_to: Optional[str] = None) -> RedirectResponse:
+    return RedirectResponse(
+        url=safe_return_to(return_to) or f"/campaigns/{campaign_id}/{section}",
+        status_code=303,
+    )
 
 
 @router.get("/campaigns/{campaign_id}/npcs/{npc_id}/edit", response_class=HTMLResponse)
@@ -295,12 +308,17 @@ def delete_npc_confirm(request: Request, campaign_id: int, npc_id: int, db: Sess
 
 
 @router.post("/campaigns/{campaign_id}/npcs/{npc_id}/delete")
-def delete_npc(campaign_id: int, npc_id: int, db: Session = Depends(get_session)):
+def delete_npc(
+    campaign_id: int,
+    npc_id: int,
+    return_to: Optional[str] = Form(None),
+    db: Session = Depends(get_session),
+):
     npc = get_entity_or_none(db, NPC, campaign_id, npc_id)
     if npc:
         delete_npc_cascade(db, npc)
         db.commit()
-    return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    return _after_delete(campaign_id, "npcs", return_to)
 
 
 @router.get("/campaigns/{campaign_id}/locations/{location_id}/edit", response_class=HTMLResponse)
@@ -514,12 +532,17 @@ def delete_location_confirm(request: Request, campaign_id: int, location_id: int
 
 
 @router.post("/campaigns/{campaign_id}/locations/{location_id}/delete")
-def delete_location(campaign_id: int, location_id: int, db: Session = Depends(get_session)):
+def delete_location(
+    campaign_id: int,
+    location_id: int,
+    return_to: Optional[str] = Form(None),
+    db: Session = Depends(get_session),
+):
     location = get_entity_or_none(db, Location, campaign_id, location_id)
     if location:
         delete_location_cascade(db, location)
         db.commit()
-    return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    return _after_delete(campaign_id, "locations", return_to)
 
 
 @router.get("/campaigns/{campaign_id}/factions/{faction_id}/edit", response_class=HTMLResponse)
@@ -738,12 +761,17 @@ def delete_faction_confirm(request: Request, campaign_id: int, faction_id: int, 
 
 
 @router.post("/campaigns/{campaign_id}/factions/{faction_id}/delete")
-def delete_faction(campaign_id: int, faction_id: int, db: Session = Depends(get_session)):
+def delete_faction(
+    campaign_id: int,
+    faction_id: int,
+    return_to: Optional[str] = Form(None),
+    db: Session = Depends(get_session),
+):
     faction = get_entity_or_none(db, Faction, campaign_id, faction_id)
     if faction:
         delete_faction_cascade(db, faction)
         db.commit()
-    return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    return _after_delete(campaign_id, "factions", return_to)
 
 
 @router.get("/campaigns/{campaign_id}/items/{item_id}/edit", response_class=HTMLResponse)
@@ -933,12 +961,17 @@ def delete_item_confirm(request: Request, campaign_id: int, item_id: int, db: Se
 
 
 @router.post("/campaigns/{campaign_id}/items/{item_id}/delete")
-def delete_item(campaign_id: int, item_id: int, db: Session = Depends(get_session)):
+def delete_item(
+    campaign_id: int,
+    item_id: int,
+    return_to: Optional[str] = Form(None),
+    db: Session = Depends(get_session),
+):
     item = get_entity_or_none(db, Item, campaign_id, item_id)
     if item:
         delete_item_cascade(db, item)
         db.commit()
-    return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    return _after_delete(campaign_id, "items", return_to)
 
 
 @router.get("/campaigns/{campaign_id}/creatures/{creature_id}/edit", response_class=HTMLResponse)
@@ -1104,12 +1137,17 @@ def delete_creature_confirm(request: Request, campaign_id: int, creature_id: int
 
 
 @router.post("/campaigns/{campaign_id}/creatures/{creature_id}/delete")
-def delete_creature(campaign_id: int, creature_id: int, db: Session = Depends(get_session)):
+def delete_creature(
+    campaign_id: int,
+    creature_id: int,
+    return_to: Optional[str] = Form(None),
+    db: Session = Depends(get_session),
+):
     creature = get_entity_or_none(db, Creature, campaign_id, creature_id)
     if creature:
         delete_creature_cascade(db, creature)
         db.commit()
-    return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    return _after_delete(campaign_id, "creatures", return_to)
 
 
 @router.get("/campaigns/{campaign_id}/threads/{thread_id}/edit", response_class=HTMLResponse)
@@ -1334,12 +1372,17 @@ def delete_plot_thread_confirm(request: Request, campaign_id: int, thread_id: in
 
 
 @router.post("/campaigns/{campaign_id}/threads/{thread_id}/delete")
-def delete_plot_thread(campaign_id: int, thread_id: int, db: Session = Depends(get_session)):
+def delete_plot_thread(
+    campaign_id: int,
+    thread_id: int,
+    return_to: Optional[str] = Form(None),
+    db: Session = Depends(get_session),
+):
     thread = get_entity_or_none(db, PlotThread, campaign_id, thread_id)
     if thread:
         delete_plot_thread_cascade(db, thread)
         db.commit()
-    return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    return _after_delete(campaign_id, "threads", return_to)
 
 
 @router.post("/campaigns/{campaign_id}/npcs")
@@ -1356,7 +1399,7 @@ def create_npc(
     session.commit()
     return htmx_or_redirect(
         request,
-        f"/campaigns/{campaign_id}",
+        f"/campaigns/{campaign_id}/npcs",
         render_entity_section(request, campaign_id, session, "npcs"),
     )
 
@@ -1382,7 +1425,7 @@ def create_location(
     session.commit()
     return htmx_or_redirect(
         request,
-        f"/campaigns/{campaign_id}",
+        f"/campaigns/{campaign_id}/locations",
         render_entity_section(request, campaign_id, session, "locations"),
     )
 
@@ -1409,7 +1452,7 @@ def create_faction(
     session.commit()
     return htmx_or_redirect(
         request,
-        f"/campaigns/{campaign_id}",
+        f"/campaigns/{campaign_id}/factions",
         render_entity_section(request, campaign_id, session, "factions"),
     )
 
@@ -1438,7 +1481,7 @@ def create_item(
     session.commit()
     return htmx_or_redirect(
         request,
-        f"/campaigns/{campaign_id}",
+        f"/campaigns/{campaign_id}/items",
         render_entity_section(request, campaign_id, session, "items"),
     )
 
@@ -1475,7 +1518,7 @@ def create_creature(
     session.commit()
     return htmx_or_redirect(
         request,
-        f"/campaigns/{campaign_id}",
+        f"/campaigns/{campaign_id}/creatures",
         render_entity_section(request, campaign_id, session, "creatures"),
     )
 
@@ -1503,7 +1546,7 @@ def create_plot_thread(
     session.commit()
     return htmx_or_redirect(
         request,
-        f"/campaigns/{campaign_id}",
+        f"/campaigns/{campaign_id}/threads",
         render_entity_section(request, campaign_id, session, "threads"),
     )
 
@@ -1535,7 +1578,7 @@ def create_pc_note(
     db.commit()
     return htmx_or_redirect(
         request,
-        f"/campaigns/{campaign_id}",
+        f"/campaigns/{campaign_id}/pcs",
         render_entity_section(request, campaign_id, db, "pcs"),
     )
 

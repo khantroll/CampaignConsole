@@ -101,7 +101,7 @@
       var campaignId = select.value;
       var sessionId = localStorage.getItem("mc:last_session:" + campaignId);
       var mode = localStorage.getItem("mc:last_mode:" + campaignId) || "prep";
-      window.location.href = workspaceUrl(campaignId, sessionId, mode);
+      window.location.href = "/campaigns/" + encodeURIComponent(campaignId);
     });
   }
 

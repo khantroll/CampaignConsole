@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="mc-kicker">{{ campaign.name }}</p>
+<h1 class="mc-home-title">{{ section_title }}</h1>
+<p class="mc-sort-row">
+  <a class="mc-quiet-link {% if entity_sort == 'name' %}is-current{% endif %}" href="/campaigns/{{ campaign.id }}/{{ section_key }}?entity_sort=name{% if section_key == 'locations' %}&amp;location_filter={{ location_filter }}{% endif %}">Name</a>
+  <a class="mc-quiet-link {% if entity_sort == 'updated' %}is-current{% endif %}" href="/campaigns/{{ campaign.id }}/{{ section_key }}?entity_sort=updated{% if section_key == 'locations' %}&amp;location_filter={{ location_filter }}{% endif %}">Recently updated</a>
+  <a class="mc-quiet-link {% if entity_sort == 'completeness' %}is-current{% endif %}" href="/campaigns/{{ campaign.id }}/{{ section_key }}?entity_sort=completeness{% if section_key == 'locations' %}&amp;location_filter={{ location_filter }}{% endif %}">Completeness</a>
+</p>
+{% include "partials/campaign_entity_section.html" %}
+{% endblock %}

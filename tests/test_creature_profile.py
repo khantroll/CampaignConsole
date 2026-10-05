@@ -150,7 +150,7 @@ class CreatureProfileTests(CampaignConsoleSmokeTests):
             creature = db.get(Creature, creature.id)
             self.assertEqual(creature.last_seen_session_id, session.id)
 
-        board = self.client.get(f"/campaigns/{campaign_id}")
+        board = self.client.get(f"/campaigns/{campaign_id}/creatures")
         self.assertEqual(board.status_code, 200)
         self.assertIn(b"creatures-section", board.content)
         self.assertIn(b"Dire Wolf", board.content)

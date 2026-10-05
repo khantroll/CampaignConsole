@@ -186,7 +186,7 @@ def workspace_url(
 def session_workflow_url(campaign_id: int, session_id: Optional[int] = None) -> str:
     if session_id:
         return f"/campaigns/{campaign_id}/sessions/{session_id}"
-    return f"/campaigns/{campaign_id}#sessions-section"
+    return f"/campaigns/{campaign_id}/sessions"
 
 
 def lore_board_url(campaign_id: int) -> str:
@@ -250,6 +250,12 @@ def mc_context(
             resolved_session.id if resolved_session else None,
         )
         ctx["lore_board_href"] = lore_board_url(campaign.id)
+        ctx["session_nav_href"] = (
+            ctx["workspace_href"] if resolved_session else session_workflow_url(campaign.id)
+        )
+        from app.services.gm_home import load_nav_counts
+
+        ctx["nav_counts"] = load_nav_counts(db, campaign.id)
     ctx.update(extra)
     return ctx
 
@@ -297,11 +303,16 @@ def entity_form_context(
     **extra: Any,
 ) -> Dict[str, Any]:
     return_to = safe_return_to(request.query_params.get("return_to"))
+    from app.services.gm_home import entity_list_path
+
+    list_path = entity_list_path(campaign.id, entity_section_key)
+    if active_nav is None and entity_section_key:
+        active_nav = entity_section_key
     form_ctx = {
         **ctx,
         "request": request,
         "return_to": return_to,
-        "cancel_url": return_to or cancel_default or lore_board_url(campaign.id),
+        "cancel_url": return_to or cancel_default or list_path or lore_board_url(campaign.id),
     }
     entity = ctx.get("entity")
     if entity_section_key and entity and getattr(entity, "id", None):

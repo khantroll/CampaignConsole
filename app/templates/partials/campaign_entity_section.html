@@ -4,12 +4,12 @@
     <div class="d-flex flex-wrap gap-2 align-items-center">
       {% if section_key == 'locations' %}
       <div class="btn-group btn-group-sm">
-        <a href="/campaigns/{{ campaign_id }}?location_filter=major&amp;entity_sort={{ entity_sort | default('name') }}" class="btn btn-outline-secondary {% if location_filter == 'major' %}active{% endif %}">Major</a>
-        <a href="/campaigns/{{ campaign_id }}?location_filter=sub&amp;entity_sort={{ entity_sort | default('name') }}" class="btn btn-outline-secondary {% if location_filter == 'sub' %}active{% endif %}">Sub</a>
-        <a href="/campaigns/{{ campaign_id }}?location_filter=major_sub&amp;entity_sort={{ entity_sort | default('name') }}" class="btn btn-outline-secondary {% if location_filter == 'major_sub' %}active{% endif %}">Major + Sub</a>
-        <a href="/campaigns/{{ campaign_id }}?location_filter=all&amp;entity_sort={{ entity_sort | default('name') }}" class="btn btn-outline-secondary {% if location_filter == 'all' %}active{% endif %}">All</a>
+        <a href="/campaigns/{{ campaign_id }}/locations?location_filter=major&amp;entity_sort={{ entity_sort | default('name') }}" class="mc-quiet-link {% if location_filter == 'major' %}is-current{% endif %}">Major</a>
+        <a href="/campaigns/{{ campaign_id }}/locations?location_filter=sub&amp;entity_sort={{ entity_sort | default('name') }}" class="mc-quiet-link {% if location_filter == 'sub' %}is-current{% endif %}">Sub</a>
+        <a href="/campaigns/{{ campaign_id }}/locations?location_filter=major_sub&amp;entity_sort={{ entity_sort | default('name') }}" class="mc-quiet-link {% if location_filter == 'major_sub' %}is-current{% endif %}">Major + Sub</a>
+        <a href="/campaigns/{{ campaign_id }}/locations?location_filter=all&amp;entity_sort={{ entity_sort | default('name') }}" class="mc-quiet-link {% if location_filter == 'all' %}is-current{% endif %}">All</a>
       </div>
-      <a href="/campaigns/{{ campaign_id }}/locations/admin" class="btn btn-sm btn-outline-primary">Manage</a>
+      <a href="/campaigns/{{ campaign_id }}/locations/admin" class="mc-quiet-link">Manage</a>
       {% endif %}
     </div>
   </div>
@@ -23,7 +23,7 @@
           <div class="flex-grow-1 pe-2">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
               <span class="badge bg-dark">{{ entity_type_badges[section_key] if entity_type_badges is defined and section_key in entity_type_badges else section_key|upper }}</span>
-              <strong>{% if section_key == 'pcs' %}<a href="/campaigns/{{ campaign_id }}/pcs/{{ item.id }}/edit">{{ item.character_name }}</a>{% else %}{{ item.name or item.title }}{% endif %}</strong>
+              <strong>{% if section_key == 'pcs' %}<a href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/pcs/' ~ item.id ~ '/edit', '/campaigns/' ~ campaign_id ~ '/pcs') }}">{{ item.character_name }}</a>{% else %}{{ item.name or item.title }}{% endif %}</strong>
               {% if health %}
               <span
                 class="badge bg-{{ health.badge_class }}"
@@ -109,27 +109,28 @@
               {% endif %}
             </div>
           </div>
-          <div class="btn-group btn-group-sm" role="group">
+          <div class="mc-row-actions">
+            {% set list_return = '/campaigns/' ~ campaign_id ~ '/' ~ section_key %}
             {% if section_key == 'npcs' %}
-            <a href="/campaigns/{{ campaign_id }}/npcs/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
-            <a href="/campaigns/{{ campaign_id }}/npcs/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            <a class="mc-quiet-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/npcs/' ~ item.id ~ '/edit', list_return) }}">Edit</a>
+            <a class="mc-danger-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/npcs/' ~ item.id ~ '/delete', list_return) }}">Delete</a>
             {% elif section_key == 'locations' %}
-            <a href="/campaigns/{{ campaign_id }}/locations/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
-            <a href="/campaigns/{{ campaign_id }}/locations/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            <a class="mc-quiet-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/locations/' ~ item.id ~ '/edit', list_return) }}">Edit</a>
+            <a class="mc-danger-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/locations/' ~ item.id ~ '/delete', list_return) }}">Delete</a>
             {% elif section_key == 'factions' %}
-            <a href="/campaigns/{{ campaign_id }}/factions/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
-            <a href="/campaigns/{{ campaign_id }}/factions/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            <a class="mc-quiet-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/factions/' ~ item.id ~ '/edit', list_return) }}">Edit</a>
+            <a class="mc-danger-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/factions/' ~ item.id ~ '/delete', list_return) }}">Delete</a>
             {% elif section_key == 'items' %}
-            <a href="/campaigns/{{ campaign_id }}/items/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
-            <a href="/campaigns/{{ campaign_id }}/items/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            <a class="mc-quiet-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/items/' ~ item.id ~ '/edit', list_return) }}">Edit</a>
+            <a class="mc-danger-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/items/' ~ item.id ~ '/delete', list_return) }}">Delete</a>
             {% elif section_key == 'creatures' %}
-            <a href="/campaigns/{{ campaign_id }}/creatures/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
-            <a href="/campaigns/{{ campaign_id }}/creatures/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            <a class="mc-quiet-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/creatures/' ~ item.id ~ '/edit', list_return) }}">Edit</a>
+            <a class="mc-danger-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/creatures/' ~ item.id ~ '/delete', list_return) }}">Delete</a>
             {% elif section_key == 'threads' %}
-            <a href="/campaigns/{{ campaign_id }}/threads/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
-            <a href="/campaigns/{{ campaign_id }}/threads/{{ item.id }}/delete" class="btn btn-outline-danger">Delete</a>
+            <a class="mc-quiet-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/threads/' ~ item.id ~ '/edit', list_return) }}">Edit</a>
+            <a class="mc-danger-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/threads/' ~ item.id ~ '/delete', list_return) }}">Delete</a>
             {% elif section_key == 'pcs' %}
-            <a href="/campaigns/{{ campaign_id }}/pcs/{{ item.id }}/edit" class="btn btn-outline-primary">Edit</a>
+            <a class="mc-quiet-link" href="{{ append_return_to('/campaigns/' ~ campaign_id ~ '/pcs/' ~ item.id ~ '/edit', list_return) }}">Edit</a>
             {% endif %}
           </div>
         </div>
@@ -141,6 +142,7 @@
     {% endif %}
 
     <form
+      id="add-form"
       action="/campaigns/{{ campaign_id }}/{{ action }}"
       method="post"
       data-draft-form="{{ form_name }}"
@@ -214,8 +216,11 @@
       </div>
       {% endfor %}
       <div class="mt-2">
-        <button type="submit" class="btn btn-sm btn-outline-primary">{{ add_label }}</button>
+        <button type="submit" class="btn btn-primary">{{ add_label }}</button>
       </div>
     </form>
   </div>
 </div>
+{% if htmx_nav_oob %}
+{% include "partials/mc_sidebar_campaign.html" %}
+{% endif %}

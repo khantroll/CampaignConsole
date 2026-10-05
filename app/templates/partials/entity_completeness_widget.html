@@ -2,11 +2,6 @@
   <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <span>Entity Completeness Overview</span>
     <div class="d-flex flex-wrap gap-2 align-items-center">
-      <div class="btn-group btn-group-sm">
-        <a href="/campaigns/{{ campaign.id }}?location_filter={{ location_filter | default('major_sub') }}&amp;entity_sort=name" class="btn btn-outline-secondary {% if entity_sort | default('name') == 'name' %}active{% endif %}">Sort: Name</a>
-        <a href="/campaigns/{{ campaign.id }}?location_filter={{ location_filter | default('major_sub') }}&amp;entity_sort=updated" class="btn btn-outline-secondary {% if entity_sort == 'updated' %}active{% endif %}">Recently Updated</a>
-        <a href="/campaigns/{{ campaign.id }}?location_filter={{ location_filter | default('major_sub') }}&amp;entity_sort=completeness" class="btn btn-outline-secondary {% if entity_sort == 'completeness' %}active{% endif %}">Completeness</a>
-      </div>
       <span class="badge bg-{{ completeness_overview.campaign_badge_class }}">
         Campaign {{ completeness_overview.campaign_average }}%
       </span>
@@ -23,7 +18,7 @@
           <div class="d-flex justify-content-between align-items-start mb-2">
             <div>
               <span class="badge bg-dark me-1">{{ section.type_badge }}</span>
-              <a href="/campaigns/{{ campaign.id }}#{{ section.key }}-section" class="text-decoration-none"><strong>{{ section.label }}</strong></a>
+              <a href="/campaigns/{{ campaign.id }}/{{ section.key }}"><strong>{{ section.label }}</strong></a>
               <span class="text-muted small">({{ section.count }})</span>
             </div>
             <span class="badge bg-{% if section.average_score >= 80 %}success{% elif section.average_score >= 40 %}warning{% else %}danger{% endif %}">

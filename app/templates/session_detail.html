@@ -7,13 +7,13 @@
     <p class="text-muted mb-1">{{ session.date or 'No date set' }}</p>
     <p class="mb-0">Campaign: <a href="{{ lore_board_href }}">{{ campaign.name }}</a></p>
   </div>
-  <div class="d-flex flex-wrap gap-2">
-    <a href="{{ workspace_href }}" class="btn btn-primary">Workspace</a>
-    <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player" class="btn btn-outline-info">Player View</a>
-    <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/export/markdown" class="btn btn-outline-success">Export Markdown</a>
+  <div class="mc-tool-row">
+    <a class="mc-quiet-link" href="{{ workspace_href }}">Workspace</a>
+    <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player">Player view</a>
+    <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/export/markdown">Export Markdown</a>
     <form action="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/clear-ai-fields" method="post" class="d-inline"
           onsubmit="return confirm('Clear all AI-generated fields for this session?');">
-      <button type="submit" class="btn btn-outline-danger">Clear AI Fields</button>
+      <button type="submit" class="mc-danger-link">Clear AI fields</button>
     </form>
   </div>
 </div>
@@ -87,8 +87,11 @@
             <textarea name="notes" id="session-notes" class="form-control text-preserve" rows="10"
               data-saved-notes="{{ (session.notes or '') | e }}">{{ session.notes or '' }}</textarea>
           </div>
-          <button type="submit" class="btn btn-outline-primary">Save Notes</button>
-          <button type="submit" class="btn btn-primary ms-2"
+          {% set has_analysis = session.player_recap or session.recap or session.analysis %}
+          {% set has_prep = session.next_session_prep %}
+          {% set primary_step = 'analyze' if not has_analysis else ('prep' if not has_prep else 'drafts') %}
+          <button type="submit" class="mc-text-action">Save Notes</button>
+          <button type="submit" class="{% if primary_step == 'analyze' %}btn btn-primary{% else %}mc-text-action{% endif %}"
             formaction="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/save-and-analyze"
             formmethod="post">Save &amp; Analyze Session</button>
         </div>
@@ -169,14 +172,14 @@
           </div>
           {% endif %}
 
-          <button type="submit" class="btn btn-success"
+          <button type="submit" class="{% if primary_step == 'drafts' %}btn btn-primary{% else %}mc-text-action{% endif %}"
             formaction="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/ai-drafts"
             formmethod="post">Save AI Drafts</button>
-          <button type="submit" class="btn btn-outline-primary ms-2"
+          <button type="submit" class="{% if primary_step == 'prep' %}btn btn-primary{% else %}mc-text-action{% endif %}"
             formaction="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/generate-prep"
             formmethod="post"
             onclick="return confirmNotesSavedForPrep();">Generate Prep from This Session</button>
-          <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player" class="btn btn-sm btn-outline-info ms-2">Open Player View</a>
+          <a href="/campaigns/{{ campaign.id }}/sessions/{{ session.id }}/player" class="mc-quiet-link">Open player view</a>
         </div>
       </div>
 
@@ -327,8 +330,8 @@
       <div class="card mb-3">
         <div class="card-header">Campaign Tools</div>
         <div class="card-body">
-          <a href="/campaigns/{{ campaign.id }}/search" class="btn btn-outline-secondary w-100 mb-2">Search Campaign Lore</a>
-          <a href="/campaigns/{{ campaign.id }}/ai/review" class="btn btn-outline-primary w-100">Campaign AI Review</a>
+          <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/search">Search campaign lore</a>
+          <a class="mc-quiet-link" href="/campaigns/{{ campaign.id }}/ai/review">Campaign AI review</a>
           <p class="small text-muted mt-2 mb-0">Use Campaign AI Review to generate prep for a different session from the campaign page.</p>
         </div>
       </div>
