@@ -99,10 +99,10 @@ ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
     },
     "pcs": {
         "required_fields": ["character_name"],
-        "title": "PC Notes",
+        "title": "Party Members",
         "model": PlayerCharacterNote,
         "fields": [
-            ("character_name", "Character"),
+            ("character_name", "Character Name"),
             ("character_archetype", "Archetype"),
             ("description", "Description"),
             ("signature_gear", "Signature Gear"),
@@ -110,7 +110,7 @@ ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
             ("campaign_role_plot_notes", "Campaign Role & Plot Notes"),
             ("notes", "Additional Notes"),
         ],
-        "add_label": "Add PC Note",
+        "add_label": "Add Party Member",
     },
 }
 
