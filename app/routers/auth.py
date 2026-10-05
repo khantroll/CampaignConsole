@@ -198,7 +198,7 @@ def change_password(
     db.commit()
     invalidate_user_sessions(db, user.id)
     _, raw_token = create_app_session(db, user.id)
-    response = RedirectResponse("/", status_code=303)
+    response = RedirectResponse(_default_landing_path(db, user), status_code=303)
     set_session_cookie(response, request, raw_token)
     return response
 
