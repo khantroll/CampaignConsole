@@ -52,6 +52,26 @@ class AuthAuthorizationTests(unittest.TestCase):
         payload["_csrf"] = self.csrf()
         return self.client.post(url, data=payload)
 
+    def csrf_for(self, client):
+        response = client.get("/")
+        match = re.search(r'<meta name="csrf-token" content="([^"]+)"', response.text)
+        self.assertIsNotNone(match)
+        return match.group(1)
+
+    def post_with_csrf(self, client, url, data=None):
+        payload = dict(data or {})
+        payload["_csrf"] = self.csrf_for(client)
+        return client.post(url, data=payload)
+
+    def login_client(self, username, password):
+        client = TestClient(main.app, follow_redirects=False)
+        response = client.post(
+            "/login",
+            data={"username": username, "password": password, "next": "/"},
+        )
+        self.assertEqual(response.status_code, 303)
+        return client
+
     def test_bootstrap_normalizes_hashes_and_owns_existing_campaign(self):
         with Session(database.engine) as db:
             campaign = Campaign(name="Legacy", system="Test")
@@ -152,6 +172,158 @@ class AuthAuthorizationTests(unittest.TestCase):
 
         cross = self.client.get(f"/campaigns/{one_id}/npcs/{npc_id}/edit")
         self.assertEqual(cross.status_code, 303)
+
+    def test_player_only_user_cannot_create_campaign_and_no_row_is_added(self):
+        self.bootstrap()
+        seed = self.post_auth("/campaigns", {"name": "Seed"})
+        seed_id = int(re.search(r"/campaigns/(\d+)", seed.headers["location"]).group(1))
+        with Session(database.engine) as db:
+            player = User(
+                username="createplayer",
+                display_name="Create Player",
+                password_hash=hash_password("player-create-password"),
+            )
+            db.add(player)
+            db.commit()
+            db.refresh(player)
+            db.add(CampaignMembership(campaign_id=seed_id, user_id=player.id, role="player"))
+            db.commit()
+            before = len(db.exec(select(Campaign)).all())
+
+        player_client = self.login_client("createplayer", "player-create-password")
+        response = self.post_with_csrf(player_client, "/campaigns", {"name": "Forbidden Campaign"})
+        self.assertEqual(response.status_code, 403)
+        with Session(database.engine) as db:
+            after = len(db.exec(select(Campaign)).all())
+            forbidden = db.exec(select(Campaign).where(Campaign.name == "Forbidden Campaign")).first()
+        self.assertEqual(after, before)
+        self.assertIsNone(forbidden)
+        self.assertNotIn("New Campaign", player_client.get("/").text)
+        player_client.close()
+
+    def test_admin_owner_and_gm_can_create_campaigns(self):
+        self.bootstrap()
+        seed = self.post_auth("/campaigns", {"name": "Seed for Creators"})
+        seed_id = int(re.search(r"/campaigns/(\d+)", seed.headers["location"]).group(1))
+
+        with Session(database.engine) as db:
+            owner = User(
+                username="creatorowner",
+                display_name="Creator Owner",
+                password_hash=hash_password("owner-create-password"),
+            )
+            gm = User(
+                username="creatorgm",
+                display_name="Creator GM",
+                password_hash=hash_password("gm-create-password"),
+            )
+            db.add(owner)
+            db.add(gm)
+            db.commit()
+            db.refresh(owner)
+            db.refresh(gm)
+            db.add(CampaignMembership(campaign_id=seed_id, user_id=owner.id, role="owner"))
+            db.add(CampaignMembership(campaign_id=seed_id, user_id=gm.id, role="gm"))
+            db.commit()
+            owner_id = owner.id
+            gm_id = gm.id
+
+        admin_create = self.post_auth("/campaigns", {"name": "Admin Created"})
+        self.assertEqual(admin_create.status_code, 303)
+
+        owner_client = self.login_client("creatorowner", "owner-create-password")
+        owner_create = self.post_with_csrf(owner_client, "/campaigns", {"name": "Owner Created"})
+        self.assertEqual(owner_create.status_code, 303)
+        owner_client.close()
+
+        gm_client = self.login_client("creatorgm", "gm-create-password")
+        gm_create = self.post_with_csrf(gm_client, "/campaigns", {"name": "GM Created"})
+        self.assertEqual(gm_create.status_code, 303)
+        gm_client.close()
+
+        with Session(database.engine) as db:
+            owner_campaign = db.exec(select(Campaign).where(Campaign.name == "Owner Created")).one()
+            gm_campaign = db.exec(select(Campaign).where(Campaign.name == "GM Created")).one()
+            owner_membership = db.exec(select(CampaignMembership).where(
+                CampaignMembership.campaign_id == owner_campaign.id,
+                CampaignMembership.user_id == owner_id,
+            )).one()
+            gm_membership = db.exec(select(CampaignMembership).where(
+                CampaignMembership.campaign_id == gm_campaign.id,
+                CampaignMembership.user_id == gm_id,
+            )).one()
+        self.assertEqual(owner_membership.role, "owner")
+        self.assertEqual(gm_membership.role, "owner")
+
+    def test_rules_lookup_requires_owner_or_gm_membership(self):
+        self.bootstrap()
+        created = self.post_auth("/campaigns", {"name": "Rules Campaign", "system": "Test"})
+        campaign_id = int(re.search(r"/campaigns/(\d+)", created.headers["location"]).group(1))
+
+        with Session(database.engine) as db:
+            owner = User(
+                username="rulesowner",
+                display_name="Rules Owner",
+                password_hash=hash_password("rules-owner-password"),
+            )
+            gm = User(
+                username="rulesgm",
+                display_name="Rules GM",
+                password_hash=hash_password("rules-gm-password"),
+            )
+            player = User(
+                username="rulesplayer",
+                display_name="Rules Player",
+                password_hash=hash_password("rules-player-password"),
+            )
+            stranger = User(
+                username="rulesstranger",
+                display_name="Rules Stranger",
+                password_hash=hash_password("rules-stranger-password"),
+            )
+            db.add(owner)
+            db.add(gm)
+            db.add(player)
+            db.add(stranger)
+            db.commit()
+            db.refresh(owner)
+            db.refresh(gm)
+            db.refresh(player)
+            db.add(CampaignMembership(campaign_id=campaign_id, user_id=owner.id, role="owner"))
+            db.add(CampaignMembership(campaign_id=campaign_id, user_id=gm.id, role="gm"))
+            db.add(CampaignMembership(campaign_id=campaign_id, user_id=player.id, role="player"))
+            db.commit()
+
+        clients = {
+            "owner": self.login_client("rulesowner", "rules-owner-password"),
+            "gm": self.login_client("rulesgm", "rules-gm-password"),
+            "player": self.login_client("rulesplayer", "rules-player-password"),
+            "stranger": self.login_client("rulesstranger", "rules-stranger-password"),
+        }
+        try:
+            self.assertEqual(
+                clients["owner"].get(f"/api/workspace/rules-lookup?campaign_id={campaign_id}&text=test").status_code,
+                200,
+            )
+            self.assertEqual(
+                clients["gm"].get(f"/api/workspace/rules-lookup?campaign_id={campaign_id}&text=test").status_code,
+                200,
+            )
+            self.assertEqual(
+                clients["player"].get(f"/api/workspace/rules-lookup?campaign_id={campaign_id}&text=test").status_code,
+                403,
+            )
+            self.assertEqual(
+                clients["stranger"].get(f"/api/workspace/rules-lookup?campaign_id={campaign_id}&text=test").status_code,
+                403,
+            )
+            self.assertEqual(
+                clients["owner"].get("/api/workspace/rules-lookup?campaign_id=999999&text=test").status_code,
+                403,
+            )
+        finally:
+            for client in clients.values():
+                client.close()
 
     def test_failed_login_is_throttled_at_boundary(self):
         self.bootstrap()
