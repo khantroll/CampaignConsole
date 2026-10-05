@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from app.database import get_session
 from app.deps import get_campaign_or_none, sort_sessions_chronologically, templates
-from app.models import Campaign, SessionModel
+from app.models import Campaign, CampaignMembership, SessionModel
 from app.services.campaign_deletion import delete_campaign_cascade
 from app.services.campaign_dashboard import build_campaign_dashboard_summary
 from app.services.campaign_intelligence import load_campaign_briefing_data
@@ -22,7 +22,7 @@ router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, session: Session = Depends(get_session)):
-    ctx = mc_context(session, layout="minimal", include_campaigns=True)
+    ctx = mc_context(session, layout="minimal", include_campaigns=True, request=request)
     ctx["request"] = request
     return templates.TemplateResponse("campaigns.html", ctx)
 
