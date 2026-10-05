@@ -118,6 +118,26 @@ def get_campaign_membership(db: Session, user_id: int, campaign_id: int) -> Opti
     )).first()
 
 
+GM_CAMPAIGN_ROLES = {"owner", "gm"}
+
+
+def user_can_manage_campaign(db: Session, user_id: int, campaign_id: int) -> bool:
+    membership = get_campaign_membership(db, user_id, campaign_id)
+    return bool(membership and membership.role in GM_CAMPAIGN_ROLES)
+
+
+def user_can_create_campaign(db: Session, user: User) -> bool:
+    if user.is_admin:
+        return True
+    membership = db.exec(
+        select(CampaignMembership).where(
+            CampaignMembership.user_id == user.id,
+            CampaignMembership.role.in_(GM_CAMPAIGN_ROLES),
+        )
+    ).first()
+    return membership is not None
+
+
 def cookie_is_secure(request: Request) -> bool:
     forwarded = request.headers.get("x-forwarded-proto", "").split(",", 1)[0].strip().lower()
     return request.url.scheme == "https" or forwarded == "https"
