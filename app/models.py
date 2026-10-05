@@ -500,6 +500,7 @@ class PlayerCharacterNote(SQLModel, table=True):
     description: Optional[str] = None
     signature_gear: Optional[str] = None
     key_ties_history: Optional[str] = None
+    portrait_path: Optional[str] = None
     campaign_role_plot_notes: Optional[str] = None
     notes: Optional[str] = None
     created_at: datetime = Field(
