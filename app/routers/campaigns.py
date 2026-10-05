@@ -25,6 +25,7 @@ router = APIRouter()
 def home(request: Request, session: Session = Depends(get_session)):
     ctx = mc_context(session, layout="minimal", include_campaigns=True, request=request)
     ctx["request"] = request
+    ctx["can_create_campaign"] = user_can_create_campaign(session, request.state.current_user)
     return templates.TemplateResponse("campaigns.html", ctx)
 
 
@@ -36,6 +37,12 @@ def create_campaign(
     description: str = Form(""),
     session: Session = Depends(get_session),
 ):
+    if not user_can_create_campaign(session, request.state.current_user):
+        return PlainTextResponse(
+            "Campaign creation requires administrator, owner, or GM access.",
+            status_code=403,
+        )
+
     campaign = Campaign(name=name, system=system, description=description)
     session.add(campaign)
     session.commit()
