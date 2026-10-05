@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.database import create_db_and_tables
+from app.middleware import AuthMiddleware
 from app.services.provider_router import log_active_llm_config
 from app.services import rule_indexer as rule_indexer_module
 from app.services.rule_indexer import RuleIndexerService
@@ -28,9 +29,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Campaign Console", lifespan=lifespan)
+app.add_middleware(AuthMiddleware)
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
+app.include_router(auth.router)
 app.include_router(campaigns.router)
 app.include_router(sessions.router)
 app.include_router(workspace.router)
