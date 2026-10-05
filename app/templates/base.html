@@ -110,6 +110,7 @@
 
           {% if request and request.state.current_user %}
           {% if request.state.current_user.is_admin %}<a class="mc-btn mc-btn-ghost" href="/admin/users">Users</a><a class="mc-btn mc-btn-ghost" href="/settings/llm">LLM Settings</a>{% endif %}
+          <a class="mc-btn mc-btn-ghost" href="/player">Player Console</a>
           <a class="mc-btn mc-btn-ghost" href="/account/password">Password</a>
           <form method="post" action="/logout" style="display:inline"><button class="mc-btn mc-btn-ghost" type="submit">Logout</button></form>
           {% endif %}
