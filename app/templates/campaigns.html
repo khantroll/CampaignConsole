@@ -36,7 +36,7 @@
       {% endfor %}
     </div>
     {% else %}
-    <p class="text-muted">No campaigns yet. Create one to start your campaign console.</p>
+    <p class="text-muted">{% if can_create_campaign %}No campaigns yet. Create one to start your campaign console.{% else %}No GM campaigns are available to this account.{% endif %}</p>
     {% endif %}
   </div>
   <div class="col-md-4">
