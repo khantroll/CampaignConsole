@@ -35,7 +35,9 @@ from app.models import (
     PCFactionLink,
     PCPlotThreadLink,
     PlayerCharacterNote,
+    PlayerReveal,
     PlotThread,
+    RevealAudience,
     PlotThreadRelatedPlotThreadLink,
     SessionCreatureLink,
     SessionFactionLink,
@@ -60,6 +62,7 @@ CAMPAIGN_SCOPED_TABLES = (
     "plotthread",
     "playercharacternote",
     "lorechunk",
+    "playerreveal",
 )
 
 LINK_TABLE_FILTERS = {
@@ -163,6 +166,10 @@ LINK_TABLE_FILTERS = {
         "creature_id IN (SELECT id FROM creature WHERE campaign_id = ?) "
         "AND plot_thread_id IN (SELECT id FROM plotthread WHERE campaign_id = ?)"
     ),
+    "revealaudience": (
+        "reveal_id IN (SELECT id FROM playerreveal WHERE campaign_id = ?) "
+        "AND membership_id IN (SELECT id FROM campaignmembership WHERE campaign_id = ?)"
+    ),
 }
 
 def _dump_model(obj: SQLModel) -> Dict[str, Any]:
@@ -205,6 +212,15 @@ def export_campaign_json(db: Session, campaign_id: int) -> Dict[str, Any]:
     pc_notes = db.exec(select(PlayerCharacterNote).where(PlayerCharacterNote.campaign_id == campaign_id)).all()
     lore_chunks = db.exec(select(LoreChunk).where(LoreChunk.campaign_id == campaign_id)).all()
     lore_index = db.get(CampaignLoreIndex, campaign_id)
+    player_reveals = db.exec(
+        select(PlayerReveal).where(PlayerReveal.campaign_id == campaign_id)
+    ).all()
+    reveal_ids = [row.id for row in player_reveals if row.id is not None]
+    reveal_audiences = db.exec(
+        select(RevealAudience).where(
+            RevealAudience.reveal_id.in_(_ids_or_sentinel(reveal_ids))
+        )
+    ).all()
 
     session_ids = [row.id for row in sessions if row.id is not None]
     npc_ids = [row.id for row in npcs if row.id is not None]
@@ -279,6 +295,8 @@ def export_campaign_json(db: Session, campaign_id: int) -> Dict[str, Any]:
         "player_notes": [_dump_model(row) for row in pc_notes],
         "lore_chunks": [_dump_model(row) for row in lore_chunks],
         "lore_index": _dump_model(lore_index) if lore_index else None,
+        "player_reveals": [_dump_model(row) for row in player_reveals],
+        "reveal_audiences": [_dump_model(row) for row in reveal_audiences],
         "links": links,
     }
 
