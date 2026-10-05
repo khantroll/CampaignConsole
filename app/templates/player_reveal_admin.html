@@ -10,6 +10,7 @@
 <label class="form-label">Player-safe summary</label><textarea class="form-control" name="public_summary" required></textarea>
 <label class="form-label">Session ID (optional)</label><input class="form-control" name="revealed_session_id">
 <label class="form-label">Selected membership IDs (comma-separated; blank = campaign-wide)</label><input class="form-control" name="audience_memberships">
+{% if memberships %}<small class="text-muted">Campaign memberships: {% for membership in memberships %}#{{ membership.id }} ({{ membership.role }}){% if not loop.last %}, {% endif %}{% endfor %}</small>{% endif %}
 <button class="btn btn-primary mt-2" type="submit">Create Reveal</button>
 </form>
 </div></div>
