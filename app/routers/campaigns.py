@@ -259,6 +259,11 @@ def delete_campaign_confirm(request: Request, campaign_id: int, session: Session
 
 @router.post("/campaigns/{campaign_id}/delete")
 def delete_campaign(campaign_id: int, session: Session = Depends(get_session)):
+    for membership in session.exec(
+        select(CampaignMembership).where(CampaignMembership.campaign_id == campaign_id)
+    ).all():
+        session.delete(membership)
+    session.commit()
     try:
         delete_campaign_cascade(session, campaign_id)
     except ValueError:
