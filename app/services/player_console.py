@@ -235,6 +235,56 @@ def _visible_related(
     return [allowed[entity_id] for entity_id in entity_ids if entity_id in allowed]
 
 
+def load_eligible_player_characters(
+    db: Session,
+    membership: CampaignMembership,
+) -> List[Dict]:
+    claimed_by_other_players = set(
+        db.exec(
+            select(CampaignMembership.player_character_id).where(
+                CampaignMembership.campaign_id == membership.campaign_id,
+                CampaignMembership.role == "player",
+                CampaignMembership.id != membership.id,
+                CampaignMembership.player_character_id.is_not(None),
+            )
+        ).all()
+    )
+    pcs = db.exec(
+        select(PlayerCharacterNote)
+        .where(PlayerCharacterNote.campaign_id == membership.campaign_id)
+        .order_by(PlayerCharacterNote.character_name)
+    ).all()
+    return [
+        {
+            "id": pc.id,
+            "character_name": pc.character_name,
+            "character_archetype": pc.character_archetype,
+            "description": pc.description,
+        }
+        for pc in pcs
+        if pc.id not in claimed_by_other_players
+    ]
+
+
+def player_character_is_eligible(
+    db: Session,
+    membership: CampaignMembership,
+    player_character_id: int,
+) -> bool:
+    pc = db.get(PlayerCharacterNote, player_character_id)
+    if not pc or pc.campaign_id != membership.campaign_id:
+        return False
+    claimed = db.exec(
+        select(CampaignMembership.id).where(
+            CampaignMembership.campaign_id == membership.campaign_id,
+            CampaignMembership.role == "player",
+            CampaignMembership.id != membership.id,
+            CampaignMembership.player_character_id == player_character_id,
+        )
+    ).first()
+    return claimed is None
+
+
 def load_player_character(db: Session, membership: CampaignMembership) -> Optional[Dict]:
     if not membership.player_character_id:
         return None
