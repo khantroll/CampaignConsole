@@ -152,6 +152,8 @@ class CampaignConsoleSmokeTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("HTMX Party Member", response.text)
+        self.assertIn("Party Members", response.text)
+        self.assertIn("Add Party Member", response.text)
         self.assertIn('id="pcs-section"', response.text)
         self.assertNotIn("CSRF validation failed", response.text)
         with Session(database.engine) as db:
