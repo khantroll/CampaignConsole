@@ -1,0 +1,17 @@
+{% extends "player_base.html" %}
+{% block content %}
+<h1>{{ campaign.name }}</h1>
+<p class="text-muted">{{ campaign.system or 'No system' }}</p>
+{% if character %}
+<div class="card mb-3"><div class="card-body"><h2>{{ character.character_name }}</h2><p>{{ character.character_archetype or '' }}</p></div></div>
+{% endif %}
+{% if latest_session %}
+<div class="card mb-3"><div class="card-body"><h3>Latest recap</h3><h4>{{ latest_session.title }}</h4><p>{{ latest_session.player_recap }}</p></div></div>
+{% endif %}
+<h3>Recent discoveries</h3>
+{% if recent_reveals %}
+<ul>{% for reveal in recent_reveals %}<li><a href="/player/campaigns/{{ campaign.id }}/lore/{{ reveal.entity_kind }}/{{ reveal.entity_id }}">{{ reveal.title }}</a></li>{% endfor %}</ul>
+{% else %}<p class="text-muted">Nothing has been revealed yet.</p>{% endif %}
+<h3>Recent sessions</h3>
+{% if recent_sessions %}<ul>{% for session in recent_sessions %}<li><a href="/player/campaigns/{{ campaign.id }}/sessions/{{ session.id }}">{{ session.title }}</a>{% if session.date %} — {{ session.date }}{% endif %}</li>{% endfor %}</ul>{% else %}<p class="text-muted">No player recaps have been published yet.</p>{% endif %}
+{% endblock %}
