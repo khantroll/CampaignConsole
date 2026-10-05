@@ -1,10 +1,11 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Form, Query, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from app.auth import user_can_manage_campaign
 from app.database import get_session
 from app.deps import get_campaign_or_none, get_entity_or_none, render_markdown, templates
 from app.models import (
