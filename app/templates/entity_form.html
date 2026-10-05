@@ -52,6 +52,23 @@
     {% endif %}
   </div>
   <div class="card-body">
+    {% if entity_section_key is defined and entity_section_key == 'pcs' and entity %}
+    <div class="mb-4 border-bottom pb-3">
+      <h2 class="h6">Character portrait</h2>
+      {% if entity.portrait_path %}
+      <img src="{{ entity.portrait_path }}" alt="{{ entity.character_name }} portrait" style="width:180px;max-width:40vw;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:1px solid var(--border-subtle);" class="mb-2">
+      {% endif %}
+      <form method="post" action="/campaigns/{{ campaign.id }}/pcs/{{ entity.id }}/portrait" enctype="multipart/form-data" class="mb-2">
+        <input class="form-control mb-2" type="file" name="portrait" accept="image/png,image/jpeg,image/webp" required>
+        <button class="btn btn-outline-primary btn-sm" type="submit">{% if entity.portrait_path %}Replace Portrait{% else %}Upload Portrait{% endif %}</button>
+      </form>
+      {% if entity.portrait_path %}
+      <form method="post" action="/campaigns/{{ campaign.id }}/pcs/{{ entity.id }}/portrait/remove" onsubmit="return confirm('Remove this character portrait?');">
+        <button class="btn btn-outline-danger btn-sm" type="submit">Remove Portrait</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
     <form action="{{ action }}" method="post">
       {% if return_to %}
       <input type="hidden" name="return_to" value="{{ return_to }}" />
