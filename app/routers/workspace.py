@@ -60,6 +60,9 @@ def workspace_rules_lookup(
     text: str = Query(""),
     db: Session = Depends(get_session),
 ):
+    if not user_can_manage_campaign(db, request.state.current_user.id, campaign_id):
+        raise HTTPException(status_code=403, detail="Campaign GM access denied.")
+
     campaign = get_campaign_or_none(db, campaign_id)
     if not campaign:
         return []
