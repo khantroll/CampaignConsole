@@ -21,6 +21,7 @@ from app.auth import (
 from app.database import get_session
 from app.deps import templates
 from app.models import Campaign, CampaignMembership, PlayerCharacterNote, User
+from app.services.user_deletion import delete_local_user
 from app.utils.time import utc_now
 
 router = APIRouter()
@@ -241,7 +242,12 @@ def admin_create_user(
 
 
 @router.get("/admin/users/{user_id}", response_class=HTMLResponse)
-def admin_user_edit(request: Request, user_id: int, db: Session = Depends(get_session)):
+def admin_user_edit(
+    request: Request,
+    user_id: int,
+    message: Optional[str] = Query(None),
+    db: Session = Depends(get_session),
+):
     user = db.get(User, user_id)
     if not user:
         return PlainTextResponse("User not found.", status_code=404)
@@ -259,6 +265,7 @@ def admin_user_edit(request: Request, user_id: int, db: Session = Depends(get_se
             "campaigns": campaigns,
             "campaign_lookup": {c.id: c for c in campaigns},
             "pcs": pcs,
+            "message": message,
         },
     )
 
@@ -302,6 +309,25 @@ def admin_reset_password(
     db.commit()
     invalidate_user_sessions(db, user.id)
     return RedirectResponse(f"/admin/users/{user_id}", status_code=303)
+
+
+@router.post("/admin/users/{user_id}/delete")
+def admin_delete_user(
+    request: Request,
+    user_id: int,
+    db: Session = Depends(get_session),
+):
+    user = db.get(User, user_id)
+    if not user:
+        return PlainTextResponse("User not found.", status_code=404)
+    ok, message = delete_local_user(db, user, request.state.current_user.id)
+    if not ok:
+        from urllib.parse import quote
+        return RedirectResponse(
+            f"/admin/users/{user_id}?message={quote(message)}",
+            status_code=303,
+        )
+    return RedirectResponse("/admin/users", status_code=303)
 
 
 @router.post("/admin/users/{user_id}/memberships")
