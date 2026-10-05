@@ -9,6 +9,7 @@ from sqlmodel import Session, SQLModel, create_engine, select
 import app.database as database
 import app.main as main
 from app.auth import clear_login_throttle_for_tests, hash_password
+from app.services.backup import export_campaign_json
 from app.models import (
     Campaign,
     CampaignMembership,
@@ -277,6 +278,15 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
             self.assertEqual(cross.status_code, 404)
         finally:
             player.close()
+
+    def test_campaign_backup_includes_reveals_without_auth_credentials(self):
+        with Session(database.engine) as db:
+            payload = export_campaign_json(db, self.c1)
+        self.assertTrue(payload["player_reveals"])
+        self.assertTrue(payload["reveal_audiences"])
+        serialized = str(payload).lower()
+        self.assertNotIn("password_hash", serialized)
+        self.assertNotIn("token_hash", serialized)
 
     def test_character_is_linked_character_only_and_hidden_relationships_stay_hidden(self):
         player = self.login("player1", "player-one-password")
