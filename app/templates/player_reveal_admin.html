@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Player Reveals</h1>
+<p class="text-muted">Minimal Phase 2 authoring surface. Full reveal-management UX is deferred.</p>
+<div class="card mb-3"><div class="card-body">
+<form action="/campaigns/{{ campaign_id }}/player-reveals" method="post">
+<label class="form-label">Entity type</label><select class="form-select" name="entity_kind">{% for key, label in entity_kinds.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+<label class="form-label">Entity ID</label><input class="form-control" name="entity_id" type="number" required>
+<label class="form-label">Title override</label><input class="form-control" name="title">
+<label class="form-label">Player-safe summary</label><textarea class="form-control" name="public_summary" required></textarea>
+<label class="form-label">Session ID (optional)</label><input class="form-control" name="revealed_session_id">
+<label class="form-label">Selected membership IDs (comma-separated; blank = campaign-wide)</label><input class="form-control" name="audience_memberships">
+<button class="btn btn-primary mt-2" type="submit">Create Reveal</button>
+</form>
+</div></div>
+{% for reveal in reveals %}
+<div class="card mb-2"><div class="card-body"><strong>{{ reveal.entity_kind }} #{{ reveal.entity_id }}</strong> — {{ reveal.title or '' }}{% if not reveal.is_active %} (revoked){% endif %}
+<p>{{ reveal.public_summary }}</p>
+{% if reveal.is_active %}<form action="/campaigns/{{ campaign_id }}/player-reveals/{{ reveal.id }}/revoke" method="post"><button class="btn btn-danger btn-sm" type="submit">Revoke</button></form>{% endif %}
+</div></div>
+{% endfor %}
+{% endblock %}
