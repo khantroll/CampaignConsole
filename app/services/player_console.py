@@ -66,7 +66,6 @@ def load_player_campaigns(db: Session, user_id: int) -> List[Dict]:
             "id": campaign.id,
             "name": campaign.name,
             "system": campaign.system,
-            "description": campaign.description,
             "role": membership.role,
         })
     return rows
@@ -80,7 +79,6 @@ def load_player_campaign(db: Session, membership: CampaignMembership) -> Optiona
         "id": campaign.id,
         "name": campaign.name,
         "system": campaign.system,
-        "description": campaign.description,
         "membership_role": membership.role,
     }
 
