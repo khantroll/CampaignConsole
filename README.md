@@ -171,3 +171,10 @@ Administrators manage local users at `/admin/users`: create accounts, enable/dis
 
 Authentication uses Argon2id password hashes and opaque database-backed sessions. Authenticated browser mutations require a CSRF token. Password changes and administrator password resets invalidate prior sessions.
 
+## Player Console Phase 2
+
+Authenticated campaign members can open the separate read-only Player Console at `/player`. The Player Console uses dedicated routes, templates, and player-safe projection services rather than the GM Mission Control context.
+
+Player-visible lore comes only from active `PlayerReveal` records. Campaign-wide reveals are visible to all campaign members; selected reveals target campaign membership IDs and fail closed when no matching audience is available. Player session pages publish only sessions with a non-empty `player_recap`, and character pages use the existing linked `PlayerCharacterNote` while omitting GM-oriented PC fields and unrevealed relationships.
+
+A minimal GM reveal authoring page exists at `/campaigns/{campaign_id}/player-reveals` for Phase 2 testing/manual use. The polished reveal-management workflow remains deferred.
