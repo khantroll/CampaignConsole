@@ -1,0 +1,20 @@
+{% extends "player_base.html" %}
+{% block content %}
+<h1>Create New Character</h1>
+<p class="text-muted">Create a basic campaign character record. Rules-system character building is outside Player Console.</p>
+<form method="post" action="/player/campaigns/{{ campaign.id }}/character/new">
+<input type="hidden" name="_csrf" value="{{ request.state.csrf_token }}">
+<label class="form-label">Character name</label>
+<input class="form-control mb-2" name="character_name" required>
+<label class="form-label">Archetype</label>
+<input class="form-control mb-2" name="character_archetype">
+<label class="form-label">Description</label>
+<textarea class="form-control mb-2" name="description" rows="4"></textarea>
+<label class="form-label">Signature gear</label>
+<textarea class="form-control mb-2" name="signature_gear" rows="2"></textarea>
+<label class="form-label">History & ties</label>
+<textarea class="form-control mb-2" name="key_ties_history" rows="3"></textarea>
+<button class="btn btn-primary" type="submit">Create & Link Character</button>
+<a class="btn btn-outline-secondary" href="/player/campaigns/{{ campaign.id }}/character">Cancel</a>
+</form>
+{% endblock %}
