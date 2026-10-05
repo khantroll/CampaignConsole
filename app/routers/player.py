@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
 
@@ -22,6 +22,7 @@ from app.services.player_console import (
     load_player_session,
     load_player_sessions,
 )
+from app.services.character_portraits import delete_portrait_file, save_portrait_upload
 from app.services.mission_control_ui import mc_context
 from app.utils.time import utc_now
 
@@ -151,6 +152,49 @@ def player_character(request: Request, campaign_id: int, db: Session = Depends(g
             "active_player_nav": "character",
         },
     )
+
+
+@router.post("/player/campaigns/{campaign_id}/character/portrait")
+async def player_character_portrait_upload(
+    request: Request,
+    campaign_id: int,
+    portrait: UploadFile = File(...),
+    db: Session = Depends(get_session),
+):
+    membership = _membership_or_404(db, request, campaign_id)
+    if not membership.player_character_id:
+        raise HTTPException(status_code=400, detail="Link a character before uploading a portrait.")
+    pc = db.get(PlayerCharacterNote, membership.player_character_id)
+    if not pc or pc.campaign_id != campaign_id:
+        raise HTTPException(status_code=404, detail="Character not found.")
+    try:
+        pc.portrait_path = await save_portrait_upload(portrait, pc.portrait_path)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    pc.updated_at = utc_now()
+    db.add(pc)
+    db.commit()
+    return RedirectResponse(f"/player/campaigns/{campaign_id}/character", status_code=303)
+
+
+@router.post("/player/campaigns/{campaign_id}/character/portrait/remove")
+def player_character_portrait_remove(
+    request: Request,
+    campaign_id: int,
+    db: Session = Depends(get_session),
+):
+    membership = _membership_or_404(db, request, campaign_id)
+    if not membership.player_character_id:
+        raise HTTPException(status_code=400, detail="No linked character.")
+    pc = db.get(PlayerCharacterNote, membership.player_character_id)
+    if not pc or pc.campaign_id != campaign_id:
+        raise HTTPException(status_code=404, detail="Character not found.")
+    delete_portrait_file(pc.portrait_path)
+    pc.portrait_path = None
+    pc.updated_at = utc_now()
+    db.add(pc)
+    db.commit()
+    return RedirectResponse(f"/player/campaigns/{campaign_id}/character", status_code=303)
 
 
 @router.get("/player/campaigns/{campaign_id}/character/select", response_class=HTMLResponse)
