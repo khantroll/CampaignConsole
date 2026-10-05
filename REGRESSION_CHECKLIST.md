@@ -87,3 +87,19 @@ Manual smoke test before releases or after stabilization changes. Run against a 
 - [ ] Admin can create users, reset temporary passwords, toggle active state, and manage memberships
 - [ ] Campaign exports contain no password hash or live session token
 
+## Player Console Phase 2
+
+- [ ] Player, owner, and GM campaign members can open `/player/campaigns/{id}`
+- [ ] Unrelated users receive the same safe not-found behavior for Player Console campaign resources
+- [ ] Player remains denied the existing GM `/campaigns/{id}/...` surface
+- [ ] Campaign-wide reveal appears in Lore for campaign members
+- [ ] Selected reveal appears only for selected membership IDs
+- [ ] Revoked reveal disappears immediately
+- [ ] Unrevealed and cross-campaign entity IDs return safe not-found responses
+- [ ] Player pages contain no NPC secrets, plot-thread secret notes/unrevealed clues, GM session notes, analysis/raw analysis, next-session prep, or workspace notes
+- [ ] Sessions list only published `player_recap` sessions; session detail exposes title/date/recap plus visible reveals only
+- [ ] Character view uses the membership-linked existing PC record; GM PC notes stay hidden
+- [ ] Character relationships appear only when the related entity has a visible reveal
+- [ ] Campaign backup includes reveal/audience data while excluding users, password hashes, and app-session credentials
+- [ ] Minimal GM reveal authoring can create campaign-wide or selected reveals and revoke them
+- [ ] Existing owner/GM Mission Control workflows still function
