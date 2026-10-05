@@ -113,6 +113,7 @@ COLUMN_DEFINITIONS = {
         "description TEXT",
         "signature_gear TEXT",
         "key_ties_history TEXT",
+        "portrait_path TEXT",
         "campaign_role_plot_notes TEXT",
         "created_at TEXT NOT NULL DEFAULT (datetime('now'))",
         "updated_at TEXT NOT NULL DEFAULT (datetime('now'))",
