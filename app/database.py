@@ -104,6 +104,10 @@ COLUMN_DEFINITIONS = {
         "created_at TEXT NOT NULL DEFAULT (datetime('now'))",
         "updated_at TEXT NOT NULL DEFAULT (datetime('now'))",
     ],
+    "playerreveal": [
+        "audience_mode TEXT NOT NULL DEFAULT 'campaign'",
+        "is_active INTEGER NOT NULL DEFAULT 1",
+    ],
     "playercharacternote": [
         "character_archetype TEXT",
         "description TEXT",
