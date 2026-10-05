@@ -186,10 +186,7 @@ def load_player_sessions(db: Session, membership: CampaignMembership) -> List[Di
     # A player recap is the deliberate publication signal for a session.
     sessions = db.exec(
         select(SessionModel)
-        .where(
-            SessionModel.campaign_id == membership.campaign_id,
-            SessionModel.player_recap.is_not(None),
-        )
+        .where(SessionModel.campaign_id == membership.campaign_id)
         .order_by(SessionModel.id.desc())
     ).all()
     return [
