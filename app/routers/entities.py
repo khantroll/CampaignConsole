@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
 
@@ -1687,6 +1687,47 @@ def update_pc(
     db.add(pc)
     db.commit()
     return _entity_save_redirect(campaign_id, return_to)
+
+
+@router.post("/campaigns/{campaign_id}/pcs/{pc_id}/portrait")
+async def upload_pc_portrait(
+    request: Request,
+    campaign_id: int,
+    pc_id: int,
+    portrait: UploadFile = File(...),
+    db: Session = Depends(get_session),
+):
+    pc = get_entity_or_none(db, PlayerCharacterNote, campaign_id, pc_id)
+    if not pc:
+        return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    try:
+        pc.portrait_path = await save_portrait_upload(portrait, pc.portrait_path)
+    except ValueError as exc:
+        from urllib.parse import quote
+        return RedirectResponse(
+            url=f"/campaigns/{campaign_id}/pcs/{pc_id}/edit?message={quote(str(exc))}",
+            status_code=303,
+        )
+    db.add(pc)
+    db.commit()
+    return RedirectResponse(url=f"/campaigns/{campaign_id}/pcs/{pc_id}/edit", status_code=303)
+
+
+@router.post("/campaigns/{campaign_id}/pcs/{pc_id}/portrait/remove")
+def remove_pc_portrait(
+    request: Request,
+    campaign_id: int,
+    pc_id: int,
+    db: Session = Depends(get_session),
+):
+    pc = get_entity_or_none(db, PlayerCharacterNote, campaign_id, pc_id)
+    if not pc:
+        return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+    delete_portrait_file(pc.portrait_path)
+    pc.portrait_path = None
+    db.add(pc)
+    db.commit()
+    return RedirectResponse(url=f"/campaigns/{campaign_id}/pcs/{pc_id}/edit", status_code=303)
 
 
 @router.post("/campaigns/{campaign_id}/pcs/{pc_id}/convert-to-npc")
