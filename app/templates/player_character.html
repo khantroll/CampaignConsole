@@ -8,11 +8,19 @@
 {% if character.description %}<p>{{ character.description }}</p>{% endif %}
 {% if character.signature_gear %}<p><strong>Signature gear:</strong> {{ character.signature_gear }}</p>{% endif %}
 {% if character.key_ties_history %}<p><strong>History & ties:</strong> {{ character.key_ties_history }}</p>{% endif %}
+<p><a class="btn btn-outline-secondary btn-sm" href="/player/campaigns/{{ campaign.id }}/character/select">Change linked character</a></p>
 </div></div>
 {% for label, entries in [('Locations', character.locations), ('Factions', character.factions), ('Plot Threads / Quests', character.plot_threads)] %}
 <h3>{{ label }}</h3>{% if entries %}<ul>{% for entry in entries %}<li><a href="/player/campaigns/{{ campaign.id }}/lore/{{ entry.entity_kind }}/{{ entry.entity_id }}">{{ entry.title }}</a></li>{% endfor %}</ul>{% else %}<p class="text-muted">No revealed connections.</p>{% endif %}
 {% endfor %}
 {% else %}
-<p class="text-muted">No player character is linked to this campaign membership.</p>
+<div class="card"><div class="card-body">
+<h2>No character linked yet</h2>
+<p class="text-muted">No character is linked to this account yet.</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap">
+<a class="btn btn-primary" href="/player/campaigns/{{ campaign.id }}/character/select">Choose Existing Character</a>
+<a class="btn btn-outline-secondary" href="/player/campaigns/{{ campaign.id }}/character/new">Create New Character</a>
+</div>
+</div></div>
 {% endif %}
 {% endblock %}
