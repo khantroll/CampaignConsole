@@ -1,0 +1,16 @@
+{% extends "player_base.html" %}
+{% block content %}
+<h1>Your Campaigns</h1>
+{% if player_campaigns %}
+<div class="list-group">
+{% for campaign in player_campaigns %}
+<a class="list-group-item list-group-item-action" href="/player/campaigns/{{ campaign.id }}">
+  <strong>{{ campaign.name }}</strong>
+  <div class="text-muted">{{ campaign.system or 'No system' }} · {{ campaign.role }}</div>
+</a>
+{% endfor %}
+</div>
+{% else %}
+<p class="text-muted">No campaign memberships are assigned to this account.</p>
+{% endif %}
+{% endblock %}
