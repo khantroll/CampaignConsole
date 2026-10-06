@@ -1,0 +1,68 @@
+{% extends "player_base.html" %}
+{% block title %}Journal · {{ campaign.name }}{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap">
+  <div><h1>Journal</h1><p class="text-muted">Thoughts, theories, questions, goals, and memories from the campaign.</p></div>
+</div>
+
+{% if can_write %}
+<div class="card mb-4"><div class="card-header">Add a Thought</div><div class="card-body">
+<form method="post" action="/player/campaigns/{{ campaign.id }}/journal">
+  <input type="hidden" name="_csrf" value="{{ request.state.csrf_token }}">
+  <div class="row g-2">
+    <div class="col-md-4"><label class="form-label">Type</label><select class="form-select" name="entry_type">{% for value,label in entry_types.items() %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label">Who can see it?</label><select class="form-select" name="visibility">{% for value,label in visibilities.items() %}<option value="{{ value }}" {% if value == 'gm' %}selected{% endif %}>{{ label }}{% if value == 'private' %} — only me{% elif value == 'gm' %} — me + GM{% elif value == 'party' %} — party + GM{% endif %}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label">Title <span class="text-muted">(optional)</span></label><input class="form-control" name="title" maxlength="200"></div>
+    <div class="col-12"><label class="form-label">Thought</label><textarea class="form-control" name="body" rows="4" required></textarea></div>
+    <div class="col-md-6"><label class="form-label">Session <span class="text-muted">(optional)</span></label><select class="form-select" name="session_id"><option value="">—</option>{% for s in published_sessions %}<option value="{{ s.id }}">{{ s.title }}{% if s.date %} · {{ s.date }}{% endif %}</option>{% endfor %}</select></div>
+    <div class="col-md-6"><label class="form-label">Related discovery <span class="text-muted">(optional)</span></label><select class="form-select" name="linked_reveal_id"><option value="">—</option>{% for reveal in visible_reveals %}<option value="{{ reveal.reveal_id }}">{{ reveal.title }} · {{ reveal.kind_label }}</option>{% endfor %}</select></div>
+  </div>
+  <button class="btn btn-primary mt-3" type="submit">Add Thought</button>
+</form>
+</div></div>
+{% endif %}
+
+{% if journal_entries %}
+{% for row in journal_entries %}
+{% set e = row.entry %}
+<div class="card mb-3"><div class="card-body">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:start;flex-wrap:wrap">
+    <div>
+      <span class="badge text-bg-secondary">{{ row.type_label }}</span>
+      <span class="badge text-bg-dark">{{ row.visibility_label }}</span>
+      {% if e.entry_type == 'question' and not e.is_resolved %}<span class="badge text-bg-warning">Needs answer</span>{% elif e.is_resolved %}<span class="badge text-bg-success">Resolved</span>{% endif %}
+      <strong style="display:block;margin-top:8px">{{ e.title or row.type_label }}</strong>
+      <small class="text-muted">{{ e.author_display_name }} · {{ e.created_at.strftime('%Y-%m-%d %H:%M') if e.created_at else '' }}</small>
+    </div>
+  </div>
+  <p class="text-preserve mt-3">{{ e.body }}</p>
+  {% if row.session %}<p class="small">Session: <a href="/player/campaigns/{{ campaign.id }}/sessions/{{ row.session.id }}">{{ row.session.title }}</a></p>{% endif %}
+  {% if row.linked_reveal %}<p class="small">Related: <a href="/player/campaigns/{{ campaign.id }}/lore/{{ row.linked_reveal.entity_kind }}/{{ row.linked_reveal.entity_id }}">{{ row.linked_reveal.title }}</a></p>{% endif %}
+  {% if e.gm_response %}<div class="alert alert-secondary"><strong>GM:</strong> {{ e.gm_response }}</div>{% endif %}
+
+  {% if row.is_author and can_write %}
+  <details class="mt-3"><summary>Edit</summary>
+    <form method="post" action="/player/campaigns/{{ campaign.id }}/journal/{{ e.id }}/update" class="mt-2">
+      <input type="hidden" name="_csrf" value="{{ request.state.csrf_token }}">
+      <div class="row g-2">
+        <div class="col-md-4"><select class="form-select" name="entry_type">{% for value,label in entry_types.items() %}<option value="{{ value }}" {% if e.entry_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><select class="form-select" name="visibility">{% for value,label in visibilities.items() %}<option value="{{ value }}" {% if e.visibility == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><input class="form-control" name="title" value="{{ e.title or '' }}" maxlength="200" placeholder="Title"></div>
+        <div class="col-12"><textarea class="form-control" name="body" rows="4" required>{{ e.body }}</textarea></div>
+        <div class="col-md-6"><select class="form-select" name="session_id"><option value="">No session link</option>{% for s in published_sessions %}<option value="{{ s.id }}" {% if e.session_id == s.id %}selected{% endif %}>{{ s.title }}</option>{% endfor %}</select></div>
+        <div class="col-md-6"><select class="form-select" name="linked_reveal_id"><option value="">No discovery link</option>{% for reveal in visible_reveals %}<option value="{{ reveal.reveal_id }}" {% if e.linked_reveal_id == reveal.reveal_id %}selected{% endif %}>{{ reveal.title }}</option>{% endfor %}</select></div>
+      </div>
+      <button class="btn btn-outline-primary btn-sm mt-2" type="submit">Save</button>
+    </form>
+    <form method="post" action="/player/campaigns/{{ campaign.id }}/journal/{{ e.id }}/delete" class="mt-2" onsubmit="return confirm('Delete this journal entry?');">
+      <input type="hidden" name="_csrf" value="{{ request.state.csrf_token }}">
+      <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+    </form>
+  </details>
+  {% endif %}
+</div></div>
+{% endfor %}
+{% else %}
+<div class="card"><div class="card-body"><p class="text-muted mb-0">No journal entries yet. Add a thought, theory, question, or goal when something catches your attention.</p></div></div>
+{% endif %}
+{% endblock %}
