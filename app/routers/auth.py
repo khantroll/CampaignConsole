@@ -37,14 +37,15 @@ def _safe_next(value: Optional[str]) -> str:
 def _default_landing_path(db: Session, user: User) -> str:
     if user.is_admin:
         return "/"
-    roles = set(
-        db.exec(
-            select(CampaignMembership.role).where(CampaignMembership.user_id == user.id)
-        ).all()
-    )
-    if roles and roles.issubset({"player"}):
-        return "/player"
-    return "/"
+    memberships = db.exec(
+        select(CampaignMembership).where(CampaignMembership.user_id == user.id)
+    ).all()
+    if any(m.role in {"owner", "gm"} for m in memberships):
+        return "/"
+    player_campaign_ids = [m.campaign_id for m in memberships if m.role == "player"]
+    if len(player_campaign_ids) == 1:
+        return f"/player/campaigns/{player_campaign_ids[0]}"
+    return "/player"
 
 
 def _user_by_name(db: Session, username: str):
@@ -379,6 +380,11 @@ def admin_membership_delete(
 ):
     membership = db.get(CampaignMembership, membership_id)
     if membership and membership.user_id == user_id:
+        from app.models import RevealAudience
+        for audience in db.exec(
+            select(RevealAudience).where(RevealAudience.membership_id == membership.id)
+        ).all():
+            db.delete(audience)
         db.delete(membership)
         db.commit()
     return RedirectResponse(f"/admin/users/{user_id}", status_code=303)
