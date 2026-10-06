@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from sqlmodel import Session, select
 
-from app.models import AppSession, Campaign, CampaignMembership, PlayerReveal, RevealAudience, User
+from app.models import AppSession, Campaign, CampaignMembership, PlayerJournalEntry, PlayerReveal, RevealAudience, User
 
 
 def user_delete_blockers(db: Session, target: User, current_user_id: int) -> List[str]:
@@ -70,6 +70,13 @@ def delete_local_user(db: Session, target: User, current_user_id: int) -> Tuple[
 
     for session in db.exec(select(AppSession).where(AppSession.user_id == target.id)).all():
         db.delete(session)
+
+    journal_entries = db.exec(
+        select(PlayerJournalEntry).where(PlayerJournalEntry.author_user_id == target.id)
+    ).all()
+    for entry in journal_entries:
+        entry.author_user_id = None
+        db.add(entry)
 
     authored_reveals = db.exec(
         select(PlayerReveal).where(PlayerReveal.created_by_user_id == target.id)
