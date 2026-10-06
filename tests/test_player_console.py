@@ -663,6 +663,26 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
         finally:
             player.close()
 
+    def test_contextual_journal_links_preselect_visible_lore_and_session(self):
+        player = self.login("player1", "player-one-password")
+        try:
+            lore = player.get(
+                f"/player/campaigns/{self.c1}/journal?reveal_id={self.selected_reveal_id}"
+            ).text
+            self.assertIn(
+                f'value="{self.selected_reveal_id}" selected',
+                lore,
+            )
+            session = player.get(
+                f"/player/campaigns/{self.c1}/journal?session_id={self.session_id}"
+            ).text
+            self.assertIn(
+                f'value="{self.session_id}" selected',
+                session,
+            )
+        finally:
+            player.close()
+
     def test_player_dashboard_surfaces_leads_party_and_journal(self):
         player = self.login("player1", "player-one-password")
         try:
