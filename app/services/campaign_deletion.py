@@ -11,6 +11,8 @@ from app.models import (
     LoreChunk,
     NPC,
     PlayerCharacterNote,
+    PlayerJournalEntry,
+    PlayerReveal,
     PlotThread,
     SessionModel,
 )
@@ -25,6 +27,8 @@ CAMPAIGN_ENTITY_MODELS = (
     Creature,
     PlotThread,
     PlayerCharacterNote,
+    PlayerJournalEntry,
+    PlayerReveal,
     LoreChunk,
 )
 
