@@ -215,6 +215,9 @@ def export_campaign_json(db: Session, campaign_id: int) -> Dict[str, Any]:
     player_reveals = db.exec(
         select(PlayerReveal).where(PlayerReveal.campaign_id == campaign_id)
     ).all()
+    player_journal = db.exec(
+        select(PlayerJournalEntry).where(PlayerJournalEntry.campaign_id == campaign_id)
+    ).all()
     reveal_ids = [row.id for row in player_reveals if row.id is not None]
     reveal_audiences = db.exec(
         select(RevealAudience).where(
@@ -296,6 +299,7 @@ def export_campaign_json(db: Session, campaign_id: int) -> Dict[str, Any]:
         "lore_chunks": [_dump_model(row) for row in lore_chunks],
         "lore_index": _dump_model(lore_index) if lore_index else None,
         "player_reveals": [_dump_model(row) for row in player_reveals],
+        "player_journal": [_dump_model(row) for row in player_journal],
         "reveal_audiences": [_dump_model(row) for row in reveal_audiences],
         "links": links,
     }
