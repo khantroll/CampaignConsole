@@ -150,8 +150,6 @@ def load_active_leads(db: Session, membership: CampaignMembership) -> List[Dict]
         thread = db.get(PlotThread, reveal["entity_id"])
         if not thread or thread.campaign_id != membership.campaign_id:
             continue
-        leads.append({
-            **reveal,
-            "status": thread.status,
-        })
+        # The reveal is the player-safe projection. Do not expose raw PlotThread fields here.
+        leads.append(dict(reveal))
     return leads
