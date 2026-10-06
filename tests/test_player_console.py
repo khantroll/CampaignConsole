@@ -11,6 +11,7 @@ import app.database as database
 import app.main as main
 from app.auth import clear_login_throttle_for_tests, hash_password
 from app.services.backup import export_campaign_json
+from app.services.campaign_deletion import delete_campaign_cascade
 from app.models import (
     Campaign,
     CampaignMembership,
@@ -20,6 +21,7 @@ from app.models import (
     PCFactionLink,
     PCLocationLink,
     PlayerCharacterNote,
+    PlayerJournalEntry,
     PlayerReveal,
     PlotThread,
     RevealAudience,
@@ -539,6 +541,212 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
             self.assertIn("Visible Faction", page.text)
         finally:
             player.close()
+
+
+    def test_player_journal_visibility_and_gm_inbox(self):
+        player1 = self.login("player1", "player-one-password")
+        player2 = self.login("player2", "player-two-password")
+        gm = self.login("gm2", "gm-two-password")
+        try:
+            for visibility, title in (
+                ("private", "PRIVATE_THOUGHT_SENTINEL"),
+                ("gm", "GM_THOUGHT_SENTINEL"),
+                ("party", "PARTY_THOUGHT_SENTINEL"),
+            ):
+                response = self.post_player_form(
+                    player1,
+                    f"/player/campaigns/{self.c1}/journal",
+                    f"/player/campaigns/{self.c1}/journal",
+                    {
+                        "entry_type": "theory",
+                        "visibility": visibility,
+                        "title": title,
+                        "body": f"{title} body",
+                        "session_id": "",
+                        "linked_reveal_id": "",
+                    },
+                )
+                self.assertEqual(response.status_code, 303)
+
+            p1 = player1.get(f"/player/campaigns/{self.c1}/journal").text
+            p2 = player2.get(f"/player/campaigns/{self.c1}/journal").text
+            gm_page = gm.get(f"/campaigns/{self.c1}/player-journal").text
+
+            self.assertIn("PRIVATE_THOUGHT_SENTINEL", p1)
+            self.assertIn("GM_THOUGHT_SENTINEL", p1)
+            self.assertIn("PARTY_THOUGHT_SENTINEL", p1)
+            self.assertNotIn("PRIVATE_THOUGHT_SENTINEL", p2)
+            self.assertNotIn("GM_THOUGHT_SENTINEL", p2)
+            self.assertIn("PARTY_THOUGHT_SENTINEL", p2)
+            self.assertNotIn("PRIVATE_THOUGHT_SENTINEL", gm_page)
+            self.assertIn("GM_THOUGHT_SENTINEL", gm_page)
+            self.assertIn("PARTY_THOUGHT_SENTINEL", gm_page)
+        finally:
+            player1.close(); player2.close(); gm.close()
+
+    def test_player_question_can_be_answered_and_resolved_by_gm(self):
+        player = self.login("player1", "player-one-password")
+        gm = self.login("gm2", "gm-two-password")
+        try:
+            response = self.post_player_form(
+                player,
+                f"/player/campaigns/{self.c1}/journal",
+                f"/player/campaigns/{self.c1}/journal",
+                {
+                    "entry_type": "question",
+                    "visibility": "gm",
+                    "title": "Do I recognize this?",
+                    "body": "Does Avery recognize the symbol?",
+                    "session_id": str(self.session_id),
+                    "linked_reveal_id": "",
+                },
+            )
+            self.assertEqual(response.status_code, 303)
+            with Session(database.engine) as db:
+                entry = db.exec(
+                    select(PlayerJournalEntry).where(
+                        PlayerJournalEntry.title == "Do I recognize this?"
+                    )
+                ).one()
+                entry_id = entry.id
+
+            response = self.post_player_form(
+                gm,
+                f"/campaigns/{self.c1}/player-journal",
+                f"/campaigns/{self.c1}/player-journal/{entry_id}/respond",
+                {"gm_response": "Yes. It belongs to the old academy.", "resolved": "1"},
+            )
+            self.assertEqual(response.status_code, 303)
+            page = player.get(f"/player/campaigns/{self.c1}/journal").text
+            self.assertIn("Yes. It belongs to the old academy.", page)
+            self.assertIn("Resolved", page)
+        finally:
+            player.close(); gm.close()
+
+    def test_journal_rejects_cross_campaign_or_unrevealed_links(self):
+        player = self.login("player1", "player-one-password")
+        try:
+            response = self.post_player_form(
+                player,
+                f"/player/campaigns/{self.c1}/journal",
+                f"/player/campaigns/{self.c1}/journal",
+                {
+                    "entry_type": "note",
+                    "visibility": "gm",
+                    "title": "Bad session",
+                    "body": "Should fail",
+                    "session_id": str(self.other_session_id),
+                    "linked_reveal_id": "",
+                },
+            )
+            self.assertEqual(response.status_code, 400)
+
+            with Session(database.engine) as db:
+                other_reveal = db.exec(
+                    select(PlayerReveal).where(PlayerReveal.campaign_id == self.c2)
+                ).first()
+                other_reveal_id = other_reveal.id
+            response = self.post_player_form(
+                player,
+                f"/player/campaigns/{self.c1}/journal",
+                f"/player/campaigns/{self.c1}/journal",
+                {
+                    "entry_type": "note",
+                    "visibility": "gm",
+                    "title": "Bad lore",
+                    "body": "Should fail",
+                    "session_id": "",
+                    "linked_reveal_id": str(other_reveal_id),
+                },
+            )
+            self.assertEqual(response.status_code, 400)
+        finally:
+            player.close()
+
+    def test_contextual_journal_links_preselect_visible_lore_and_session(self):
+        player = self.login("player1", "player-one-password")
+        try:
+            lore = player.get(
+                f"/player/campaigns/{self.c1}/journal?reveal_id={self.selected_reveal_id}"
+            ).text
+            self.assertIn(
+                f'value="{self.selected_reveal_id}" selected',
+                lore,
+            )
+            session = player.get(
+                f"/player/campaigns/{self.c1}/journal?session_id={self.session_id}"
+            ).text
+            self.assertIn(
+                f'value="{self.session_id}" selected',
+                session,
+            )
+        finally:
+            player.close()
+
+    def test_player_dashboard_surfaces_leads_party_and_journal(self):
+        player = self.login("player1", "player-one-password")
+        try:
+            self.post_player_form(
+                player,
+                f"/player/campaigns/{self.c1}/journal",
+                f"/player/campaigns/{self.c1}/journal",
+                {
+                    "entry_type": "goal",
+                    "visibility": "gm",
+                    "title": "Find the lighthouse",
+                    "body": "Follow the clue before next session.",
+                    "session_id": "",
+                    "linked_reveal_id": str(self.selected_reveal_id),
+                },
+            )
+            page = player.get(f"/player/campaigns/{self.c1}").text
+            self.assertIn("Leads &amp; Quests", page)
+            self.assertIn("Revealed Quest", page)
+            self.assertIn("Party", page)
+            self.assertIn("Avery", page)
+            self.assertIn("Other Player Character", page)
+            self.assertIn("Find the lighthouse", page)
+            self.assertNotIn("THREAD_SECRET_SENTINEL", page)
+        finally:
+            player.close()
+
+    def test_campaign_delete_cleans_memberships_reveals_audiences_and_journal(self):
+        with Session(database.engine) as db:
+            player = db.exec(select(User).where(User.username == "player1")).one()
+            db.add(PlayerJournalEntry(
+                campaign_id=self.c1,
+                author_user_id=player.id,
+                author_display_name=player.display_name,
+                entry_type="note",
+                visibility="gm",
+                body="Delete with campaign.",
+            ))
+            db.commit()
+            delete_campaign_cascade(db, self.c1)
+
+        with Session(database.engine) as db:
+            self.assertIsNone(db.get(Campaign, self.c1))
+            self.assertFalse(db.exec(select(CampaignMembership).where(CampaignMembership.campaign_id == self.c1)).all())
+            self.assertFalse(db.exec(select(PlayerReveal).where(PlayerReveal.campaign_id == self.c1)).all())
+            self.assertFalse(db.exec(select(PlayerJournalEntry).where(PlayerJournalEntry.campaign_id == self.c1)).all())
+            self.assertFalse(db.exec(select(RevealAudience)).all())
+
+    def test_campaign_backup_includes_player_journal(self):
+        with Session(database.engine) as db:
+            player = db.exec(select(User).where(User.username == "player1")).one()
+            db.add(PlayerJournalEntry(
+                campaign_id=self.c1,
+                author_user_id=player.id,
+                author_display_name=player.display_name,
+                entry_type="note",
+                visibility="gm",
+                title="BACKUP_JOURNAL_SENTINEL",
+                body="Preserve this campaign memory.",
+            ))
+            db.commit()
+            payload = export_campaign_json(db, self.c1)
+        self.assertTrue(payload["player_journal"])
+        self.assertEqual(payload["player_journal"][0]["title"], "BACKUP_JOURNAL_SENTINEL")
 
 
 if __name__ == "__main__":

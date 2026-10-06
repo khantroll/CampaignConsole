@@ -24,6 +24,7 @@ from app.services.player_console import (
 )
 from app.services.character_portraits import delete_portrait_file, save_portrait_upload
 from app.services.mission_control_ui import mc_context
+from app.services.player_journal import load_active_leads, load_party, load_player_journal
 from app.utils.time import utc_now
 
 router = APIRouter()
@@ -51,6 +52,11 @@ def player_home(request: Request, campaign_id: int, db: Session = Depends(get_se
     ctx = load_player_home(db, membership)
     if not ctx["campaign"]:
         raise HTTPException(status_code=404, detail="Player campaign not found.")
+    ctx["party"] = load_party(db, campaign_id)
+    ctx["active_leads"] = load_active_leads(db, membership)
+    ctx["recent_journal"] = load_player_journal(
+        db, membership, request.state.current_user.id
+    )[:3]
     return templates.TemplateResponse(
         "player_home.html",
         {"request": request, **ctx, "active_player_nav": "home"},

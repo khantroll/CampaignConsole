@@ -694,3 +694,21 @@ class RevealAudience(SQLModel, table=True):
     reveal_id: int = Field(foreign_key="playerreveal.id", primary_key=True)
     membership_id: int = Field(foreign_key="campaignmembership.id", primary_key=True)
 
+
+# Player-authored campaign journal (Player Console Phase 3)
+class PlayerJournalEntry(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    campaign_id: int = Field(foreign_key="campaign.id", index=True)
+    author_user_id: Optional[int] = Field(default=None, foreign_key="appuser.id", index=True)
+    author_display_name: str
+    entry_type: str = Field(default="note", index=True)
+    visibility: str = Field(default="gm", index=True)
+    title: Optional[str] = None
+    body: str
+    session_id: Optional[int] = Field(default=None, foreign_key="sessionmodel.id", index=True)
+    linked_reveal_id: Optional[int] = Field(default=None, foreign_key="playerreveal.id", index=True)
+    is_resolved: bool = Field(default=False, index=True)
+    gm_response: Optional[str] = None
+    created_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
+    updated_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False))
+

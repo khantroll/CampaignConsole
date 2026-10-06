@@ -1,17 +1,52 @@
 {% extends "player_base.html" %}
 {% block content %}
-<h1>{{ campaign.name }}</h1>
-<p class="text-muted">{{ campaign.system or 'No system' }}</p>
-{% if character %}
-<div class="card mb-3"><div class="card-body"><h2>{{ character.character_name }}</h2><p>{{ character.character_archetype or '' }}</p></div></div>
-{% endif %}
-{% if latest_session %}
-<div class="card mb-3"><div class="card-body"><h3>Latest recap</h3><h4>{{ latest_session.title }}</h4><p>{{ latest_session.player_recap }}</p></div></div>
-{% endif %}
-<h3>Recent discoveries</h3>
-{% if recent_reveals %}
-<ul>{% for reveal in recent_reveals %}<li><a href="/player/campaigns/{{ campaign.id }}/lore/{{ reveal.entity_kind }}/{{ reveal.entity_id }}">{{ reveal.title }}</a></li>{% endfor %}</ul>
-{% else %}<p class="text-muted">Nothing has been revealed yet.</p>{% endif %}
-<h3>Recent sessions</h3>
-{% if recent_sessions %}<ul>{% for session in recent_sessions %}<li><a href="/player/campaigns/{{ campaign.id }}/sessions/{{ session.id }}">{{ session.title }}</a>{% if session.date %} — {{ session.date }}{% endif %}</li>{% endfor %}</ul>{% else %}<p class="text-muted">No player recaps have been published yet.</p>{% endif %}
+<div style="display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap">
+  <div><h1>{{ campaign.name }}</h1><p class="text-muted">{{ campaign.system or 'No system' }}</p></div>
+  <a class="btn btn-primary btn-sm" href="/player/campaigns/{{ campaign.id }}/journal">Add a Thought</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card h-100"><div class="card-header">Character</div><div class="card-body">
+      {% if character %}
+      <div style="display:flex;gap:14px;align-items:center">
+        {% if character.portrait_path %}<img src="{{ character.portrait_path }}" alt="" style="width:82px;height:82px;object-fit:cover;border-radius:8px">{% endif %}
+        <div><h2 class="h4 mb-1">{{ character.character_name }}</h2><p class="text-muted mb-2">{{ character.character_archetype or '' }}</p><a href="/player/campaigns/{{ campaign.id }}/character">View character</a></div>
+      </div>
+      {% else %}<p class="text-muted">No character is linked yet.</p><a href="/player/campaigns/{{ campaign.id }}/character">Choose or create character</a>{% endif %}
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100"><div class="card-header">Last Session</div><div class="card-body">
+      {% if latest_session %}<h2 class="h5">{{ latest_session.title }}</h2>{% if latest_session.date %}<p class="text-muted">{{ latest_session.date }}</p>{% endif %}<p>{{ latest_session.player_recap }}</p><a href="/player/campaigns/{{ campaign.id }}/sessions/{{ latest_session.id }}">Read recap</a>
+      {% else %}<p class="text-muted">No player recap has been published yet.</p>{% endif %}
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6"><div class="card h-100"><div class="card-header">Leads & Quests</div><div class="card-body">
+    {% if active_leads %}<ul class="mb-0">{% for lead in active_leads %}<li class="mb-2"><a href="/player/campaigns/{{ campaign.id }}/lore/plot_thread/{{ lead.entity_id }}"><strong>{{ lead.title }}</strong></a><div class="small text-muted">{{ lead.public_summary }}</div></li>{% endfor %}</ul>
+    {% else %}<p class="text-muted mb-0">No leads or quests have been revealed yet.</p>{% endif %}
+  </div></div></div>
+  <div class="col-md-6"><div class="card h-100"><div class="card-header">Recent Discoveries</div><div class="card-body">
+    {% if recent_reveals %}<ul class="mb-0">{% for reveal in recent_reveals %}<li><a href="/player/campaigns/{{ campaign.id }}/lore/{{ reveal.entity_kind }}/{{ reveal.entity_id }}">{{ reveal.title }}</a> <span class="small text-muted">· {{ reveal.kind_label }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="text-muted mb-0">Nothing has been revealed yet.</p>{% endif %}
+  </div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-7"><div class="card h-100"><div class="card-header" style="display:flex;justify-content:space-between"><span>Player Journal</span><a href="/player/campaigns/{{ campaign.id }}/journal">Open Journal</a></div><div class="card-body">
+    {% if recent_journal %}{% for row in recent_journal %}<div class="mb-3"><span class="badge text-bg-secondary">{{ row.type_label }}</span> <span class="small text-muted">{{ row.entry.author_display_name }}</span><strong style="display:block">{{ row.entry.title or row.type_label }}</strong><div>{{ row.entry.body[:220] }}{% if row.entry.body|length > 220 %}…{% endif %}</div>{% if row.entry.gm_response %}<div class="small mt-1"><strong>GM:</strong> {{ row.entry.gm_response }}</div>{% endif %}</div>{% endfor %}
+    {% else %}<p class="text-muted mb-0">No thoughts have been recorded yet.</p>{% endif %}
+  </div></div></div>
+  <div class="col-md-5"><div class="card h-100"><div class="card-header">Party</div><div class="card-body">
+    {% if party %}{% for member in party %}<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">{% if member.portrait_path %}<img src="{{ member.portrait_path }}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:50%">{% endif %}<div><strong>{{ member.character_name or member.display_name }}</strong>{% if member.character_name %}<div class="small text-muted">{{ member.character_archetype or member.display_name }}</div>{% endif %}</div></div>{% endfor %}
+    {% else %}<p class="text-muted mb-0">No players are assigned yet.</p>{% endif %}
+  </div></div></div>
+</div>
+
+<div class="card"><div class="card-header">Recent Sessions</div><div class="card-body">
+{% if recent_sessions %}<ul class="mb-0">{% for session in recent_sessions %}<li><a href="/player/campaigns/{{ campaign.id }}/sessions/{{ session.id }}">{{ session.title }}</a>{% if session.date %} — {{ session.date }}{% endif %}</li>{% endfor %}</ul>{% else %}<p class="text-muted mb-0">No player recaps have been published yet.</p>{% endif %}
+</div></div>
 {% endblock %}

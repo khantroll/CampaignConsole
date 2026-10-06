@@ -3,7 +3,7 @@
 <p><a href="/player/campaigns/{{ campaign.id }}/sessions">← Sessions</a></p>
 <h1>{{ player_session.title }}</h1>
 {% if player_session.date %}<p class="text-muted">{{ player_session.date }}</p>{% endif %}
-<div class="card mb-3"><div class="card-body"><h2>Recap</h2><p>{{ player_session.player_recap }}</p></div></div>
+<div class="card mb-3"><div class="card-body"><h2>Recap</h2><p>{{ player_session.player_recap }}</p><a class="btn btn-outline-primary btn-sm" href="/player/campaigns/{{ campaign.id }}/journal?session_id={{ player_session.id }}">Add a Thought about this session</a></div></div>
 <h2>Discoveries</h2>
 {% if player_session.reveals %}<ul>{% for reveal in player_session.reveals %}<li><a href="/player/campaigns/{{ campaign.id }}/lore/{{ reveal.entity_kind }}/{{ reveal.entity_id }}">{{ reveal.title }}</a> — {{ reveal.public_summary }}</li>{% endfor %}</ul>{% else %}<p class="text-muted">No reveals are associated with this session.</p>{% endif %}
 {% endblock %}

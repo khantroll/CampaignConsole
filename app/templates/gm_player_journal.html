@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Player Thoughts · {{ campaign.name }}{% endblock %}
+{% block content %}
+<div class="mc-hero">
+  <span class="mc-hero-label">Player Console</span>
+  <h1 class="mc-hero-title">Player Thoughts</h1>
+  <p class="mc-hero-sub">{{ campaign.name }} · theories, questions, goals, and journal entries players chose to share.</p>
+</div>
+
+{% if journal_entries %}
+{% for row in journal_entries %}
+{% set e = row.entry %}
+<div class="card mb-3"><div class="card-body">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <strong>{{ e.author_display_name }}</strong>
+    <span class="badge text-bg-secondary">{{ row.type_label }}</span>
+    <span class="badge text-bg-dark">{{ row.visibility_label }}</span>
+    {% if e.entry_type == 'question' and not e.is_resolved %}<span class="badge text-bg-warning">Needs answer</span>{% elif e.is_resolved %}<span class="badge text-bg-success">Resolved</span>{% endif %}
+  </div>
+  <h2 class="h5 mt-2">{{ e.title or row.type_label }}</h2>
+  <p class="text-preserve">{{ e.body }}</p>
+  {% if row.session %}<p class="small text-muted">Session: {{ row.session.title }}</p>{% endif %}
+  {% if row.reveal %}<p class="small text-muted">Linked reveal: {{ row.reveal.title or (row.reveal.entity_kind ~ ' #' ~ row.reveal.entity_id) }}</p>{% endif %}
+  <form method="post" action="/campaigns/{{ campaign.id }}/player-journal/{{ e.id }}/respond">
+    <input type="hidden" name="_csrf" value="{{ request.state.csrf_token }}">
+    <label class="form-label">GM response</label>
+    <textarea class="form-control" name="gm_response" rows="2" placeholder="Optional response visible to the player{% if e.visibility == 'party' %} and party{% endif %}.">{{ e.gm_response or '' }}</textarea>
+    <label style="display:block;margin-top:8px"><input type="checkbox" name="resolved" value="1" {% if e.is_resolved %}checked{% endif %}> Resolved / answered</label>
+    <button class="btn btn-outline-primary btn-sm mt-2" type="submit">Save Response</button>
+  </form>
+</div></div>
+{% endfor %}
+{% else %}
+<div class="card"><div class="card-body"><p class="text-muted mb-0">No player thoughts have been shared with the GM yet. Private entries never appear here.</p></div></div>
+{% endif %}
+{% endblock %}

@@ -4,6 +4,7 @@ from sqlmodel import Session, delete
 from app.models import (
     Campaign,
     CampaignLoreIndex,
+    CampaignMembership,
     Creature,
     Faction,
     Item,
@@ -11,6 +12,8 @@ from app.models import (
     LoreChunk,
     NPC,
     PlayerCharacterNote,
+    PlayerJournalEntry,
+    PlayerReveal,
     PlotThread,
     SessionModel,
 )
@@ -25,6 +28,8 @@ CAMPAIGN_ENTITY_MODELS = (
     Creature,
     PlotThread,
     PlayerCharacterNote,
+    PlayerJournalEntry,
+    PlayerReveal,
     LoreChunk,
 )
 
@@ -42,5 +47,6 @@ def delete_campaign_cascade(db: Session, campaign_id: int) -> None:
         db.exec(delete(model).where(model.campaign_id == campaign_id))
 
     db.exec(delete(CampaignLoreIndex).where(CampaignLoreIndex.campaign_id == campaign_id))
+    db.exec(delete(CampaignMembership).where(CampaignMembership.campaign_id == campaign_id))
     db.delete(campaign)
     db.commit()
