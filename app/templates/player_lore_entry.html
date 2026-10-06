@@ -4,4 +4,5 @@
 <h1>{{ entry.title }}</h1>
 <p class="text-muted">{{ entry.kind_label }}</p>
 <div class="card"><div class="card-body">{{ entry.public_summary }}</div></div>
+<p class="mt-3"><a class="btn btn-outline-primary btn-sm" href="/player/campaigns/{{ campaign.id }}/journal?reveal_id={{ entry.reveal_id }}">Add a Thought about this</a></p>
 {% endblock %}
