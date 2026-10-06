@@ -11,6 +11,7 @@ import app.database as database
 import app.main as main
 from app.auth import clear_login_throttle_for_tests, hash_password
 from app.services.backup import export_campaign_json
+from app.services.campaign_deletion import delete_campaign_cascade
 from app.models import (
     Campaign,
     CampaignMembership,
@@ -688,6 +689,27 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
             self.assertNotIn("THREAD_SECRET_SENTINEL", page)
         finally:
             player.close()
+
+    def test_campaign_delete_cleans_memberships_reveals_audiences_and_journal(self):
+        with Session(database.engine) as db:
+            player = db.exec(select(User).where(User.username == "player1")).one()
+            db.add(PlayerJournalEntry(
+                campaign_id=self.c1,
+                author_user_id=player.id,
+                author_display_name=player.display_name,
+                entry_type="note",
+                visibility="gm",
+                body="Delete with campaign.",
+            ))
+            db.commit()
+            delete_campaign_cascade(db, self.c1)
+
+        with Session(database.engine) as db:
+            self.assertIsNone(db.get(Campaign, self.c1))
+            self.assertFalse(db.exec(select(CampaignMembership).where(CampaignMembership.campaign_id == self.c1)).all())
+            self.assertFalse(db.exec(select(PlayerReveal).where(PlayerReveal.campaign_id == self.c1)).all())
+            self.assertFalse(db.exec(select(PlayerJournalEntry).where(PlayerJournalEntry.campaign_id == self.c1)).all())
+            self.assertFalse(db.exec(select(RevealAudience)).all())
 
     def test_campaign_backup_includes_player_journal(self):
         with Session(database.engine) as db:
