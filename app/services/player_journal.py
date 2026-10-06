@@ -39,11 +39,15 @@ def visible_reveal_map(db: Session, membership: CampaignMembership) -> Dict[int,
 
 
 def published_sessions(db: Session, campaign_id: int) -> List[SessionModel]:
-    return db.exec(
-        select(SessionModel)
-        .where(SessionModel.campaign_id == campaign_id)
-        .order_by(SessionModel.id.desc())
-    ).all()
+    return [
+        row
+        for row in db.exec(
+            select(SessionModel)
+            .where(SessionModel.campaign_id == campaign_id)
+            .order_by(SessionModel.id.desc())
+        ).all()
+        if (row.player_recap or "").strip()
+    ]
 
 
 def validate_session_link(db: Session, campaign_id: int, session_id: Optional[int]) -> bool:
