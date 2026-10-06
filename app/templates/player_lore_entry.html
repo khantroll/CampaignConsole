@@ -1,0 +1,7 @@
+{% extends "player_base.html" %}
+{% block content %}
+<p><a href="/player/campaigns/{{ campaign.id }}/lore">← Lore</a></p>
+<h1>{{ entry.title }}</h1>
+<p class="text-muted">{{ entry.kind_label }}</p>
+<div class="card"><div class="card-body">{{ entry.public_summary }}</div></div>
+{% endblock %}

@@ -8,7 +8,7 @@ from app.middleware import AuthMiddleware
 from app.services.provider_router import log_active_llm_config
 from app.services import rule_indexer as rule_indexer_module
 from app.services.rule_indexer import RuleIndexerService
-from app.routers import auth, campaigns, debug, entities, export, ingestion, llm, locations, search, sessions, workspace, workspace_narrative
+from app.routers import auth, campaigns, debug, entities, export, ingestion, llm, locations, player, search, sessions, workspace, workspace_narrative
 
 rule_indexer: RuleIndexerService | None = None
 
@@ -35,6 +35,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(auth.router)
 app.include_router(campaigns.router)
+app.include_router(player.router)
 app.include_router(sessions.router)
 app.include_router(workspace.router)
 app.include_router(workspace_narrative.router)

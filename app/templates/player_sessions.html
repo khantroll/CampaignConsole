@@ -1,0 +1,7 @@
+{% extends "player_base.html" %}
+{% block content %}
+<h1>Sessions</h1>
+{% if player_sessions %}
+<div class="list-group">{% for session in player_sessions %}<a class="list-group-item list-group-item-action" href="/player/campaigns/{{ campaign.id }}/sessions/{{ session.id }}"><strong>{{ session.title }}</strong>{% if session.date %}<div class="text-muted">{{ session.date }}</div>{% endif %}</a>{% endfor %}</div>
+{% else %}<p class="text-muted">No player recaps have been published yet.</p>{% endif %}
+{% endblock %}

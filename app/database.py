@@ -104,11 +104,16 @@ COLUMN_DEFINITIONS = {
         "created_at TEXT NOT NULL DEFAULT (datetime('now'))",
         "updated_at TEXT NOT NULL DEFAULT (datetime('now'))",
     ],
+    "playerreveal": [
+        "audience_mode TEXT NOT NULL DEFAULT 'campaign'",
+        "is_active INTEGER NOT NULL DEFAULT 1",
+    ],
     "playercharacternote": [
         "character_archetype TEXT",
         "description TEXT",
         "signature_gear TEXT",
         "key_ties_history TEXT",
+        "portrait_path TEXT",
         "campaign_role_plot_notes TEXT",
         "created_at TEXT NOT NULL DEFAULT (datetime('now'))",
         "updated_at TEXT NOT NULL DEFAULT (datetime('now'))",
@@ -159,10 +164,23 @@ def ensure_auth_indexes() -> None:
         conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_campaignmembership_campaign_user ON campaignmembership (campaign_id, user_id)"))
 
 
+def ensure_player_reveal_indexes() -> None:
+    with engine.begin() as conn:
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_playerreveal_campaign_entity_active "
+            "ON playerreveal (campaign_id, entity_kind, entity_id, is_active)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_revealaudience_membership "
+            "ON revealaudience (membership_id)"
+        ))
+
+
 def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
     ensure_missing_columns()
     ensure_auth_indexes()
+    ensure_player_reveal_indexes()
     backfill_world_status_defaults()
 
 def get_session():

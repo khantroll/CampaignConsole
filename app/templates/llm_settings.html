@@ -237,8 +237,14 @@
         <h6 class="mb-3 text-capitalize">{{ provider_name }}</h6>
         <div class="row g-3">
           <div class="col-md-6">
+            {% if provider_name == 'mistral' %}
+            <label class="form-label" for="{{ url_key | lower }}">API endpoint override (optional)</label>
+            <input class="form-control" id="{{ url_key | lower }}" name="{{ url_key }}" value="{{ settings[url_key] or '' }}" placeholder="https://api.mistral.ai/v1/chat/completions" />
+            <div class="form-text">Leave blank to use Mistral's built-in chat-completions endpoint. Custom hosts must be complete endpoint URLs.</div>
+            {% else %}
             <label class="form-label" for="{{ url_key | lower }}">API URL</label>
             <input class="form-control" id="{{ url_key | lower }}" name="{{ url_key }}" value="{{ settings[url_key] or '' }}" />
+            {% endif %}
           </div>
           <div class="col-md-6">
             <label class="form-label" for="{{ key_key | lower }}">API key</label>
@@ -331,14 +337,19 @@ async function selectProvider(providerId) {
   try {
     const body = new FormData();
     body.append("provider", providerId);
-    const response = await fetch("/settings/llm/provider", {
+    const response = await window.mcCsrfFetch("/settings/llm/provider", {
       method: "POST",
       headers: { Accept: "application/json" },
       body,
     });
-    const data = await response.json();
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (_error) {
+      data = {};
+    }
     if (!response.ok || !data.ok) {
-      throw new Error(data.error || data.message || "Provider switch failed.");
+      throw new Error(data.error || data.message || ("Provider switch failed (" + response.status + ")."));
     }
     highlightProvider(providerId);
     setProviderSwitchMessage(data.message || "Provider updated.", "success");

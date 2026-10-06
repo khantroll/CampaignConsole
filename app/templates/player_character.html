@@ -1,0 +1,36 @@
+{% extends "player_base.html" %}
+{% block content %}
+<h1>Character</h1>
+{% if character %}
+<div class="card mb-3"><div class="card-body">
+<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+{% if character.portrait_path %}<img src="{{ character.portrait_path }}" alt="{{ character.character_name }} portrait" style="width:180px;max-width:40vw;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:1px solid var(--border-subtle);">{% endif %}
+<div style="flex:1;min-width:240px"><h2>{{ character.character_name }}</h2>
+{% if character.character_archetype %}<p><strong>Archetype:</strong> {{ character.character_archetype }}</p>{% endif %}
+{% if character.description %}<p>{{ character.description }}</p>{% endif %}
+{% if character.signature_gear %}<p><strong>Signature gear:</strong> {{ character.signature_gear }}</p>{% endif %}
+{% if character.key_ties_history %}<p><strong>History & ties:</strong> {{ character.key_ties_history }}</p>{% endif %}
+<p><a class="btn btn-outline-secondary btn-sm" href="/player/campaigns/{{ campaign.id }}/character/select">Change linked character</a></p></div></div>
+<div class="mt-3">
+<form method="post" action="/player/campaigns/{{ campaign.id }}/character/portrait" enctype="multipart/form-data" class="mb-2">
+<label class="form-label">Character portrait</label>
+<input class="form-control mb-2" type="file" name="portrait" accept="image/png,image/jpeg,image/webp" required>
+<button class="btn btn-outline-primary btn-sm" type="submit">{% if character.portrait_path %}Replace Portrait{% else %}Upload Portrait{% endif %}</button>
+</form>
+{% if character.portrait_path %}<form method="post" action="/player/campaigns/{{ campaign.id }}/character/portrait/remove" onsubmit="return confirm('Remove this character portrait?');"><button class="btn btn-outline-danger btn-sm" type="submit">Remove Portrait</button></form>{% endif %}
+</div>
+</div></div>
+{% for label, entries in [('Locations', character.locations), ('Factions', character.factions), ('Plot Threads / Quests', character.plot_threads)] %}
+<h3>{{ label }}</h3>{% if entries %}<ul>{% for entry in entries %}<li><a href="/player/campaigns/{{ campaign.id }}/lore/{{ entry.entity_kind }}/{{ entry.entity_id }}">{{ entry.title }}</a></li>{% endfor %}</ul>{% else %}<p class="text-muted">No revealed connections.</p>{% endif %}
+{% endfor %}
+{% else %}
+<div class="card"><div class="card-body">
+<h2>No character linked yet</h2>
+<p class="text-muted">No character is linked to this account yet.</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap">
+<a class="btn btn-primary" href="/player/campaigns/{{ campaign.id }}/character/select">Choose Existing Character</a>
+<a class="btn btn-outline-secondary" href="/player/campaigns/{{ campaign.id }}/character/new">Create New Character</a>
+</div>
+</div></div>
+{% endif %}
+{% endblock %}

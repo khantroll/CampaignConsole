@@ -21,6 +21,7 @@ from app.auth import (
 from app.database import get_session
 from app.deps import templates
 from app.models import Campaign, CampaignMembership, PlayerCharacterNote, User
+from app.services.user_deletion import delete_local_user
 from app.utils.time import utc_now
 
 router = APIRouter()
@@ -31,6 +32,20 @@ def _safe_next(value: Optional[str]) -> str:
     if not value or not value.startswith("/") or value.startswith("//") or "://" in value:
         return "/"
     return value
+
+
+def _default_landing_path(db: Session, user: User) -> str:
+    if user.is_admin:
+        return "/"
+    memberships = db.exec(
+        select(CampaignMembership).where(CampaignMembership.user_id == user.id)
+    ).all()
+    if any(m.role in {"owner", "gm"} for m in memberships):
+        return "/"
+    player_campaign_ids = [m.campaign_id for m in memberships if m.role == "player"]
+    if len(player_campaign_ids) == 1:
+        return f"/player/campaigns/{player_campaign_ids[0]}"
+    return "/player"
 
 
 def _user_by_name(db: Session, username: str):
@@ -83,7 +98,7 @@ def bootstrap(
     db.commit()
 
     _, raw_token = create_app_session(db, user.id)
-    response = RedirectResponse("/", status_code=303)
+    response = RedirectResponse(_default_landing_path(db, user), status_code=303)
     set_session_cookie(response, request, raw_token)
     return response
 
@@ -135,7 +150,12 @@ def login(
     db.add(user)
     db.commit()
     _, raw_token = create_app_session(db, user.id)
-    target = "/account/password" if user.must_change_password else _safe_next(next)
+    safe_next = _safe_next(next)
+    target = (
+        "/account/password"
+        if user.must_change_password
+        else (_default_landing_path(db, user) if safe_next == "/" else safe_next)
+    )
     response = RedirectResponse(target, status_code=303)
     set_session_cookie(response, request, raw_token)
     return response
@@ -180,7 +200,7 @@ def change_password(
     db.commit()
     invalidate_user_sessions(db, user.id)
     _, raw_token = create_app_session(db, user.id)
-    response = RedirectResponse("/", status_code=303)
+    response = RedirectResponse(_default_landing_path(db, user), status_code=303)
     set_session_cookie(response, request, raw_token)
     return response
 
@@ -223,7 +243,12 @@ def admin_create_user(
 
 
 @router.get("/admin/users/{user_id}", response_class=HTMLResponse)
-def admin_user_edit(request: Request, user_id: int, db: Session = Depends(get_session)):
+def admin_user_edit(
+    request: Request,
+    user_id: int,
+    message: Optional[str] = Query(None),
+    db: Session = Depends(get_session),
+):
     user = db.get(User, user_id)
     if not user:
         return PlainTextResponse("User not found.", status_code=404)
@@ -241,6 +266,7 @@ def admin_user_edit(request: Request, user_id: int, db: Session = Depends(get_se
             "campaigns": campaigns,
             "campaign_lookup": {c.id: c for c in campaigns},
             "pcs": pcs,
+            "message": message,
         },
     )
 
@@ -284,6 +310,25 @@ def admin_reset_password(
     db.commit()
     invalidate_user_sessions(db, user.id)
     return RedirectResponse(f"/admin/users/{user_id}", status_code=303)
+
+
+@router.post("/admin/users/{user_id}/delete")
+def admin_delete_user(
+    request: Request,
+    user_id: int,
+    db: Session = Depends(get_session),
+):
+    user = db.get(User, user_id)
+    if not user:
+        return PlainTextResponse("User not found.", status_code=404)
+    ok, message = delete_local_user(db, user, request.state.current_user.id)
+    if not ok:
+        from urllib.parse import quote
+        return RedirectResponse(
+            f"/admin/users/{user_id}?message={quote(message)}",
+            status_code=303,
+        )
+    return RedirectResponse("/admin/users", status_code=303)
 
 
 @router.post("/admin/users/{user_id}/memberships")
@@ -335,6 +380,11 @@ def admin_membership_delete(
 ):
     membership = db.get(CampaignMembership, membership_id)
     if membership and membership.user_id == user_id:
+        from app.models import RevealAudience
+        for audience in db.exec(
+            select(RevealAudience).where(RevealAudience.membership_id == membership.id)
+        ).all():
+            db.delete(audience)
         db.delete(membership)
         db.commit()
     return RedirectResponse(f"/admin/users/{user_id}", status_code=303)

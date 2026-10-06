@@ -1,0 +1,11 @@
+{% extends "player_base.html" %}
+{% block content %}
+<h1>Lore</h1>
+{% for kind, label in entity_labels.items() %}
+<section class="card mb-3"><div class="card-body"><h2>{{ label }}</h2>
+{% if lore_groups[kind] %}
+<ul>{% for entry in lore_groups[kind] %}<li><a href="/player/campaigns/{{ campaign.id }}/lore/{{ entry.entity_kind }}/{{ entry.entity_id }}">{{ entry.title }}</a><p>{{ entry.public_summary }}</p></li>{% endfor %}</ul>
+{% else %}<p class="text-muted">No revealed entries.</p>{% endif %}
+</div></section>
+{% endfor %}
+{% endblock %}

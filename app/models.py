@@ -500,6 +500,7 @@ class PlayerCharacterNote(SQLModel, table=True):
     description: Optional[str] = None
     signature_gear: Optional[str] = None
     key_ties_history: Optional[str] = None
+    portrait_path: Optional[str] = None
     campaign_role_plot_notes: Optional[str] = None
     notes: Optional[str] = None
     created_at: datetime = Field(
@@ -671,4 +672,25 @@ class AppSession(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
     last_seen_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
     expires_at: datetime
+
+
+# Player-safe reveal records (Player Console Phase 2)
+class PlayerReveal(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    campaign_id: int = Field(foreign_key="campaign.id", index=True)
+    entity_kind: str = Field(index=True)
+    entity_id: int = Field(index=True)
+    title: Optional[str] = None
+    public_summary: str
+    audience_mode: str = Field(default="campaign", index=True)
+    revealed_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, nullable=False))
+    revealed_session_id: Optional[int] = Field(default=None, foreign_key="sessionmodel.id", index=True)
+    created_by_user_id: Optional[int] = Field(default=None, foreign_key="appuser.id")
+    is_active: bool = Field(default=True, index=True)
+    updated_at: datetime = Field(default_factory=utc_now, sa_column=Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False))
+
+
+class RevealAudience(SQLModel, table=True):
+    reveal_id: int = Field(foreign_key="playerreveal.id", primary_key=True)
+    membership_id: int = Field(foreign_key="campaignmembership.id", primary_key=True)
 

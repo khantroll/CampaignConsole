@@ -64,7 +64,7 @@
 
   <div class="col-lg-6">
 
-    {% with section_key='npcs', section_title='NPCs', items=npcs, action='npcs', fields=[('name','Name'), ('role','Role'), ('description','Description')], add_label='Add NPC', form_name='add-npcs', health_map=health_maps['npcs'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+    {% with section_key='npcs', section_title='NPCs', required_fields=['name'], items=npcs, action='npcs', fields=[('name','Name'), ('role','Role'), ('description','Description')], add_label='Add NPC', form_name='add-npcs', health_map=health_maps['npcs'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
 
     {% include "partials/campaign_entity_section.html" %}
 
@@ -72,7 +72,7 @@
 
 
 
-    {% with section_key='locations', section_title='Locations', items=locations, action='locations', fields=[('name','Name'), ('location_type','Type'), ('description','Description'), ('notes','Notes')], add_label='Add Location', form_name='add-locations', location_filter=location_filter, location_type_label=location_type_label, health_map=health_maps['locations'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+    {% with section_key='locations', section_title='Locations', required_fields=['name'], items=locations, action='locations', fields=[('name','Name'), ('location_type','Type'), ('description','Description'), ('notes','Notes')], add_label='Add Location', form_name='add-locations', location_filter=location_filter, location_type_label=location_type_label, health_map=health_maps['locations'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
 
     {% include "partials/campaign_entity_section.html" %}
 
@@ -80,7 +80,7 @@
 
 
 
-    {% with section_key='factions', section_title='Factions', items=factions, action='factions', fields=[('name','Name'), ('faction_type','Type'), ('summary','Description'), ('plot_notes','Plot Notes')], add_label='Add Faction', form_name='add-factions', faction_type_label=faction_type_label, health_map=health_maps['factions'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+    {% with section_key='factions', section_title='Factions', required_fields=['name'], items=factions, action='factions', fields=[('name','Name'), ('faction_type','Type'), ('summary','Description'), ('plot_notes','Plot Notes')], add_label='Add Faction', form_name='add-factions', faction_type_label=faction_type_label, health_map=health_maps['factions'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
 
     {% include "partials/campaign_entity_section.html" %}
 
@@ -88,7 +88,7 @@
 
 
 
-    {% with section_key='items', section_title='Items', items=items, action='items', fields=[('name','Name'), ('item_type','Type'), ('description','Description'), ('origin','Origin'), ('plot_notes','Plot Notes')], add_label='Add Item', form_name='add-items', item_type_label=item_type_label, item_type_options=item_type_options, health_map=health_maps['items'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+    {% with section_key='items', section_title='Items', required_fields=['name'], items=items, action='items', fields=[('name','Name'), ('item_type','Type'), ('description','Description'), ('origin','Origin'), ('plot_notes','Plot Notes')], add_label='Add Item', form_name='add-items', item_type_label=item_type_label, item_type_options=item_type_options, health_map=health_maps['items'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
 
     {% include "partials/campaign_entity_section.html" %}
 
@@ -96,7 +96,7 @@
 
 
 
-    {% with section_key='creatures', section_title='Creatures', items=creatures, action='creatures', fields=[('name','Name'), ('classification','Classification'), ('habitat','Habitat'), ('threat_level','Threat Level'), ('physical_description','Physical Description'), ('special_traits','Special Traits & Abilities'), ('campaign_context_tactics','Campaign Context & Tactics'), ('notes','Additional Notes')], add_label='Add Creature', form_name='add-creatures', creature_type_label=creature_type_label, health_map=health_maps['creatures'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+    {% with section_key='creatures', section_title='Creatures', required_fields=['name'], items=creatures, action='creatures', fields=[('name','Name'), ('classification','Classification'), ('habitat','Habitat'), ('threat_level','Threat Level'), ('physical_description','Physical Description'), ('special_traits','Special Traits & Abilities'), ('campaign_context_tactics','Campaign Context & Tactics'), ('notes','Additional Notes')], add_label='Add Creature', form_name='add-creatures', creature_type_label=creature_type_label, health_map=health_maps['creatures'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
 
     {% include "partials/campaign_entity_section.html" %}
 
@@ -104,7 +104,7 @@
 
 
 
-    {% with section_key='threads', section_title='Plot Threads', items=threads, action='threads', fields=[('title','Title'), ('status','Status'), ('details','Details')], add_label='Add Plot Thread', form_name='add-threads', health_map=health_maps['threads'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+    {% with section_key='threads', section_title='Plot Threads', required_fields=['title'], items=threads, action='threads', fields=[('title','Title'), ('status','Status'), ('details','Details')], add_label='Add Plot Thread', form_name='add-threads', health_map=health_maps['threads'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
 
     {% include "partials/campaign_entity_section.html" %}
 
@@ -112,7 +112,7 @@
 
 
 
-    {% with section_key='pcs', section_title='Party Members', items=pc_notes, action='pcs', fields=[('character_name','Character'), ('character_archetype','Archetype'), ('description','Description'), ('signature_gear','Signature Gear'), ('key_ties_history','Key Ties & History'), ('campaign_role_plot_notes','Campaign Role & Plot Notes'), ('notes','Additional Notes')], add_label='Add Party Member', form_name='add-pcs', health_map=health_maps['pcs'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
+    {% with section_key='pcs', required_fields=['character_name'], section_title='Party Members', items=pc_notes, action='pcs', fields=[('character_name','Character Name'), ('character_archetype','Archetype'), ('description','Description'), ('signature_gear','Signature Gear'), ('key_ties_history','Key Ties & History'), ('campaign_role_plot_notes','Campaign Role & Plot Notes'), ('notes','Additional Notes')], add_label='Add Party Member', form_name='add-pcs', health_map=health_maps['pcs'], entity_sort=entity_sort, entity_type_badges=entity_type_badges %}
 
     {% include "partials/campaign_entity_section.html" %}
 

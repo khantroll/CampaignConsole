@@ -110,6 +110,7 @@
 
           {% if request and request.state.current_user %}
           {% if request.state.current_user.is_admin %}<a class="mc-btn mc-btn-ghost" href="/admin/users">Users</a><a class="mc-btn mc-btn-ghost" href="/settings/llm">LLM Settings</a>{% endif %}
+          <a class="mc-btn mc-btn-ghost" href="/player">Player Console</a>
           <a class="mc-btn mc-btn-ghost" href="/account/password">Password</a>
           <form method="post" action="/logout" style="display:inline"><button class="mc-btn mc-btn-ghost" type="submit">Logout</button></form>
           {% endif %}
@@ -152,9 +153,53 @@
 
     <script>
       (function () {
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        if (!meta) return;
-        const token = meta.content;
+        function getCsrfToken() {
+          const meta = document.querySelector('meta[name="csrf-token"]');
+          return meta ? meta.content : "";
+        }
+
+        function showRequestError(message) {
+          const text = message || "The request could not be completed.";
+          let alert = document.getElementById("mc-request-error");
+          if (!alert) {
+            alert = document.createElement("div");
+            alert.id = "mc-request-error";
+            alert.className = "alert alert-danger";
+            alert.setAttribute("role", "alert");
+            alert.style.position = "fixed";
+            alert.style.right = "16px";
+            alert.style.bottom = "16px";
+            alert.style.zIndex = "9999";
+            alert.style.maxWidth = "420px";
+            document.body.appendChild(alert);
+          }
+          alert.textContent = text;
+          alert.hidden = false;
+        }
+
+        window.mcGetCsrfToken = getCsrfToken;
+        window.mcShowRequestError = showRequestError;
+        window.mcCsrfFetch = function (url, options) {
+          const opts = Object.assign({}, options || {});
+          const method = String(opts.method || "GET").toUpperCase();
+          const headers = new Headers(opts.headers || {});
+          if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+            const token = getCsrfToken();
+            if (token) headers.set("X-CSRF-Token", token);
+          }
+          opts.headers = headers;
+          return fetch(url, opts).then(function (response) {
+            if (!response.ok) {
+              console.error("Request failed", method, String(url), response.status);
+              showRequestError("Request failed (" + response.status + "). Please try again or check the server log.");
+            }
+            return response;
+          });
+        };
+
+        const token = getCsrfToken();
+        if (!token) return;
+
         document.querySelectorAll('form').forEach(function (form) {
           const method = (form.getAttribute('method') || 'get').toLowerCase();
           if (method === 'get' || form.querySelector('input[name="_csrf"]')) return;
@@ -164,8 +209,18 @@
           input.value = token;
           form.appendChild(input);
         });
+
         document.body.addEventListener('htmx:configRequest', function (event) {
           event.detail.headers['X-CSRF-Token'] = token;
+        });
+        document.body.addEventListener('htmx:responseError', function (event) {
+          const status = event.detail && event.detail.xhr ? event.detail.xhr.status : "error";
+          console.error("HTMX request failed", status);
+          showRequestError("Request failed (" + status + "). Your changes were not applied.");
+        });
+        document.body.addEventListener('htmx:sendError', function () {
+          console.error("HTMX request could not be sent");
+          showRequestError("Request could not be sent. Check the server connection and try again.");
         });
       })();
     </script>

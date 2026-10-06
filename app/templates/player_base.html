@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Player Console{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/mission_control.css">
+</head>
+<body class="mc-body layout-minimal">
+  <div class="mc-app">
+    <header class="mc-topbar">
+      <a class="mc-brand" href="/player">Player Console</a>
+      {% if campaign %}
+      <nav class="mc-topnav">
+        <a href="/player/campaigns/{{ campaign.id }}" class="{% if active_player_nav == 'home' %}is-active{% endif %}">Home</a>
+        <a href="/player/campaigns/{{ campaign.id }}/lore" class="{% if active_player_nav == 'lore' %}is-active{% endif %}">Lore</a>
+        <a href="/player/campaigns/{{ campaign.id }}/sessions" class="{% if active_player_nav == 'sessions' %}is-active{% endif %}">Sessions</a>
+        <a href="/player/campaigns/{{ campaign.id }}/character" class="{% if active_player_nav == 'character' %}is-active{% endif %}">Character</a>
+      </nav>
+      {% endif %}
+      <form action="/logout" method="post" style="margin-left:auto">
+        <input type="hidden" name="_csrf" value="{{ request.state.csrf_token }}">
+        <button class="btn btn-outline-secondary btn-sm" type="submit">Logout</button>
+      </form>
+    </header>
+    <main style="max-width: 980px; margin: 0 auto; padding: 24px;">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

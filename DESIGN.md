@@ -334,3 +334,15 @@ Campaign Console now has application-local users, opaque database-backed session
 The existing GM route surface is protected server-side. A user must hold an `owner` or `gm` membership for the campaign in the URL; `player` memberships are intentionally denied the GM console until dedicated Player Console routes are implemented. Global user/settings/debug administration is restricted to application administrators.
 
 Existing installations bootstrap their first administrator through `/bootstrap`; that account receives ownership of pre-existing campaigns. New campaigns assign their creator as owner. Campaign exports remain campaign-data exports and intentionally omit users, password hashes, campaign memberships, and live application sessions.
+
+## 14. Player Console read-only surface
+
+Phase 2 adds a separate `/player` route family and `player_base.html` shell. Player routes authorize any campaign membership (`owner`, `gm`, or `player`) but never call GM route handlers or reuse GM aggregate contexts.
+
+`app/services/player_console.py` is the player-safe projection boundary. It resolves visible reveal records first, then returns dictionaries containing only explicit safe fields. Canonical NPC, PlotThread, SessionModel, and other GM models are never passed wholesale into player templates.
+
+`PlayerReveal` stores campaign/entity provenance, a safe summary, optional session provenance, creator, active state, and explicit `campaign` or `selected` audience mode. `RevealAudience` links selected reveals to campaign memberships. Selected reveals with missing/unresolved audience links fail closed.
+
+Player sessions are deliberately published by the presence of `player_recap`; player routes expose only title, date, recap, and visible reveals associated with the session. Character pages use the membership-linked `PlayerCharacterNote` and expose character name, archetype, description, signature gear, and ties/history; GM notes and campaign-role plot notes are omitted. Related locations/factions/threads appear only when separately revealed.
+
+Campaign backup includes reveal records and audience link rows. Application users, password hashes, and app-session credentials remain outside campaign backup. Audience links retain membership IDs for same-install restoration; if those IDs cannot be resolved after transfer, explicit selected audience mode prevents accidental widening to campaign-wide visibility.

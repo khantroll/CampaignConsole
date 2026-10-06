@@ -25,12 +25,14 @@ from app.models import (
 
 ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
     "npcs": {
+        "required_fields": ["name"],
         "title": "NPCs",
         "model": NPC,
         "fields": [("name", "Name"), ("role", "Role"), ("description", "Description")],
         "add_label": "Add NPC",
     },
     "locations": {
+        "required_fields": ["name"],
         "title": "Locations",
         "model": Location,
         "fields": [
@@ -42,6 +44,7 @@ ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
         "add_label": "Add Location",
     },
     "factions": {
+        "required_fields": ["name"],
         "title": "Factions",
         "model": Faction,
         "fields": [
@@ -53,6 +56,7 @@ ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
         "add_label": "Add Faction",
     },
     "items": {
+        "required_fields": ["name"],
         "title": "Items",
         "model": Item,
         "fields": [
@@ -65,6 +69,7 @@ ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
         "add_label": "Add Item",
     },
     "creatures": {
+        "required_fields": ["name"],
         "title": "Creatures",
         "model": Creature,
         "fields": [
@@ -80,6 +85,7 @@ ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
         "add_label": "Add Creature",
     },
     "threads": {
+        "required_fields": ["title"],
         "title": "Plot Threads",
         "model": PlotThread,
         "fields": [
@@ -92,10 +98,11 @@ ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
         "add_label": "Add Plot Thread",
     },
     "pcs": {
-        "title": "PC Notes",
+        "required_fields": ["character_name"],
+        "title": "Party Members",
         "model": PlayerCharacterNote,
         "fields": [
-            ("character_name", "Character"),
+            ("character_name", "Character Name"),
             ("character_archetype", "Archetype"),
             ("description", "Description"),
             ("signature_gear", "Signature Gear"),
@@ -103,7 +110,7 @@ ENTITY_SECTIONS: Dict[str, Dict[str, Any]] = {
             ("campaign_role_plot_notes", "Campaign Role & Plot Notes"),
             ("notes", "Additional Notes"),
         ],
-        "add_label": "Add PC Note",
+        "add_label": "Add Party Member",
     },
 }
 
@@ -158,6 +165,7 @@ def render_entity_section(request: Request, campaign_id: int, db: Session, secti
             "items": items,
             "action": section_key,
             "fields": config["fields"],
+            "required_fields": config.get("required_fields", []),
             "add_label": config["add_label"],
             "form_name": f"add-{section_key}",
             "location_filter": "major_sub",

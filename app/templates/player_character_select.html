@@ -1,0 +1,23 @@
+{% extends "player_base.html" %}
+{% block content %}
+<h1>Choose Existing Character</h1>
+<p class="text-muted">Only unclaimed characters from this campaign are available.</p>
+{% if characters %}
+<form method="post" action="/player/campaigns/{{ campaign.id }}/character/select">
+<input type="hidden" name="_csrf" value="{{ request.state.csrf_token }}">
+{% for pc in characters %}
+<label class="card mb-2" style="display:block; padding:12px;">
+  <input type="radio" name="player_character_id" value="{{ pc.id }}" required>
+  <strong>{{ pc.character_name }}</strong>
+  {% if pc.character_archetype %}<div>{{ pc.character_archetype }}</div>{% endif %}
+  {% if pc.description %}<p class="text-muted mb-0">{{ pc.description }}</p>{% endif %}
+</label>
+{% endfor %}
+<button class="btn btn-primary" type="submit">Link Character</button>
+<a class="btn btn-outline-secondary" href="/player/campaigns/{{ campaign.id }}/character">Cancel</a>
+</form>
+{% else %}
+<p class="text-muted">No unclaimed existing characters are available.</p>
+<a class="btn btn-primary" href="/player/campaigns/{{ campaign.id }}/character/new">Create New Character</a>
+{% endif %}
+{% endblock %}

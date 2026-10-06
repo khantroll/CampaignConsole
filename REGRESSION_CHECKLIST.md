@@ -87,3 +87,34 @@ Manual smoke test before releases or after stabilization changes. Run against a 
 - [ ] Admin can create users, reset temporary passwords, toggle active state, and manage memberships
 - [ ] Campaign exports contain no password hash or live session token
 
+## Player Console Phase 2
+
+- [ ] Player, owner, and GM campaign members can open `/player/campaigns/{id}`
+- [ ] Unrelated users receive the same safe not-found behavior for Player Console campaign resources
+- [ ] Player remains denied the existing GM `/campaigns/{id}/...` surface
+- [ ] Campaign-wide reveal appears in Lore for campaign members
+- [ ] Selected reveal appears only for selected membership IDs
+- [ ] Revoked reveal disappears immediately
+- [ ] Unrevealed and cross-campaign entity IDs return safe not-found responses
+- [ ] Player pages contain no NPC secrets, plot-thread secret notes/unrevealed clues, GM session notes, analysis/raw analysis, next-session prep, or workspace notes
+- [ ] Sessions list only published `player_recap` sessions; session detail exposes title/date/recap plus visible reveals only
+- [ ] Character view uses the membership-linked existing PC record; GM PC notes stay hidden
+- [ ] Character relationships appear only when the related entity has a visible reveal
+- [ ] Unlinked player Character page offers Choose Existing Character and Create New Character
+- [ ] Existing-character selection lists only same-campaign PCs not claimed by another player membership
+- [ ] Player-created character persists only player-safe fields and immediately links to the current membership
+- [ ] Changing a linked character updates only the membership link and never deletes the prior PC
+- [ ] Campaign backup includes reveal/audience data while excluding users, password hashes, and app-session credentials
+- [ ] Minimal GM reveal authoring can create campaign-wide or selected reveals and revoke them
+- [ ] Existing owner/GM Mission Control workflows still function
+
+## Phase 1/2 smoke-test stabilization
+
+- [ ] Mistral endpoint override blank / hostname-only / `/v1` resolves to `https://api.mistral.ai/v1/chat/completions`
+- [ ] A complete Mistral endpoint remains unchanged; custom non-Mistral hosts are treated as complete endpoint URLs
+- [ ] Provider switch button succeeds under CSRF enforcement; failures show a visible alert instead of appearing inert
+- [ ] Workspace rule-render POST succeeds under CSRF enforcement
+- [ ] Party Member quick-add requires only Character Name; Archetype and other metadata remain optional
+- [ ] Party Member name-only HTMX add creates the PC and refreshes the Party Members section
+- [ ] Admin-created player logs in with temporary password, is forced to change it, receives a fresh session, and lands on `/player`
+- [ ] Player can logout and re-login with the new password; old temporary password fails; disabled player is rejected

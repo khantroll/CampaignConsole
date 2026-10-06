@@ -10,7 +10,7 @@ from sqlmodel import Session, SQLModel, create_engine, select
 import app.database as database
 import app.main as main
 from app.auth import clear_login_throttle_for_tests, hash_password
-from app.models import AppSession, Campaign, CampaignMembership, NPC, User
+from app.models import AppSession, Campaign, CampaignMembership, NPC, PlayerCharacterNote, PlayerReveal, RevealAudience, User
 
 
 class AuthAuthorizationTests(unittest.TestCase):
@@ -139,6 +139,117 @@ class AuthAuthorizationTests(unittest.TestCase):
         other.cookies.set("campaign_console_session", old_token)
         self.assertEqual(other.get("/").status_code, 303)
         other.close()
+
+    def test_admin_created_player_browser_login_password_change_logout_and_relogin(self):
+        self.bootstrap()
+        campaign_response = self.post_auth("/campaigns", {"name": "Player Login Campaign"})
+        campaign_id = int(re.search(r"/campaigns/(\d+)", campaign_response.headers["location"]).group(1))
+
+        created = self.post_auth(
+            "/admin/users",
+            {
+                "username": "browserplayer",
+                "display_name": "Browser Player",
+                "temporary_password": "temporary-player-password",
+            },
+        )
+        self.assertEqual(created.status_code, 303)
+        with Session(database.engine) as db:
+            player = db.exec(select(User).where(User.username == "browserplayer")).one()
+            player_id = player.id
+            self.assertTrue(player.must_change_password)
+
+        membership = self.post_auth(
+            f"/admin/users/{player_id}/memberships",
+            {
+                "campaign_id": str(campaign_id),
+                "role": "player",
+                "player_character_id": "",
+            },
+        )
+        self.assertEqual(membership.status_code, 303)
+        self.assertEqual(self.post_auth("/logout").status_code, 303)
+
+        wrong = self.client.post(
+            "/login",
+            data={"username": "browserplayer", "password": "wrong-password", "next": "/"},
+        )
+        self.assertEqual(wrong.status_code, 401)
+
+        login = self.client.post(
+            "/login",
+            data={
+                "username": "browserplayer",
+                "password": "temporary-player-password",
+                "next": "/",
+            },
+        )
+        self.assertEqual(login.status_code, 303)
+        self.assertEqual(login.headers["location"], "/account/password")
+        temporary_session = self.client.cookies.get("campaign_console_session")
+        self.assertTrue(temporary_session)
+
+        change_page = self.client.get("/account/password")
+        self.assertEqual(change_page.status_code, 200)
+        self.assertIn("temporary password", change_page.text.lower())
+        self.assertIn("Current password", change_page.text)
+        csrf_match = re.search(r'<meta name="csrf-token" content="([^"]+)"', change_page.text)
+        self.assertIsNotNone(csrf_match)
+
+        changed = self.client.post(
+            "/account/password",
+            data={
+                "_csrf": csrf_match.group(1),
+                "current_password": "temporary-player-password",
+                "new_password": "player-new-password-456",
+            },
+        )
+        self.assertEqual(changed.status_code, 303)
+        self.assertEqual(changed.headers["location"], "/player")
+        fresh_session = self.client.cookies.get("campaign_console_session")
+        self.assertTrue(fresh_session)
+        self.assertNotEqual(temporary_session, fresh_session)
+        self.assertEqual(self.client.get("/player").status_code, 200)
+
+        stale = TestClient(main.app, follow_redirects=False)
+        stale.cookies.set("campaign_console_session", temporary_session)
+        self.assertEqual(stale.get("/player").status_code, 303)
+        stale.close()
+
+        player_page = self.client.get("/player")
+        logout_csrf = re.search(r'name="_csrf" value="([^"]+)"', player_page.text)
+        self.assertIsNotNone(logout_csrf)
+        logout = self.client.post("/logout", data={"_csrf": logout_csrf.group(1)})
+        self.assertEqual(logout.status_code, 303)
+        self.assertEqual(self.client.get("/player").status_code, 303)
+
+        old_password = self.client.post(
+            "/login",
+            data={
+                "username": "browserplayer",
+                "password": "temporary-player-password",
+                "next": "/",
+            },
+        )
+        self.assertEqual(old_password.status_code, 401)
+
+        relogin = self.client.post(
+            "/login",
+            data={
+                "username": "browserplayer",
+                "password": "player-new-password-456",
+                "next": "/",
+            },
+        )
+        self.assertEqual(relogin.status_code, 303)
+        self.assertEqual(relogin.headers["location"], "/player")
+
+        with Session(database.engine) as db:
+            player = db.get(User, player_id)
+            player.is_active = False
+            db.add(player)
+            db.commit()
+        self.assertEqual(self.client.get("/player").status_code, 303)
 
     def test_gm_allowed_player_and_unrelated_denied_and_cross_campaign_id_safe(self):
         self.bootstrap()
@@ -416,6 +527,146 @@ class AuthAuthorizationTests(unittest.TestCase):
             self.assertEqual(client.get(path).status_code, 403, path)
         client.close()
 
+
+    def test_player_only_default_landing_and_root_redirect(self):
+        self.bootstrap()
+        with Session(database.engine) as db:
+            campaign = Campaign(name="Player Landing", system="Test")
+            player = User(
+                username="playerlanding",
+                display_name="Player Landing",
+                password_hash=hash_password("player-landing-password"),
+            )
+            db.add(campaign); db.add(player); db.commit()
+            db.refresh(campaign); db.refresh(player)
+            db.add(CampaignMembership(campaign_id=campaign.id, user_id=player.id, role="player"))
+            db.commit()
+            campaign_id = campaign.id
+
+        client = TestClient(main.app, follow_redirects=False)
+        try:
+            login = client.post(
+                "/login",
+                data={"username": "playerlanding", "password": "player-landing-password", "next": "/"},
+            )
+            self.assertEqual(login.status_code, 303)
+            self.assertEqual(login.headers["location"], f"/player/campaigns/{campaign_id}")
+            root = client.get("/")
+            self.assertEqual(root.status_code, 303)
+            self.assertEqual(root.headers["location"], f"/player/campaigns/{campaign_id}")
+        finally:
+            client.close()
+
+    def test_player_with_no_memberships_lands_on_player_index_not_gm_shell(self):
+        self.bootstrap()
+        with Session(database.engine) as db:
+            player = User(
+                username="nomemberships",
+                display_name="No Memberships",
+                password_hash=hash_password("no-memberships-password"),
+            )
+            db.add(player); db.commit()
+
+        client = TestClient(main.app, follow_redirects=False)
+        try:
+            login = client.post(
+                "/login",
+                data={"username": "nomemberships", "password": "no-memberships-password", "next": "/"},
+            )
+            self.assertEqual(login.status_code, 303)
+            self.assertEqual(login.headers["location"], "/player")
+            root = client.get("/")
+            self.assertEqual(root.status_code, 303)
+            self.assertEqual(root.headers["location"], "/player")
+        finally:
+            client.close()
+
+    def test_admin_delete_user_cleans_auth_state_and_preserves_campaign_content(self):
+        self.bootstrap()
+        campaign_response = self.post_auth("/campaigns", {"name": "Delete Test"})
+        campaign_id = int(re.search(r"/campaigns/(\d+)", campaign_response.headers["location"]).group(1))
+        with Session(database.engine) as db:
+            owner = db.exec(select(User).where(User.username == "admin")).one()
+            replacement = User(
+                username="replacementowner",
+                display_name="Replacement Owner",
+                password_hash=hash_password("replacement-password"),
+            )
+            target = User(
+                username="delete-me",
+                display_name="Delete Me",
+                password_hash=hash_password("delete-password"),
+            )
+            db.add(replacement); db.add(target); db.commit()
+            db.refresh(replacement); db.refresh(target)
+            db.add(CampaignMembership(campaign_id=campaign_id, user_id=replacement.id, role="owner"))
+            pc = PlayerCharacterNote(campaign_id=campaign_id, character_name="Retained Hero")
+            db.add(pc); db.commit(); db.refresh(pc)
+            membership = CampaignMembership(
+                campaign_id=campaign_id,
+                user_id=target.id,
+                role="player",
+                player_character_id=pc.id,
+            )
+            db.add(membership); db.commit(); db.refresh(membership)
+            reveal = PlayerReveal(
+                campaign_id=campaign_id,
+                entity_kind="npc",
+                entity_id=999999,
+                public_summary="Retained reveal",
+                audience_mode="selected",
+                created_by_user_id=target.id,
+            )
+            db.add(reveal); db.commit(); db.refresh(reveal)
+            db.add(RevealAudience(reveal_id=reveal.id, membership_id=membership.id))
+            db.add(AppSession(
+                token_hash="delete-session-token-hash",
+                user_id=target.id,
+                created_at=owner.created_at,
+                last_seen_at=owner.created_at,
+                expires_at=owner.created_at,
+            ))
+            db.commit()
+            target_id = target.id
+            pc_id = pc.id
+            reveal_id = reveal.id
+            membership_id = membership.id
+
+        response = self.post_auth(f"/admin/users/{target_id}/delete")
+        self.assertEqual(response.status_code, 303)
+        with Session(database.engine) as db:
+            self.assertIsNone(db.get(User, target_id))
+            self.assertIsNone(db.get(CampaignMembership, membership_id))
+            self.assertIsNotNone(db.get(PlayerCharacterNote, pc_id))
+            self.assertFalse(db.exec(select(AppSession).where(AppSession.user_id == target_id)).all())
+            self.assertFalse(db.exec(select(RevealAudience).where(RevealAudience.membership_id == membership_id)).all())
+            reveal = db.get(PlayerReveal, reveal_id)
+            self.assertIsNotNone(reveal)
+            self.assertIsNone(reveal.created_by_user_id)
+            self.assertEqual(reveal.audience_mode, "selected")
+
+    def test_admin_delete_user_blocks_self_last_admin_and_sole_owner(self):
+        self.bootstrap()
+        self.assertEqual(self.post_auth("/admin/users/1/delete").status_code, 303)
+
+        with Session(database.engine) as db:
+            owner = db.exec(select(User).where(User.username == "admin")).one()
+            campaign = Campaign(name="Owned Only", system="Test")
+            target = User(
+                username="soleowner",
+                display_name="Sole Owner",
+                password_hash=hash_password("sole-owner-password"),
+            )
+            db.add(campaign); db.add(target); db.commit()
+            db.refresh(campaign); db.refresh(target)
+            db.add(CampaignMembership(campaign_id=campaign.id, user_id=target.id, role="owner"))
+            db.commit()
+            target_id = target.id
+
+        blocked = self.post_auth(f"/admin/users/{target_id}/delete")
+        self.assertEqual(blocked.status_code, 303)
+        with Session(database.engine) as db:
+            self.assertIsNotNone(db.get(User, target_id))
 
     def test_export_omits_auth_secrets(self):
         self.bootstrap()

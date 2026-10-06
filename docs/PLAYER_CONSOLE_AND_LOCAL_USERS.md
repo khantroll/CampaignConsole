@@ -488,3 +488,9 @@ Do not add in this phase:
 8. Security/regression pass
 
 Authentication/authorization is intentionally first. Do not build the Player Console on unauthenticated routes and retrofit security later.
+
+## Phase 2 implementation clarification
+
+The Phase 2 implementation uses membership-oriented selected audiences. `PlayerReveal.audience_mode` is explicitly `campaign` or `selected`; selected reveals use `RevealAudience.membership_id` links. This explicit mode is intentionally fail-closed: a selected reveal with no resolvable audience rows is visible to nobody rather than becoming campaign-wide.
+
+For campaign backup, reveal rows and audience-link rows are preserved while application users and session credentials remain excluded. Membership IDs are installation-local references; a restore into a different identity database may require audience reassociation before selected reveals become visible.
