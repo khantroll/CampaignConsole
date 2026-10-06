@@ -35,6 +35,7 @@ from app.models import (
     PCFactionLink,
     PCPlotThreadLink,
     PlayerCharacterNote,
+    PlayerJournalEntry,
     PlayerReveal,
     PlotThread,
     RevealAudience,
@@ -63,6 +64,7 @@ CAMPAIGN_SCOPED_TABLES = (
     "playercharacternote",
     "lorechunk",
     "playerreveal",
+    "playerjournalentry",
 )
 
 LINK_TABLE_FILTERS = {
