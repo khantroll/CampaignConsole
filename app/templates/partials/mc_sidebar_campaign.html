@@ -13,6 +13,7 @@
     <a class="mc-nav-link {% if active_nav == 'ai_review' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/ai/review">AI Review</a>
     <a class="mc-nav-link {% if active_nav == 'search' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/search">Search</a>
     <a class="mc-nav-link {% if active_nav == 'timeline' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/timeline">Timeline</a>
+    <a class="mc-nav-link {% if active_nav == 'player_journal' %}is-active{% endif %}" href="/campaigns/{{ campaign.id }}/player-journal">Player Thoughts</a>
   </div>
   {% if sessions is defined and sessions %}
   <div class="mc-nav-section mc-file-tree">
