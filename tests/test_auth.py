@@ -528,6 +528,59 @@ class AuthAuthorizationTests(unittest.TestCase):
         client.close()
 
 
+    def test_player_only_default_landing_and_root_redirect(self):
+        self.bootstrap()
+        with Session(database.engine) as db:
+            campaign = Campaign(name="Player Landing", system="Test")
+            player = User(
+                username="playerlanding",
+                display_name="Player Landing",
+                password_hash=hash_password("player-landing-password"),
+            )
+            db.add(campaign); db.add(player); db.commit()
+            db.refresh(campaign); db.refresh(player)
+            db.add(CampaignMembership(campaign_id=campaign.id, user_id=player.id, role="player"))
+            db.commit()
+            campaign_id = campaign.id
+
+        client = TestClient(main.app, follow_redirects=False)
+        try:
+            login = client.post(
+                "/login",
+                data={"username": "playerlanding", "password": "player-landing-password", "next": "/"},
+            )
+            self.assertEqual(login.status_code, 303)
+            self.assertEqual(login.headers["location"], f"/player/campaigns/{campaign_id}")
+            root = client.get("/")
+            self.assertEqual(root.status_code, 303)
+            self.assertEqual(root.headers["location"], f"/player/campaigns/{campaign_id}")
+        finally:
+            client.close()
+
+    def test_player_with_no_memberships_lands_on_player_index_not_gm_shell(self):
+        self.bootstrap()
+        with Session(database.engine) as db:
+            player = User(
+                username="nomemberships",
+                display_name="No Memberships",
+                password_hash=hash_password("no-memberships-password"),
+            )
+            db.add(player); db.commit()
+
+        client = TestClient(main.app, follow_redirects=False)
+        try:
+            login = client.post(
+                "/login",
+                data={"username": "nomemberships", "password": "no-memberships-password", "next": "/"},
+            )
+            self.assertEqual(login.status_code, 303)
+            self.assertEqual(login.headers["location"], "/player")
+            root = client.get("/")
+            self.assertEqual(root.status_code, 303)
+            self.assertEqual(root.headers["location"], "/player")
+        finally:
+            client.close()
+
     def test_admin_delete_user_cleans_auth_state_and_preserves_campaign_content(self):
         self.bootstrap()
         campaign_response = self.post_auth("/campaigns", {"name": "Delete Test"})
