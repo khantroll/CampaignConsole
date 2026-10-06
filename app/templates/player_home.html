@@ -25,7 +25,7 @@
 </div>
 
 <div class="row g-3 mb-4">
-  <div class="col-md-6"><div class="card h-100"><div class="card-header">Active Leads</div><div class="card-body">
+  <div class="col-md-6"><div class="card h-100"><div class="card-header">Leads & Quests</div><div class="card-body">
     {% if active_leads %}<ul class="mb-0">{% for lead in active_leads %}<li class="mb-2"><a href="/player/campaigns/{{ campaign.id }}/lore/plot_thread/{{ lead.entity_id }}"><strong>{{ lead.title }}</strong></a><div class="small text-muted">{{ lead.public_summary }}</div></li>{% endfor %}</ul>
     {% else %}<p class="text-muted mb-0">No leads or quests have been revealed yet.</p>{% endif %}
   </div></div></div>
