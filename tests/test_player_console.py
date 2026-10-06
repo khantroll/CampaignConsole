@@ -679,7 +679,7 @@ class PlayerConsolePhase2Tests(unittest.TestCase):
                 },
             )
             page = player.get(f"/player/campaigns/{self.c1}").text
-            self.assertIn("Active Leads", page)
+            self.assertIn("Leads &amp; Quests", page)
             self.assertIn("Revealed Quest", page)
             self.assertIn("Party", page)
             self.assertIn("Avery", page)
