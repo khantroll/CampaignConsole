@@ -39,6 +39,12 @@ def _optional_int(value: str) -> Optional[int]:
 def player_journal(request: Request, campaign_id: int, db: Session = Depends(get_session)):
     membership = _membership_or_404(db, request, campaign_id)
     reveal_map = visible_reveal_map(db, membership)
+    preselected_session_id = _optional_int(request.query_params.get("session_id", ""))
+    if not validate_session_link(db, campaign_id, preselected_session_id):
+        preselected_session_id = None
+    preselected_reveal_id = _optional_int(request.query_params.get("reveal_id", ""))
+    if not validate_reveal_link(db, membership, preselected_reveal_id):
+        preselected_reveal_id = None
     return templates.TemplateResponse(
         "player_journal.html",
         {
@@ -51,6 +57,8 @@ def player_journal(request: Request, campaign_id: int, db: Session = Depends(get
             "visibilities": VISIBILITIES,
             "published_sessions": published_sessions(db, campaign_id),
             "visible_reveals": list(reveal_map.values()),
+            "preselected_session_id": preselected_session_id,
+            "preselected_reveal_id": preselected_reveal_id,
             "can_write": membership.role == "player",
             "active_player_nav": "journal",
         },
